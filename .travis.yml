@@ -30,12 +30,12 @@ install:
   - ocdev setup core --dir owncloud --branch $BRANCH --no-history
   - cd owncloud
   - ocdev ci $DB
-  # enable myapp
-  - mv ../myapp apps/
-  - php -f console.php app:enable myapp
+  # enable owncollab_talks
+  - mv ../owncollab_talks apps/
+  - php -f console.php app:enable owncollab_talks
 
 before_script:
-  - cd apps/myapp
+  - cd apps/owncollab_talks
 
 script:
   - phpunit -c phpunit.xml

@@ -1,4 +1,4 @@
 # Authors
 
-* Your Name: <mail@example.com>
+* Werdffelynir: <mail@example.com>
 

@@ -1,12 +1,12 @@
 <?php
 /**
- * ownCloud - myapp
+ * ownCloud - owncollab_talks
  *
  * This file is licensed under the Affero General Public License version 3 or
  * later. See the COPYING file.
  *
- * @author Your Name <mail@example.com>
- * @copyright Your Name 2016
+ * @author Werdffelynir <mail@example.com>
+ * @copyright Werdffelynir 2016
  */
 
 require_once __DIR__ . '/../../../../3rdparty/autoload.php';

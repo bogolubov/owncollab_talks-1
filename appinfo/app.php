@@ -1,17 +1,17 @@
 <?php
 /**
- * ownCloud chart application
+ * ownCloud - owncollab_talks
  *
  * This file is licensed under the Affero General Public License version 3 or
  * later. See the COPYING file.
  *
- * @author Your Name <mail@example.com>
- * @copyright Your Name 2016
+ * @author Werdffelynir <mail@example.com>
+ * @copyright Werdffelynir 2016
  */
 
 namespace OCA\Owncollab_Talks\AppInfo;
 
-use OCA\Owncollab\Helper;
+use OCA\Owncollab_Talks\Helper;
 use OCP\AppFramework\App;
 use OCP\Util;
 
@@ -30,7 +30,7 @@ $container->query('OCP\INavigationManager')->add(function () use ($container, $a
 		'order' => 10,
 		'href' => $urlGenerator->linkToRoute($appName.'.main.index'),
 		'icon' => $urlGenerator->imagePath($appName, 'app.svg'),
-		'name' => $l10n->t('Talks OwnCollab ')
+		'name' => $l10n->t('Talks')
 	];
 });
 

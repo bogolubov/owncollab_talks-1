@@ -1,15 +1,15 @@
 <?php
 /**
- * ownCloud - myapp
+ * ownCloud - owncollab_talks
  *
  * This file is licensed under the Affero General Public License version 3 or
  * later. See the COPYING file.
  *
- * @author Your Name <mail@example.com>
- * @copyright Your Name 2016
+ * @author Werdffelynir <mail@example.com>
+ * @copyright Werdffelynir 2016
  */
 
-namespace OCA\MyApp\Controller;
+namespace OCA\Owncollab_Talks\Controller;
 
 use PHPUnit_Framework_TestCase;
 
@@ -25,7 +25,7 @@ class PageControllerTest extends PHPUnit_Framework_TestCase {
 		$request = $this->getMockBuilder('OCP\IRequest')->getMock();
 
 		$this->controller = new PageController(
-			'myapp', $request, $this->userId
+			'owncollab_talks', $request, $this->userId
 		);
 	}
 

@@ -1,15 +1,16 @@
-# OwnCollab Talks
-
+# Owncollab Talks
 Place this app in **owncloud/apps/**
 
-## Application Destination
+## Publish to App Store
 
-The application is dependent for part of OwnCollab
+First get an account for the [App Store](http://apps.owncloud.com/) then run:
 
-- owncollab
-- owncollab_chart
-- __owncollab_tasks__
-- owncollab_calendar
+    make appstore_package
 
-Destination of application is displaying messages of users
+The archive is located in build/artifacts/appstore and can then be uploaded to the App Store.
 
+
+## Running tests
+After [Installing PHPUnit](http://phpunit.de/getting-started.html) run:
+
+    phpunit -c phpunit.xml
