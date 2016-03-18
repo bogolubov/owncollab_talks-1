@@ -2,7 +2,7 @@
 
 namespace OCA\Owncollab_Talks\Controller;
 
-use OCA\Owncollab\Helper;
+use OCA\Owncollab_Talks\Helper;
 use OCA\Owncollab_Talks\Db\Connect;
 use OCP\IRequest;
 use OCP\AppFramework\Http\TemplateResponse;
@@ -67,4 +67,231 @@ class ApiController extends Controller {
         return new DataResponse($data);
 	}
 
+	/**
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 * @return DataResponse
+	 */
+	//TODO: Використовувати метод з застосуванням засобів безпеки
+	public function begintalk() {
+		$subscribers = $this->getUsers();
+		$canwrite = true; //TODO: Створити перевірку на право починати бесіди
+
+		if ($canwrite) {
+			$params = array(
+				'user' => $this->userId,
+				'subscribers' => $subscribers,
+				'mode' => 'begin',
+				'menu' => 'begin'
+			);
+		$view = Helper::renderPartial($this->appName, 'api.talk', $params);
+		}
+		else {
+			return;
+		}
+
+		$params = array(
+			'user' => $this->userId,
+			'view' => $view,
+			'requesttoken'  => (!\OC_Util::isCallRegistered()) ? '' : \OC_Util::callRegister(),
+		);
+
+		return new DataResponse($params);
+	}
+
+	/**
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 * @return DataResponse
+	 */
+	//TODO: Використовувати метод з застосуванням засобів безпеки
+	public function alltalks() {
+		$params = ['user' => $this->userId];
+
+		if ($usermessages = $this->getUserMessages()) {
+			$files = $this->connect->files();
+			$messages = $usermessages->getByAuthorOrSubscriber($this->userId);
+			$params = array(
+				'user' => $this->userId,
+				'messages' => $messages,
+				'files' => $files,
+				'menu' => 'all'
+			);
+		}
+		$view = Helper::renderPartial($this->appName, 'api.talk', $params);
+
+		$params = array(
+			'user' => $this->userId,
+			'view' => $view,
+			'requesttoken'  => (!\OC_Util::isCallRegistered()) ? '' : \OC_Util::callRegister(),
+		);
+
+		return new DataResponse($params);
+	}
+
+	/**
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 * @return DataResponse
+	 */
+	//TODO: Використовувати метод з застосуванням засобів безпеки
+	public function selectSubscribers() {
+		$subscribers = $this->getUsers();
+		$canwrite = true; //TODO: Створити перевірку на право починати бесіди
+		if ($canwrite) {
+			$params = array(
+				'user' => $this->userId,
+				'subscribers' => $subscribers,
+				'mode' => 'subscribers',
+				'menu' => 'subscribers'
+			);
+			$view = Helper::renderPartial($this->appName, 'api.talk', $params);
+		}
+		else {
+			return;
+		}
+
+		$params = array(
+			'user' => $this->userId,
+			'view' => $view,
+			'requesttoken'  => (!\OC_Util::isCallRegistered()) ? '' : \OC_Util::callRegister(),
+		);
+
+		return new DataResponse($params);
+	}
+
+	/**
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 * @return DataResponse
+	 */
+	//TODO: Використовувати метод з застосуванням засобів безпеки
+	public function mytalks() {
+		$messages = $this->connect->messages();
+		$talks = $messages->getByAuthor($this->userId);
+		$params = array(
+			'user' => $this->userId,
+			'talks' => $talks,
+			'mode' => 'list',
+			'menu' => 'mytalks'
+		);
+		$view = Helper::renderPartial($this->appName, 'api.talk', $params);
+
+		$params = array(
+			'user' => $this->userId,
+			'view' => $view,
+			'requesttoken'  => (!\OC_Util::isCallRegistered()) ? '' : \OC_Util::callRegister(),
+		);
+
+		return new DataResponse($params);
+	}
+
+	/**
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 * @return DataResponse
+	 */
+	//TODO: Використовувати метод з застосуванням засобів безпеки
+	public function attachments() {
+		$files = $this->connect->files();
+		$userfiles = $files->getByUser($this->userId);
+
+		$params = array(
+			'user' => $this->userId,
+			'files' => $userfiles,
+			'mode' => 'attachments',
+			'menu' => 'attachments'
+		);
+		$view = Helper::renderPartial($this->appName, 'api.talk', $params);
+
+		$params = array(
+			'user' => $this->userId,
+			'view' => $view,
+			'requesttoken'  => (!\OC_Util::isCallRegistered()) ? '' : \OC_Util::callRegister(),
+		);
+
+		return new DataResponse($params);
+	}
+
+	/**
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 * @return TemplateResponse
+	 */
+	//TODO: Використовувати метод з застосуванням засобів безпеки
+	public function getuserfiles() {
+
+		$files = $this->connect->files();
+		$userfiles = $files->getByUser($this->userId);
+
+		$params = array(
+			'files' => $userfiles,
+			'requesttoken'  => (!\OC_Util::isCallRegistered()) ? '' : \OC_Util::callRegister(),
+		);
+		$view = Helper::renderPartial($this->appName, 'api.userfiles', $params);
+		//$view = "User files!";
+
+		$params = array(
+			'user' => $this->userId,
+			'files' => $userfiles,
+			'view' => $view,
+			'requesttoken'  => (!\OC_Util::isCallRegistered()) ? '' : \OC_Util::callRegister(),
+		);
+
+		return new DataResponse($params);
+	}
+
+	/**
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 * @return TemplateResponse
+	 */
+	//TODO: Використовувати метод з застосуванням засобів безпеки
+	public function getfolderfiles($folderid) {
+
+		$files = $this->connect->files();
+		$userfiles = $files->getByFolder($folderid, $this->userId);
+
+		$params = array(
+			'files' => $userfiles,
+			'folder' => $userfiles,
+			'requesttoken'  => (!\OC_Util::isCallRegistered()) ? '' : \OC_Util::callRegister(),
+		);
+		$view = Helper::renderPartial($this->appName, 'api.folderfiles', $params);
+		//$view = "User files!";
+
+		$params = array(
+			'user' => $this->userId,
+			'files' => $userfiles,
+			'view' => $view,
+			'requesttoken'  => (!\OC_Util::isCallRegistered()) ? '' : \OC_Util::callRegister(),
+		);
+
+		return new DataResponse($params);
+	}
+
+	/**
+	 * Get list of users to build
+	 * an array of subscribers
+	 */
+	public function getUsers() {
+		$users = $this->connect->users();
+		//$userlist = $users->getAll();
+		$userlist = $users->getGroupsUsersList();
+
+		return $userlist;
+	}
+
+	/**
+	 * @param string $userid
+	 * Get an object of UserMessages
+	 *
+	 */
+	public function getUserMessages($userid = NULL) {
+		$usermessages = $this->connect->userMessage();
+		if ($userid) {
+			$usermessages->setUser($userid);
+		}
+		return $usermessages;
+	}
 }

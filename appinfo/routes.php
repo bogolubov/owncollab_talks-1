@@ -28,4 +28,30 @@ $application->registerRoutes($this, ['routes' => [
     ['name' => 'main#page', 'url' => '/page', 'verb' => 'GET'],
     ['name' => 'main#do_echo', 'url' => '/echo', 'verb' => 'POST'],
 
+    ['name' => 'main#index', 'url' => '/all', 'verb' => 'GET'],
+    ['name' => 'main#mytalks', 'url' => '/mytalks', 'verb' => 'GET'],
+    ['name' => 'main#talk', 'url' => '/talk/{id}', 'verb' => 'GET'],
+    ['name' => 'main#read', 'url' => '/read/{id}', 'verb' => 'GET'],
+    ['name' => 'main#begin', 'url' => '/begin', 'verb' => 'GET'],
+    ['name' => 'main#selectSubscribers', 'url' => '/subscribers', 'verb' => 'GET'],
+    ['name' => 'main#attachments', 'url' => '/attachments', 'verb' => 'GET'],
+    ['name' => 'main#save', 'url' => '/send', 'verb' => 'POST'],
+    //['name' => 'main#save', 'url' => '/send', 'verb' => 'GET'],
+    ['name' => 'main#reply', 'url' => '/reply/{id}', 'verb' => 'GET'],
+
+    ['name' => 'main#addUser', 'url' => '/adduser/{id}', 'verb' => 'GET'],
+    ['name' => 'main#removeUser', 'url' => '/removeuser/{talk}/{user}', 'verb' => 'GET'],
+    ['name' => 'main#markMessage', 'url' => '/mark/{id}/{flag}', 'verb' => 'GET'],
+
+    ['name' => 'main#getUserFiles', 'url' => '/getfiles', 'verb' => 'GET'],
 ]]);
+
+\OCP\API::register(
+    'get',
+    '/apps/owncollab_talks/url',
+    function($urlParameters) {
+        return new \OC_OCS_Result($data);
+    },
+    'owncollab_talks',
+    \OC_API::ADMIN_AUTH
+);

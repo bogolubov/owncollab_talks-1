@@ -1,9 +1,9 @@
 <?php
+    namespace OCA\Owncollab_Talks\AppInfo;
 
-namespace OCA\Owncollab_Talks\AppInfo;
+    //ini_set('display_errors', 1);
 
-
-use \OCA\Owncollab\Helper;
+use \OCA\Owncollab_Talks\Helper;
 use OCA\Owncollab_Talks\Controller\ApiController;
 use OCA\Owncollab_Talks\Controller\MainController;
 use OCA\Owncollab_Talks\Db\Connect;

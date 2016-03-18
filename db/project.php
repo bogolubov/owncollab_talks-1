@@ -25,8 +25,8 @@ class Project
      * @param $id
      * @return mixed
      */
-    public function getById($id) {
-        $project = $this->connect->select("*", $this->tableName, "id = :id",[':id' => $id]);
+    public function get() {
+        $project = $this->connect->query("SELECT * FROM {$this->tableName}");
         return $project;
     }
 
