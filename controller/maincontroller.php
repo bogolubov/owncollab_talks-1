@@ -80,18 +80,6 @@ class MainController extends Controller {
 		return new TemplateResponse($this->appName, 'talk', $params);  // templates/talk.php
 	}
 
-	/**
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
-	 *
-	 * @return DataResponse
-	 */
-	public function page() {
-
-        $project = $this->connect->project()->get();
-
-		return new DataResponse(['echo' => $project]);
-	}
 
 	/**
 	 * @NoAdminRequired
