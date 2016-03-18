@@ -2,12 +2,15 @@
  * Module db.js
  */
 
-(function($, OC, app){
+var MODULE = function($, OC){
 
-	var o = app.module.db;
+	var o = {};
 
 	o.connect = function(){};
 
 	o.query = function(){};
 
-})(jQuery, OC, app);
+	return o;
+
+}(jQuery, OC);
+

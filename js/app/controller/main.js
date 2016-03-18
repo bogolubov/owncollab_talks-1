@@ -7,39 +7,28 @@
     // using depending on the base application
     var o = app.controller.main;
 
-    o.construct = function(hash) {
-        //app.api('getproject', onProjectLoaded, {hash:hash});
+    /**
+     * Construct call first when this controller run
+     */
+    o.construct = function() {
 
+
+        /**
+         * First we need to select all the elements necessary for work.
+         * But after the DOM is loaded
+         */
         $(document).ready(onDocumentLoaded);
-
+        //$(document).ready(buttonsInit);
     };
-
-    function onProjectLoaded(res){
-
-        console.log(res);
-
-    }
 
     function onDocumentLoaded(){
 
-        // todo: Код для /action
-        $('#hello').click(function () {
-            alert('Hello from your script file');
-        });
-
-        // todo: Код для /action
-        $('#echo').click(function () {
-            var url = OC.generateUrl('/apps/'+app.name+'/echo');
-            var data = {
-                echo: $('#echo-content').val()
-            };
-            $.post(url, data).success(function (response) {
-                $('#echo-result').text(response.echo);
-            });
-        });
-
     }
 
-    o.loader = function(name){};
+    function buttonsInit() {
+        var inc = new Inc(),
+            path = '/apps/' + app.name;
+
+    }
 
 })(jQuery, OC, app);
