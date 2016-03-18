@@ -162,4 +162,142 @@ class Helper
         return $rand;
     }
 
+    static public function checkTxt($text) {
+        $text = nl2br($text);
+        $text = strip_tags($text, "<p><br><b><strong><a><img><table><tr><td>");
+        return $text;
+    }
+
+    static public function generateRepliedText($text, $author, $date) {
+        $lines = preg_split ('/$\R?^/m', $text);
+        $firstline = ">  On ".$date." ".$author." wrote: ";
+        foreach($lines as $l => $line) {
+            $lines[$l] = ">  ".$line;
+        }
+        $lastline = ">  ";
+        $replied = $firstline."\n".implode("\n", $lines)."\n".$lastline;
+        return $replied;
+    }
+
+    /**
+     * Share file with a user
+     * @param $filename string
+     * @param $user string
+     * @return bool
+     */
+    static public function shareFile($filename, $user) {
+        $ch = curl_init();
+        $path = 'http://admin:admin@owncloud.loc/ocs/v1.php/apps/files_sharing/api/v1/shares'; //TODO: Змінити абсолютну адресу на динамічну
+        $postfields = array(
+            'path' => $filename,
+            'shareType' => 0,
+            'shareWith' => $user,
+            'publicUpload' => true,
+            'password' => 'admin',
+            'permissions' => 1
+        );
+
+        curl_setopt($ch, CURLOPT_URL, $path);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $postfields );
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        $resultCurl = curl_exec($ch);
+        $errorCurl = curl_error($ch);
+        curl_close($ch);
+        $returned = false;
+
+        return $returned;
+    }
+
+    static public function time_elapsed_string($ptime) {
+        $etime = time() - $ptime;
+
+        if ($etime < 1) {
+            return '0 seconds';
+        }
+
+        $a = array(
+            365 * 24 * 60 * 60  =>  'year',
+            30 * 24 * 60 * 60  =>  'month',
+            24 * 60 * 60  =>  'day',
+            60 * 60  =>  'hour',
+            60  =>  'minute',
+            1  =>  'second'
+        );
+
+        $a_plural = array(
+            'year'   => 'years',
+            'month'  => 'months',
+            'day'    => 'days',
+            'hour'   => 'hours',
+            'minute' => 'minutes',
+            'second' => 'seconds'
+        );
+
+        foreach ($a as $secs => $str)
+        {
+            $d = $etime / $secs;
+            if ($d >= 1)
+            {
+                $r = round($d);
+                return $r . ' ' . ($r > 1 ? $a_plural[$str] : $str) . ' ago';
+            }
+        }
+    }
+
+    static public function sizeRoundedString($size) {
+        if ($size < 1) {
+            return '0 bytes';
+        }
+
+        $a = array(
+            1024 * 1024 * 1024 * 1024  =>  'TB',
+            1024 * 1024 * 1024  =>  'GB',
+            1024 * 1024  =>  'MB',
+            1024  =>  'kB',
+            1  =>  'B'
+        );
+
+        foreach ($a as $bytes => $str) {
+            $d = $size / $bytes;
+            if ($d >= 1) {
+                $r = round($d, 2);
+                return $r . ' ' . $a[$bytes];
+            }
+        }
+    }
+
+    static public function getFileType($file) {
+        $types = array(
+            'image' => ['jpg','jpeg','gif','bmp','png'],
+            'application-pdf' => ['pdf'],
+            'x-office-document' => ['doc','dot','docx','docm','dotx','dotm','docb'],
+            'x-office-spreadsheet' => ['xls','xlt','xlm','xlsx','xlsm','xltx','xltm','xlsb','xla','xlam','xll','xlw'],
+            'x-office-presentation' => ['ppt','pot','pps','pptx','pptm','potx','potm','ppam','ppsx','ppsm','sldx','sldm – PowerPoint macro-enabled slide'],
+            'audio' => ['3gp','aa','aac','aax','act','aiff','amr','ape','au','awb','dct','dss','dvf','flac','gsm','iklax','ivs','m4a','m4b','m4p','mmf','mp3','mpc','msv','ogg','oga','opus','ra','rm','raw','sln','tta','vox','wav','wma','wv','webm'],
+            'video' => ['aaf','3gp','gif','asf','avchd','avi','cam','dat','dsh','dvr-ms','flv','m1v','m2v','fla','flr','sol','m4v','mkv','wrap','mng','mov','mpeg','mpg','mpe','mxf','roq','nsv','ogg','rm','svi','smi','swf','wmv','wtv','yuv'],
+            'text' => ['cnf','conf','cfg','log','asc','txt','a']
+        );
+        $ext = substr($file['file_target'], strpos($file['file_target'], ".")+1);
+        if ($file['item_type'] == 'folder') {
+            $filetype = 'folder';
+            if ($file['share_with']) {
+                $filetype .= '-shared';
+            }
+        }
+        else {
+            foreach ($types as $t => $type) {
+                if (in_array($ext, $type)) {
+                    $filetype = $t;
+                    break;
+                }
+            }
+        }
+        if (!$filetype) {
+            $filetype = 'file';
+        }
+        return $filetype;
+    }
 }

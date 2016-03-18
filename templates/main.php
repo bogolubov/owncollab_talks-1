@@ -9,7 +9,9 @@
 	</div>
 
 	<div id="app-content">
+		<div id="app-content-error"
 		<div id="app-content-wrapper">
+			<div id="app-content-inline-error"></div>
 			<?php print_unescaped($this->inc('part.content')); ?>
 		</div>
 	</div>

@@ -11,14 +11,20 @@ class Connect
     public $db;
     /** @var Project database table */
     private $project;
-    /** @var Project_Settings  database table */
-    private $projectSettings;
     /** @var Task  database table */
     private $task;
     /** @var Link  database table */
     private $link;
     /** @var Resource  database table */
     private $resource;
+    /** @var Messages  database table */
+    private $messages;
+    /** @var UserMessage  database table */
+    private $user_message;
+    /** @var Users  database table */
+    private $users;
+    /** @var Files  database table */
+    private $files;
 
     /**
      * Connect constructor.
@@ -28,11 +34,14 @@ class Connect
         $this->db = $db;
 
         // Register tables models
-        $this->project = new Project($this, 'collab_projects');
-        $this->projectSettings = new Project_Settings($this, 'collab_project_settings');
-        $this->task = new Task($this, 'collab_gantt_tasks');
-        $this->link = new Link($this, 'collab_gantt_links');
-        $this->resource = new Resource($this, 'collab_task_resources');
+        $this->project = new Project($this, 'collab_project');
+        $this->task = new Task($this, 'collab_tasks');
+        $this->link = new Link($this, 'collab_links');
+        $this->resource = new Resource($this, 'collab_resources');
+        $this->messages = new Messages($this, 'collab_messages');
+        $this->user_message = new UserMessages($this, 'collab_user_message');
+        $this->users = new Users($this, 'users');
+        $this->files = new Files($this, 'filecache');
     }
 
     /**
@@ -81,7 +90,8 @@ class Connect
             implode(', ', $columns),
             implode(', ', array_fill(0, count($columnData), '?'))
         );
-        return $this->db->executeQuery($sql, array_values($columnData));
+        $this->db->executeQuery($sql, array_values($columnData));
+        return $this->db->lastInsertId($table);
     }
 
     /**
@@ -126,14 +136,6 @@ class Connect
         return $this->project;
     }
 
-    /**
-     * Retry instance of class working with database
-     * Table of collab_project_settings
-     * @return Project_Settings
-     */
-    public function projectSettings() {
-        return $this->projectSettings;
-    }
 
     /**
      * Retry instance of class working with database
@@ -160,5 +162,41 @@ class Connect
      */
     public function resource() {
         return $this->resource;
+    }
+
+    /**
+     * Retry instance of class working with database
+     * Table of collab_task_messages
+     * @return Messages
+     */
+    public function messages() {
+        return $this->messages;
+    }
+
+    /**
+     * Retry instance of class working with database
+     * Table of collab_task_user_message
+     * @return UserMessage
+     */
+    public function userMessage() {
+        return $this->user_message;
+    }
+
+    /**
+     * Retry instance of class working with database
+     * Table of collab_users
+     * @return Users
+     */
+    public function users() {
+        return $this->users;
+    }
+
+    /**
+     * Retry instance of class working with database
+     * Table of share
+     * @return Files
+     */
+    public function files() {
+        return $this->files;
     }
 }
