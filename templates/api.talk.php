@@ -49,7 +49,7 @@ switch ($_['mode']) {
 					<td><?=$file['permissions'];?></td>
 					<td><?=date('d.m.Y H:i:s', $file['stime']);?></td>
 				</tr>
-			<? } ?>
+			<?php } ?>
 		</table>
 		<?
 		break;
