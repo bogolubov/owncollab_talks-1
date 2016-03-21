@@ -1,4 +1,4 @@
-<?
+<?php
 $files = $_['files'];
 //var_dump($files);
 ?>
