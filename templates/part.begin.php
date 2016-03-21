@@ -1,4 +1,4 @@
-<?
+<?php
 if (!empty($_['talk'])) {
     $id = $_['talk']['id'];
     $messageid = $_['talk']['mid'];

@@ -1,4 +1,4 @@
-<?
+<?php
 $message = $_['message'];
 $talk = $_['talk'];
 $isadmin = in_array($_['user'], array_column($_['subscribers']['Managers'], 'uid')) ? true : false;
