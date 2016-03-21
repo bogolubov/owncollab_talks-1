@@ -10,7 +10,7 @@
 Ajax response: <div id="echo-result"></div>
 
 <table class="messagelist">
-	<? foreach ($_['messages'] as $m => $message) { ?>
+	<?php foreach ($_['messages'] as $m => $message) { ?>
 	<tr<?if ($message['status'] == 0) { echo ' class="unread"'; }?>>
 		<td class="id"></td>
 		<td class="title"><?=$message['title'];?></td>
@@ -18,5 +18,5 @@ Ajax response: <div id="echo-result"></div>
 		<td class="author"><?=$message['author'];?></td>
 		<td class="attachements"><?=$message['attachements'];?></td>
 	</tr>
-	<? } ?>
+	<?php } ?>
 </table>

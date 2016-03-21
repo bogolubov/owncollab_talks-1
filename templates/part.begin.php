@@ -1,4 +1,4 @@
-<?
+<?php
 if (!empty($_['talk'])) {
     $id = $_['talk']['id'];
     $messageid = $_['talk']['mid'];
@@ -25,30 +25,30 @@ $cancheckusers = ($_['user'] == $_['talk']['author'] || in_array($_['user'], arr
 
     </div>
         <div class="talk-subscribers">
-        <? foreach ($_['subscribers'] as $group => $users) { ?>
+        <?php foreach ($_['subscribers'] as $group => $users) { ?>
         <fieldset class="usergroup">
             <div class="group-name">
                 <input type="checkbox" name="groups[]" value="<?=$group;?>" class="groupname"><label><?=$group;?></label>
             </div>
             <div class="group-users" id="<?=$group;?>_users">
-            <? foreach ($users as $u => $user) { ?>
+            <?php foreach ($users as $u => $user) { ?>
                 <div class="group-user">
                     <input type="checkbox" name="users[]" value="<?=$user['uid'];?>" id="<?=$user['uid'];?>"
-                           <? if (in_array($user['uid'],$selectedsubscribers) && $userstatus[$user['uid']] < 3) { ?> checked<? } ?>
-                           <? if (!$cancheckusers || $userstatus[$user['uid']] == 3) { ?> disabled<? } ?>
+                           <?php if (in_array($user['uid'],$selectedsubscribers) && $userstatus[$user['uid']] < 3) { ?> checked<?php } ?>
+                           <?php if (!$cancheckusers || $userstatus[$user['uid']] == 3) { ?> disabled<?php } ?>
                     ><label><?=$user['displayname'];?></label>
                 </div>
-            <? } ?>
+            <?php } ?>
             </div>
         </fieldset>
-        <? } ?>
-        <? if (!$cancheckusers) {
+        <?php } ?>
+        <?php if (!$cancheckusers) {
             $uarray = array();
             foreach ($users as $u => $user) {
                 if (!in_array($user['uid'], $uarray)) {
                     $uarray[] = $user['uid']; ?>
                     <input type="hidden" name="users[]" value="<?=$user['uid'];?>">
-                <? }
+                <?php }
             }
         } ?>
         <input type="hidden" name="replyid" value="<?=$messageid;?>">

@@ -1,4 +1,4 @@
-<?
+<?php
 $message = $_['message'];
 $talk = $_['talk'];
 $isadmin = in_array($_['user'], array_column($_['subscribers']['Managers'], 'uid')) ? true : false;
@@ -18,9 +18,9 @@ $filetypes = array('file', 'file', 'folder', 'file', 'application-pdf', 'file', 
     <div class="talk-body">
         <pre><?=$message['text'];?></pre>
     </div>
-    <? if ($message['attachements']) { ?>
+    <?php if ($message['attachements']) { ?>
     <div class="talk-attachements">
-    <? foreach ($filenames as $f => $file) {
+    <?php foreach ($filenames as $f => $file) {
         $link = $file['mimetype'] == 2 ? "/index.php/apps/files?dir=/".$file['file'] : "/index.php/apps/files/ajax/download.php?dir=%2F&files=".$file['name'];
         ?>
         <div class="attached-file">
@@ -34,33 +34,33 @@ $filetypes = array('file', 'file', 'folder', 'file', 'application-pdf', 'file', 
             <div class="filesize"><?=\OCA\Owncollab_Talks\Helper::sizeRoundedString($file['size']);?></div>
             <div class="clear"></div>
         </div>
-    <? } ?>
+    <?php } ?>
         <div class="clear"></div>
     </div>
-    <? } ?>
+    <?php } ?>
     <div class="message-buttons">
         <!-- TODO: Виводити кнопки в залежності від прав користувача -->
 
-        <button <? if ($message['status'] < 3 && $talk['status'] < 3) { ?>data-link="reply" <? } else { ?>data-link="no-reply" class="disabled"<? } ?>>Reply</button>
+        <button <?php if ($message['status'] < 3 && $talk['status'] < 3) { ?>data-link="reply" <?php } else { ?>data-link="no-reply" class="disabled"<?php } ?>>Reply</button>
 
         <button data-link="delete-confirm" title="Remove me from this talk">Remove me</button>
         <button data-link="mark">Mark as</button>
             <div class="mark-talk-as">
                 <ul id="mark-talk-as">
-                    <? if ($message['status'] == 0) { ?>
+                    <?php if ($message['status'] == 0) { ?>
                     <li data-link="read" class="markButton">Read</li>
-                    <? }
+                    <?php }
                     if ($message['status'] > 0) { ?>
                     <li data-link="unread" class="markButton">Unread</li>
-                    <? }
+                    <?php }
                     if ($isadmin || $isauthor) { ?>
                     <li data-link="finished" class="markButton">Finished</li>
-                    <? } ?>
+                    <?php } ?>
                 </ul>
             </div>
-        <? /* if ($isadmin || $isauthor) { ?>
+        <?php /* if ($isadmin || $isauthor) { ?>
         <button data-link="add-subscribers" title="Add subscribers to this talk">Add subscribers</button>
-        <? } */ ?>
+        <?php } */ ?>
         <input type="hidden" value="<?=$message['mid'];?>" id="messageId"/>
         <input type="hidden" value="<?=$_['user'];?>" id="userId"/>
     </div>

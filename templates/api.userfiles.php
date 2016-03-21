@@ -1,4 +1,4 @@
-<?
+<?php
 $files = $_['files'];
 //var_dump($files);
 ?>
@@ -40,7 +40,7 @@ $files = $_['files'];
         $totalsize += $file['size'];
         ?>
 
-        <? if ($file['mimetype'] == 'httpd/unix-directory') { // If folder ?>
+        <?php if ($file['mimetype'] == 'httpd/unix-directory') { // If folder ?>
     <tr data-icon="/core/img/filetypes/folder-shared.svg" data-share-permissions="31" data-permissions="31" data-id="<?=$file['activity_id'];?>">
          <td class="filename">
             <a title="" data-original-title="" href="#" class="action action-favorite "><img class="svg" alt="Favorite" src="/core/img/actions/star.svg"></a>
@@ -64,7 +64,7 @@ $files = $_['files'];
     <tr style="height: 0px;">
         <td colspan="3" class="folder" id="folder-files-<?=$file['fileid'];?>"></td>
     </tr>
-        <? }
+        <?php }
         else { // If file ?>
     <tr data-icon="/core/img/filetypes/folder-shared.svg" data-share-permissions="31" data-permissions="31" data-id="<?=$file['activity_id'];?>">
         <td class="filename">
@@ -80,17 +80,17 @@ $files = $_['files'];
                 </span>
                 <span currentuploads="0" class="uploadtext"></span>
             </a>
-            <? if ($file['mimetype'] == 2) { // If folder ?>
+            <?php if ($file['mimetype'] == 2) { // If folder ?>
                 <div id="folder-files"></div>
-            <? } ?>
+            <?php } ?>
         </td>
         <td style="color:rgb(160,160,160); text-align:right;" class="filesize"><?=\OCA\Owncollab_Talks\Helper::sizeRoundedString($file['size']);?></td>
         <td class="date">
             <span data-original-title="<?=date('F d, Y h:i A', $file['timestamp']);?>" style="color:rgb(51,51,51)" title="" class="modified"><?=\OCA\Owncollab_Talks\Helper::time_elapsed_string($file['timestamp']);?></span>
         </td>
     </tr>
-        <? } ?>
-    <? } ?>
+        <?php } ?>
+    <?php } ?>
     <tfoot>
     <tr class="summary" style="height: 50px;">
         <td>
