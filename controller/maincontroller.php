@@ -68,10 +68,14 @@ class MainController extends Controller {
 
 		if ($usermessages = $this->getUserMessages()) {
 			$files = $this->connect->files();
-			$messages = $usermessages->getByAuthorOrSubscriber($this->userId);
+			$messages = $this->connect->messages();
+			$talks = $usermessages->getByAuthorOrSubscriber($this->userId, '0');
+			$firsttalk = $messages->getByParent($talks[0]['messageid']);
 			$params = array(
 				'user' => $this->userId,
-				'messages' => $messages,
+				'messages' => $talks,
+				'answers' => $firsttalk,
+				'appname' => $this->appName,
 				'files' => $files,
 				'menu' => 'all'
 			);
@@ -188,6 +192,7 @@ class MainController extends Controller {
 			$params = array(
 				'user' => $this->userId,
 				'talk' => $message,
+				'replyid' => $messages->getMessageTopParent($message['mid']),
 				'subscribers' => $subscribers,
 				'userstatus' => $userstatus,
 				'mode' => 'reply'
@@ -277,6 +282,8 @@ class MainController extends Controller {
 	public function save() {
 		$files = $this->connect->files();
 		$users = $this->connect->users();
+		//print_r($_FILES);
+		Helper::uploadFile($_FILES['uploadfile'], $this->userId);
 		//$subscribers = array_unique($_POST['users']);
 		foreach ($_POST['users'] as $s => $subscriber) {
 			$subscribers[$subscriber] = $users->getUserDetails($subscriber);
@@ -322,11 +329,15 @@ class MainController extends Controller {
 		$canwrite = true; //TODO: Створити перевірку на право починати бесіди
 
 		$usermessages = $this->getUserMessages();
+		$talks = $usermessages->getByAuthorOrSubscriber($this->userId, '0');
+		$firsttalk = $messages->getByParent($talks[0]['id']);
 		if ($canwrite) {
 			$params = array(
 				'user' => $this->userId,
 				'message' => $_POST,
-				'messages' => $usermessages->getByAuthorOrSubscriber($this->userId),
+				'messages' => $talks,
+				'answers' => $firsttalk,
+				'appname' => $this->appName,
 				'mode' => 'list',
 				'menu' => 'all'
 			);
@@ -346,10 +357,13 @@ class MainController extends Controller {
 	//TODO: Використовувати метод з застосуванням засобів безпеки
 	public function mytalks() {
 		$messages = $this->connect->messages();
-		$talks = $messages->getByAuthor($this->userId);
+		$talks = $messages->getByAuthor($this->userId, 0, 'date DESC');
+		$firsttalk = $messages->getByParent($talks[0]['id']);
 		$params = array(
 			'user' => $this->userId,
 			'talks' => $talks,
+			'answers' => $firsttalk,
+			'appname' => $this->appName,
 			'mode' => 'list',
 			'menu' => 'mytalks'
 		);
@@ -548,7 +562,7 @@ class MainController extends Controller {
 		$subject = isset($messagedata['title']) ? $messagedata['title'] : 'OwnCollab message';
 		$body = isset($messagedata['text']) ? $messagedata['text'] : '';
 
-		echo $from;
+		//echo $from; //TODO Розібратись
 
 		$mail = new PHPMailer();
 		$mail->setFrom($from);

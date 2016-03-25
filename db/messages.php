@@ -42,10 +42,34 @@ class Messages
         return $messages;
     }
 
-    public function getByAuthor($author) {
+    public function getByAuthor($author, $parent = NULL, $orderby = false) {
         $sql = "SELECT * FROM ". $this->tableName ." WHERE author = '".$author."'";
+        if (isset($parent)) {
+            $sql .= " AND rid = ".$parent;
+        }
+        if ($orderby) {
+            $sql .= " ORDER BY ".$orderby;
+        }
         $messages = $this->connect->queryAll($sql);
         return $messages;
+    }
+
+    public function getByParent($parent) {
+        $sql = "SELECT * FROM ". $this->tableName ." WHERE rid = '".$parent."' ORDER BY date DESC";
+        $messages = $this->connect->queryAll($sql);
+        return $messages;
+    }
+
+    public function getMessageTopParent($id) {
+        $rid = $id;
+        if ($rid > 0) {
+            while ($rid > 0) {
+                $parent = $rid;
+                $res = $this->connect->select("rid", $this->tableName, "id = :id", [':id' => $rid]);
+                $rid = $res[0]['rid'];
+            }
+        }
+        return $parent;
     }
 
     public function setStatus($id, $status) {

@@ -6,7 +6,7 @@ $files = $_['files'];
 <table id="filestable" data-allow-public-upload="yes" data-preview-x="32" data-preview-y="32" style="top:0px;">
     <tbody id="fileList">
 
-    <?
+    <?php
     $countfolders = 0;
     $countfiles = 0;
     $totalsize = 0;

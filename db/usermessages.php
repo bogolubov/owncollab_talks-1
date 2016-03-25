@@ -54,13 +54,17 @@ class UserMessages
         }
     }
 
-    public function getByAuthorOrSubscriber($subscriber = NULL) {
+    public function getByAuthorOrSubscriber($subscriber = NULL, $parent = NULL) {
         $userid = !empty($subscriber) ? $subscriber : $this->user;
         if ($userid) {
             $sql = "SELECT um.id as id, m.id as messageid, m.date, m.title, m.text, m.attachements, m.author, m.subscribers, um.status".
                 " FROM " . $this->tableName . " um".
                 " INNER JOIN oc_collab_messages m ON m.id = um.mid".
-                " WHERE m.author = '" . $userid . "' OR m.subscribers LIKE '%" . $userid . "%'".
+                " WHERE (m.author = '" . $userid . "' OR m.subscribers LIKE '%" . $userid . "%')";
+            if (!($parent == NULL)) {
+                $sql .= " AND m.rid = ".$parent;
+            }
+            $sql .= " GROUP BY m.id".
                 " ORDER BY m.date DESC";
             $messages = $this->connect->queryAll($sql);
             return $messages;

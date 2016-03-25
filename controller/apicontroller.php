@@ -294,4 +294,32 @@ class ApiController extends Controller {
 		}
 		return $usermessages;
 	}
+
+	/**
+	 * @param int $talkid
+	 * Get selected talk with answers
+	 *
+	 */
+	public function getTalk($talkid) {
+		$messages = $this->connect->messages();
+		$talk = $messages->getById($talkid)[0];
+		$answers = $messages->getByParent($talk['id']);
+		$params = array(
+			'user' => $this->userId,
+			'talk' => $talk,
+			'answers' => $answers,
+			'appname' => $this->appName
+		);
+
+		$view = Helper::renderPartial($this->appName, 'api.talkanswers', $params);
+
+		$params = array(
+			'user' => $this->userId,
+			//'talk' => $talk,
+			'view' => $view,
+			'requesttoken'  => (!\OC_Util::isCallRegistered()) ? '' : \OC_Util::callRegister(),
+		);
+
+		return new DataResponse($params);
+	}
 }
