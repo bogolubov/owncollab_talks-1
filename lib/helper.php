@@ -187,7 +187,8 @@ class Helper
      */
     static public function shareFile($filename, $user) {
         $ch = curl_init();
-        $path = 'http://admin:admin@owncloud.loc/ocs/v1.php/apps/files_sharing/api/v1/shares'; //TODO: Змінити абсолютну адресу на динамічну
+        $host = \OC::$server->getRequest()->getServerHost();
+        $path = 'http://'.$user.':admin@'.$host.'/ocs/v1.php/apps/files_sharing/api/v1/shares'; //TODO: Змінити абсолютну адресу на динамічну
         $postfields = array(
             'path' => $filename,
             'shareType' => 0,
@@ -209,6 +210,32 @@ class Helper
         $returned = false;
 
         return $returned;
+    }
+
+    /**
+     * Upload file to share
+     * @param $filename string
+     * @param $user string
+     * @return bool
+     */
+    static public function uploadFile($filename, $user) {
+        $host = \OC::$server->getRequest()->getServerHost();
+
+        $target_url = 'davs://'.$host.'/remote.php/webdav/'.$filename['tmp_name'];
+        $postfields = array(
+            'extra_info' => '123456',
+            'file_contents'=>'@/var/www/webdav/'.$filename['name']
+        );
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $target_url);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_USERPWD, $user . ":admin"); //TODO Замінити 'admin' на реальний пароль
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $postfields);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        $result = curl_exec($ch);
+        curl_close($ch);
+        echo $result;
     }
 
     static public function time_elapsed_string($ptime) {
@@ -299,5 +326,14 @@ class Helper
             $filetype = 'file';
         }
         return $filetype;
+    }
+
+    public function firstWords($text, $limit) {
+        if (str_word_count($text, 0) > $limit) {
+            $words = str_word_count($text, 2);
+            $pos = array_keys($words);
+            $text = substr($text, 0, $pos[$limit]) . '...';
+        }
+        return $text;
     }
 }

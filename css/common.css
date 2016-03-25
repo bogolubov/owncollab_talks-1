@@ -2,30 +2,68 @@
 	color: red;
 }
 
+.left {
+	float:left;
+}
+.right {
+	float:right;
+}
+.clear {
+	clear: both;
+}
+
 /* Message list */
 .messagelist {
 	width:100%;
 	border:#FFFFFF 1px solid;
 }
-.messagelist tr:nth-child(even) {
+/* .messagelist tr:nth-child(even) {
 	background-color: #EFEFEF;
 }
 .messagelist tr:nth-child(odd) {
 	background-color: #F7F7F7;
-}
-.messagelist tr:hover {
+} */
+.messagelist tr.messagerow td.title:hover {
 	text-decoration: underline;
+}
+.messagelist tr.activerow:hover {
+	background-color: #FFFFFF;
+	cursor: default !important;
+}
+.messagelist tr.activerow td.title:hover {
+	text-decoration: none !important;
+	cursor: default !important;
 }
 .messagelist td {
 	color:#1d2d44;
-	padding:1px 10px;
+	padding:5px 10px;
 	border:#FFFFFF 1px solid;
+	vertical-align: top;
 }
-.messagelist td:hover {
+.messagelist tr.messagerow td:hover {
 	cursor: pointer;
 }
-.messagelist .unread td {
+.messagelist tr.activerow td.title {
 	font-weight: bold;
+}
+/* .messagelist .unread td {
+	font-weight: bold;
+} */
+.messagelist td.talk-body {
+	max-width: 500px;
+}
+.messagelist td.talk-body .talk-title {
+	font-weight: bold;
+}
+.messagelist td.talk-body .talk-author {
+	font-size: 10px;
+	font-style: italic;
+}
+.messagelist td.talk-body .talk-prewiev {
+	font-size: 11px;
+}
+.messagelist td.talk-body .talk-answers {
+	margin-left: 15px;
 }
 
 .messagelist .id {
@@ -43,6 +81,30 @@
 .messagelist .title {
 	width:20px;
 }
+.messagelist td.attachements .file {
+	margin-right: 10px;
+	float:left;
+}
+.messagelist td.attachements img {
+	height: 32px;
+	margin-right: 5px;
+	float:left;
+}
+.messagelist td.attachements .file-name {
+	height: 32px;
+	padding-top: 8px;
+	vertical-align: middle;
+	float:left;
+}
+.messagelist td.attachements .uploaded-time {
+	clear:both;
+	width:100%;
+	text-align: right;
+	font-size: 10px;
+	font-style: italic;
+	font-weight: bold;
+}
+
 
 /* Show message */
 .read-message {
@@ -124,8 +186,9 @@
 
 /* Begin talk */
 .begin-talk {
-	width: 100%;
-	background-color: #EFEFEF;
+	width: 550px;
+	padding: 15px;
+	/* background-color: #EFEFEF; */
 }
 .talk-title {
 	width: 100%;
@@ -137,11 +200,11 @@
 	float: left;
 }
 .talk-title input {
-	width: auto;
+	width: 100%;
 }
 .begin-talk .talk-body {
 	width: 100%;
-	padding:0 4px;
+	padding:0;
 	min-height: 100px;
 	background-color: inherit;
 }
@@ -166,7 +229,6 @@
 .talk-subscribers fieldset .group-name {
 	font-weight: bold;
 	width: 200px;
-	border-bottom: #CCCCCC 1px solid;
 }
 .talk-subscribers fieldset .group-users {
 	display: flex;
@@ -187,14 +249,83 @@
 .talk-subscribers input {
 	margin-right: 10px;
 }
-.clear {
-	clear: both;
+
+input[type="checkbox"] {
+	display:none;
+}
+input[type="checkbox"] + label {
+	margin-right: 8px;
+}
+input[type="checkbox"] + label span {
+	display:inline-block;
+	width:19px;
+	height:19px;
+	margin:0px 0px 0 0;
+	vertical-align:middle;
+	background:url('/apps/owncollab_talks/img/checkbox.png') left top no-repeat;
+	cursor:pointer;
+}
+input[type="checkbox"]:checked + label span {
+	background:url('/apps/owncollab_talks/img/checkbox-checked.png') left top no-repeat;
 }
 
-/* App navigation */
-#app #app-navigation li.active {
-	background-color: #ECEFF4;
+
+input[type="text"], input[type="password"], input[type="search"], input[type="number"], input[type="email"], input[type="url"], input[type="time"], input[type="date"], textarea, select, button, .button, input[type="submit"], input[type="button"], #quota, .pager li a {
+	margin: 3px 0;
 }
+
+.choose-file {
+	width:100%;
+	height: 32px;
+	margin: 5px 0;
+}
+#uploadFile {
+	width: 275px;
+}
+.fileUpload {
+	position: relative;
+	overflow: hidden;
+	margin: 5px 0 5px 10px;
+	width: 110px;
+	height: 30px;
+}
+.fileUpload input.upload {
+	position: absolute;
+	top: 0;
+	right: 0;
+	margin: 0;
+	padding: 0;
+	font-size: 20px;
+	cursor: pointer;
+	opacity: 0;
+	filter: alpha(opacity=0);
+	width: 110px;
+	height: 30px;
+}
+.fileUpload span {
+	width: 110px;
+	height: 30px;
+	min-width: 25px;
+	padding: 5px 10px;
+	margin-left: 16px;
+	background-color: rgba(240,240,240,.9);
+	font-weight: 600;
+	color: #555;
+	border: 1px solid rgba(240,240,240,.9);
+	cursor: pointer;
+	line-height: 30px;
+	border-radius: 3px;
+}
+.fileUpload span:hover, .fileUpload span.hovered {
+	background-color: rgba(255, 255, 255, .95);
+	color: #111;
+}
+
+
+/* App navigation */
+/* #app #app-navigation li.active {
+	background-color: #ECEFF4;
+} */
 
 /* Attachements */
 .talk-attachements {

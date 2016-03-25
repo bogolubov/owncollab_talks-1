@@ -19,6 +19,7 @@
         switch (lastItem) {
             case 'begin':
             case 'reply':
+                $(document).ready(fileUploadInit);
                 $(document).ready(editorInit);
                 $(document).ready(linksInit);
                 $(document).ready(checkboxInit);
@@ -35,6 +36,22 @@
         }
     }
 
+    function fileUploadInit() {
+        document.getElementById("uploadBtn").onchange = function () {
+            document.getElementById("uploadFile").value = this.value;
+        };
+        $(".fileUpload").hover(
+            function(){
+                var fileUploadSpan = document.getElementById("fileUploadSpan");
+                fileUploadSpan.className = "hovered";
+            },
+            function(){
+                var fileUploadSpan = document.getElementById("fileUploadSpan");
+                fileUploadSpan.className = "";
+            }
+        );
+    }
+
     function menuInit() {
         //alert("menu");
         $(".mark-talk-as").hover(
@@ -48,12 +65,28 @@
     }
 
     function linksInit() {
-        //alert("links");
         $(".messagerow").click(
-            function(){
-                var messid;
-                messid = $(this).find('#messageid').attr('value');
-                window.location = '/index.php/apps/owncollab_talks/read/'+messid;
+            function(event) {
+                /* event.preventDefault();
+                if (event.target.id == 'newanswer') {
+                    event.stopPropagation();
+                    return;
+                } */
+                //console.log(event.target);
+                var activerow = $('.messagelist .activerow')[0];
+                activerow.className = 'messagerow';
+                this.className = "activerow";
+
+                var talkid = $(this).find('#messageid').attr('value');
+
+                app.api('getTalk', function (response) {
+                    if (response.requesttoken) {
+                        app.requesttoken = response.requesttoken;
+
+                        $("#talk-body").html("");
+                        $("#talk-body").append(response.view);
+                    }
+                }, talkid);
             }
         );
 
@@ -135,7 +168,7 @@
         });
 
         //Select the same user in different groups
-        $(function(){
+        /* $(function(){
             $(".group-user input").click(
                 function(){
                     var uid = $(this)[0].value;
@@ -149,7 +182,7 @@
                     };
                 }
             );
-        });
+        }); */
     }
 
     function buttonsInit() {

@@ -21,7 +21,7 @@ $files = $_['files'];
     </thead>
     <tbody id="fileList">
 
-    <?
+    <?php
     $countfolders = 0;
     $countfiles = 0;
     $totalsize = 0;
