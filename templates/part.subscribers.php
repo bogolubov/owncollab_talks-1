@@ -15,7 +15,7 @@
             <div class="group-users" id="<?=$group;?>_users">
             <?php foreach ($users as $u => $user) { ?>
                 <div class="group-user">
-                    <input type="checkbox" name="users[]" value="<?=$user['uid'];?>" id="<?=$user['uid'];?>"><label><?=$user['displayname'];?></label>
+                    <input name="users[]" type="checkbox" value="<?=$user['uid'];?>" id="<?=$group.'-'.$user['uid'];?>"><label for="<?=$group.'-'.$user['uid'];?>"> <span></span> <?=$user['displayname'];?></label>
                 </div>
             <?php } ?>
             </div>

@@ -66,7 +66,7 @@
 		<tr class="<?=$trclass;?><?php /* if ($talk['status'] == 0) { echo ' unread'; } */ ?>"> <!-- TODO використовувати індекс активної розмови -->
 			<td class="id" id="messageid" value="<?=$talk['id'];?>"><?=$talk['messageid'];?></td>
 			<td class="title"><?=$talk['title'];?></td>
-			<? /*
+			<?php/*
 			<td class="date">Started from <?=$startedfrom;?> on <?=date("d.m.Y H:i", strtotime($talk['date']));?></td>
 			<td class="author"><?=$talk['author'];?></td>
 			<td class="subscribers"><?=$talk['subscribers'];?></td> <!-- TODO: Зробити обробник адресатів -->

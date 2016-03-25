@@ -21,11 +21,11 @@ $cancheckusers = ($_['user'] == $_['talk']['author'] || in_array($_['user'], arr
     </h2></div>
     <div class="right claer"><input type="submit" value="Submit"></div>
     <div class="talk-title">
-        <input type="text" name="title" value="<?=$title;?>"<? if (!$title) { ?> placeholder="Title of the Talk"<? } ?>>
+        <input type="text" name="title" value="<?=$title;?>"<?php if (!$title) { ?> placeholder="Title of the Talk"<?php} ?>>
     </div>
     <div class="clear"></div>
     <div class="talk-body">
-        <textarea name="message-body" id="message-body" placeholder="Enter your text here"><? if ($text) { echo "\n\n\n".$text; } ?></textarea>
+        <textarea name="message-body" id="message-body" placeholder="Enter your text here"><?php if ($text) { echo "\n\n\n".$text; } ?></textarea>
 
     </div>
 

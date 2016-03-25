@@ -1,9 +1,4 @@
-<?
-//print_r($_['firsttalk']);
-//var_dump($_['answers']);
-?>
-
-	<?
+	<?php
 	$talk = $_['talk'];
 	$startedfrom = $talk['author'] == $_['user'] ? 'You' : $talk['author'];
 	?>
