@@ -1,5 +1,5 @@
 <table class="messagelist">
-	<?
+	<?php
 	$files = $_['files'];
 	if (is_array($_['messages'])) {
 		foreach ($_['messages'] as $m => $message) {
