@@ -65,17 +65,11 @@
     }
 
     function linksInit() {
-        $(".messagerow").click(
+        $("li.title").click(
             function(event) {
-                /* event.preventDefault();
-                if (event.target.id == 'newanswer') {
-                    event.stopPropagation();
-                    return;
-                } */
-                //console.log(event.target);
-                var activerow = $('.messagelist .activerow')[0];
-                activerow.className = 'messagerow';
-                this.className = "activerow";
+                var activerow = $('.messagelist .activetalk')[0];
+                activerow.className = 'title';
+                this.className = "activetalk";
 
                 var talkid = $(this).find('#messageid').attr('value');
 
@@ -87,6 +81,32 @@
                         $("#talk-body").append(response.view);
                     }
                 }, talkid);
+
+                app.api('getTalkFiles', function (response) {
+                    console.log(response);
+                    if (response.requesttoken) {
+                        app.requesttoken = response.requesttoken;
+
+                        $("#talk-files").html("");
+                        $("#talk-files").append(response.view);
+                    }
+                }, talkid);
+            }
+        );
+
+        $("body").on('submit', 'form#newanswer',
+            function(event) {
+                event.preventDefault();
+                var text = $(this).find("input[name=answertext]").val();
+                var talkid = $(this).find("input[name=messageid]").val();
+
+                app.api('answerTalk', function (response) {
+                    if (response.requesttoken) {
+                        app.requesttoken = response.requesttoken;
+
+                        $("#talk-answers").append(response.view);
+                    }
+                }, {'talkid' : talkid, 'text' : text});
             }
         );
 
@@ -98,22 +118,11 @@
                 if (!filesresult) {
                     $('#loadimg').show();
                     app.api('getuserfiles', function (response) {
-                        //if (response.requesttoken && response.files instanceof Array) {
                         if (response.requesttoken) {
                             app.requesttoken = response.requesttoken;
 
                             $("#attach-files").append(response.view);
-                                /* response.files.map(function(item){
-
-                                 console.log(item);
-
-                                 var p = document.createElement('p');
-                                 p.className = '';
-                                 p.innerHTML = 'File: ' + item['file_target'];
-                                 document.querySelector('#talk-attachements').appendChild(p);
-                                 }); */
-
-                            }
+                        }
                         //console.log(response);
                     });
                     filesresult = 1;
@@ -151,7 +160,6 @@
      }
 
     function checkboxInit() {
-        //alert("checkbox");
         $(function(){
             var checked = null;
             $("input.groupname").click(

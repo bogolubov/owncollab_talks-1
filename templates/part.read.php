@@ -39,11 +39,9 @@ $filetypes = array('file', 'file', 'folder', 'file', 'application-pdf', 'file', 
     </div>
     <?php } ?>
     <div class="message-buttons">
-        <!-- TODO: Виводити кнопки в залежності від прав користувача -->
-
         <button <?php if ($message['status'] < 3 && $talk['status'] < 3) { ?>data-link="reply" <?php } else { ?>data-link="no-reply" class="disabled"<?php } ?>>Reply</button>
 
-        <button data-link="delete-confirm" title="Remove me from this talk">Remove me</button>
+        <?php /* <button data-link="delete-confirm" title="Remove me from this talk">Remove me</button>
         <button data-link="mark">Mark as</button>
             <div class="mark-talk-as">
                 <ul id="mark-talk-as">
@@ -58,7 +56,7 @@ $filetypes = array('file', 'file', 'folder', 'file', 'application-pdf', 'file', 
                     <?php } ?>
                 </ul>
             </div>
-        <?php /* if ($isadmin || $isauthor) { ?>
+        if ($isadmin || $isauthor) { ?>
         <button data-link="add-subscribers" title="Add subscribers to this talk">Add subscribers</button>
         <?php } */ ?>
         <input type="hidden" value="<?=$message['mid'];?>" id="messageId"/>
