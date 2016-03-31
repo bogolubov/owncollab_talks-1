@@ -13,16 +13,90 @@
 }
 
 /* Message list */
+ul.messagelist {
+	width:280px;
+	float:left;
+}
+ul.messagelist li.activetalk {
+	font-weight: bold;
+}
+ul.messagelist li {
+	min-width: 350px;
+	color: #1d2d44;
+	padding: 5px 10px;
+	border: #FFFFFF 1px solid;
+	vertical-align: top;
+	cursor: pointer;
+}
+li.messagelist li.title:hover {
+	text-decoration: underline;
+}
+ul.messagelist li.activetalk:hover {
+	background-color: #FFFFFF;
+	cursor: default !important;
+	text-decoration: none !important;
+}
+ul.messagelist li.title .id {
+	display: none;
+}
+.all-talks .talk-body {
+	max-width:500px;
+	min-width: 320px;
+	margin-top: 7px;
+	float: left;
+}
+.all-talks .talk-body .talk-title {
+	font-weight: bold;
+}
+.all-talks .talk-body .talk-author {
+	font-size: 10px;
+	font-style: italic;
+}
+.all-talks .talk-body .talk-prewiev {
+	font-size: 11px;
+}
+.all-talks .talk-body .talk-answers {
+	margin-left: 15px;
+}
+.all-talks .talk-body .newanswer input[type="text"] {
+	margin-left: 15px;
+	width: 200px;
+}
+.attachements {
+	max-width: 300px;
+	margin: 10px;
+	float: left;
+}
+.attachements .file {
+	margin-right: 10px;
+	min-width: 220px;
+	float:left;
+}
+.attachements img {
+	height: 32px;
+	margin-right: 5px;
+	float:left;
+}
+.attachements .file-name {
+	height: 32px;
+	padding-top: 8px;
+	vertical-align: middle;
+	float:left;
+}
+.attachements .uploaded-time {
+	clear:both;
+	width:100%;
+	text-align: right;
+	font-size: 10px;
+	font-style: italic;
+	font-weight: bold;
+}
+
+/* Message list */
 .messagelist {
 	width:100%;
 	border:#FFFFFF 1px solid;
 }
-/* .messagelist tr:nth-child(even) {
-	background-color: #EFEFEF;
-}
-.messagelist tr:nth-child(odd) {
-	background-color: #F7F7F7;
-} */
 .messagelist tr.messagerow td.title:hover {
 	text-decoration: underline;
 }
@@ -46,9 +120,6 @@
 .messagelist tr.activerow td.title {
 	font-weight: bold;
 }
-/* .messagelist .unread td {
-	font-weight: bold;
-} */
 .messagelist td.talk-body {
 	max-width: 500px;
 }
@@ -108,10 +179,10 @@
 
 /* Show message */
 .read-message {
-	color: #555555;
 	width: 100%;
-	background-color: #F7F7F7;
 	padding:5px;
+	/* color: #555555;
+	background-color: #F7F7F7; */
 }
 .talk-info div {
 	width: 100%;
@@ -125,19 +196,14 @@
 	width: 100px;
 	padding-left: 5px;
 	margin-right: 5px;
-	background-color: #F7F7F7;
+	/* background-color: #F7F7F7; */
 	float: left;
 }
-.talk-info, .talk-body {
-	width: 100%;
-}
-.talk-body {
-	padding:4px;
+.read-message .talk-body {
+	min-width: 55px;
 	min-height: 100px;
-	background-color: #FFFFFF;
-	margin-top: 7px;
+	float:none !important;
 }
-
 .message-buttons {
 	width: auto;
 	display: flex;
@@ -147,9 +213,9 @@
 }
 .message-buttons button {
 	width: 100px;
-	height: 35px;
+	/* height: 35px;
 	color: #FFFFFF;
-	background-color: #0a235d;
+	background-color: #0a235d; */
 }
 .message-buttons button.disabled {
 	color:#99999B;
@@ -165,7 +231,7 @@
 	position: absolute;
 	z-index: 2;
 	top: 0px;
-	left: 207px;
+	left: 201px;
 }
 .message-buttons .mark-talk-as #mark-talk-as {
 	display: none;
@@ -188,7 +254,6 @@
 .begin-talk {
 	width: 550px;
 	padding: 15px;
-	/* background-color: #EFEFEF; */
 }
 .talk-title {
 	width: 100%;
@@ -262,11 +327,11 @@ input[type="checkbox"] + label span {
 	height:19px;
 	margin:0px 0px 0 0;
 	vertical-align:middle;
-	background:url('/apps/owncollab_talks/img/checkbox.png') left top no-repeat;
+	background:url('../img/checkbox.png') left top no-repeat;
 	cursor:pointer;
 }
 input[type="checkbox"]:checked + label span {
-	background:url('/apps/owncollab_talks/img/checkbox-checked.png') left top no-repeat;
+	background:url('../img/checkbox-checked.png') left top no-repeat;
 }
 
 

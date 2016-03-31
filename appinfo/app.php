@@ -24,13 +24,14 @@ $container = $app->getContainer();
  */
 $container->query('OCP\INavigationManager')->add(function () use ($container, $appName) {
 	$urlGenerator = $container->query('OCP\IURLGenerator');
-	$l10n = $container->query('OCP\IL10N');
+	//$l10n = $container->query('OCP\IL10N');
+	$l = \OC::$server->getL10N('owncollab_talks');
 	return [
 		'id' => $appName,
 		'order' => 10,
 		'href' => $urlGenerator->linkToRoute($appName.'.main.index'),
 		'icon' => $urlGenerator->imagePath($appName, 'app.svg'),
-		'name' => $l10n->t('Talks')
+		'name' => $l->t('name')
 	];
 });
 
