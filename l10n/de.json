@@ -6,7 +6,7 @@
     "All Talks"                  : "Alle Gespräche",
     "You"                        : "You",
     "started from %s on %s"      : "%s auf %s gestartet",
-    "user % answered on %s"      : "Benutzer% auf %s beantwortet",
+    "user %s answered on %s"      : "Benutzer %s auf %s beantwortet",
     "Answer directly"            : "direkt antworten",
     "uploaded"                   : "hochgeladen",
 

@@ -1,6 +1,6 @@
 <?php
 $message = $_['message'];
-$talk = $_['talk'];
+$talk = $_['talk']; 
 $isadmin = in_array($_['user'], array_column($_['subscribers']['Managers'], 'uid')) ? true : false;
 $isauthor = $_['user'] == $_['message']['author'] ? true : false;
 $files = $_['files'];
@@ -40,25 +40,6 @@ $filetypes = array('file', 'file', 'folder', 'file', 'application-pdf', 'file', 
     <?php } ?>
     <div class="message-buttons">
         <button <?php if ($message['status'] < 3 && $talk['status'] < 3) { ?>data-link="reply" <?php } else { ?>data-link="no-reply" class="disabled"<?php } ?>>Reply</button>
-
-        <?php /* <button data-link="delete-confirm" title="Remove me from this talk">Remove me</button>
-        <button data-link="mark">Mark as</button>
-            <div class="mark-talk-as">
-                <ul id="mark-talk-as">
-                    <?php if ($message['status'] == 0) { ?>
-                    <li data-link="read" class="markButton">Read</li>
-                    <?php }
-                    if ($message['status'] > 0) { ?>
-                    <li data-link="unread" class="markButton">Unread</li>
-                    <?php }
-                    if ($isadmin || $isauthor) { ?>
-                    <li data-link="finished" class="markButton">Finished</li>
-                    <?php } ?>
-                </ul>
-            </div>
-        if ($isadmin || $isauthor) { ?>
-        <button data-link="add-subscribers" title="Add subscribers to this talk">Add subscribers</button>
-        <?php } */ ?>
         <input type="hidden" value="<?=$message['mid'];?>" id="messageId"/>
         <input type="hidden" value="<?=$_['user'];?>" id="userId"/>
     </div>

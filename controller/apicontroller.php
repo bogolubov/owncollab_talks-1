@@ -371,7 +371,6 @@ class ApiController extends Controller {
 		$talk = $messages->getById($talkid)[0];
 		$usermessages = $this->connect->userMessage();
 
-		//TODO Додати оновлення статуса
 		$usermessages = $this->getUserMessages($this->userId);
 		if (!$usermessage = $usermessages->getMessageById($message['id'])) {
 			$usermessages->createStatus($message['id'], $this->userId);
@@ -381,7 +380,6 @@ class ApiController extends Controller {
 			$message['status'] = 2;
 			$messages->setStatus($message['mid'], 2);
 		}
-		//TODO Протестувати
 
 		$subscribers = explode(',', $talk['subscribers']);
 		if (!in_array($this->userId, $subscribers)) {
@@ -392,19 +390,19 @@ class ApiController extends Controller {
 			$talk['subscribers'] = $subscribers;
 			$subscribers[] = $talk['author'];
 			$subscribers[] = $this->userId;
-		}
+		} 
 		$messagedata = array(
 			'rid' => $talkid,
 			'date' => date("Y-m-d h:i:s"),
 			'title' => Helper::checkTxt($text),
 			'text' => '',
 			'author' => $this->userId,
-			'subscribers' => implode(',', $talk['subscribers']),
+			'subscribers' => $talk['subscribers'],
 			'status' => 0
-		);
+		); 
 
 		$messages = $this->connect->messages();
-		$saved = $messages->save($messagedata);
+		$saved = $messages->save($messagedata); 
 		if ($saved) {
 			foreach ($subscribers as $s => $subscriber) {
 				$messagedata = [
@@ -415,7 +413,7 @@ class ApiController extends Controller {
 				$usermessages->save($messagedata);
 			}
 
-			$this->sendMessage($saved, $talk['subscribers'], $this->userId, $messagedata);
+			$this->sendMessage($saved, $talk['subscribers'], $this->userId, $messagedata); 
 
 			$params = array(
 				'answerid' => $saved,
@@ -429,7 +427,7 @@ class ApiController extends Controller {
 			$params = array(
 				'title' => Helper::checkTxt($text)
 			);
-		}
+		} 
 
 		$view = Helper::renderPartial($this->appName, 'api.addanswer', $params);
 
@@ -437,7 +435,7 @@ class ApiController extends Controller {
 			'user' => $this->userId,
 			'view' => $view,
 			'requesttoken'  => (!\OC_Util::isCallRegistered()) ? '' : \OC_Util::callRegister(),
-		);
+		); 
 
 		return new DataResponse($params);
 	}

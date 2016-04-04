@@ -328,7 +328,7 @@ class Helper
         return $filetype;
     }
 
-    public function firstWords($text, $limit) {
+    static function firstWords($text, $limit) {
         if (str_word_count($text, 0) > $limit) {
             $words = str_word_count($text, 2);
             $pos = array_keys($words);
