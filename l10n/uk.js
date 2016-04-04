@@ -8,7 +8,7 @@ OC.L10N.register(
         "All Talks" : "Всі Розмови",
         "You" : "Вас",
         "started from %s on %s" : "розпочато від %s %s",
-        "user % answered on %s" : "користувач %s відповів %s",
+        "user %s answered on %s" : "користувач %s відповів %s",
         "Answer directly" : "Відповісти одразу",
         "uploaded" : "завантажено",
 

@@ -8,7 +8,7 @@ OC.L10N.register(
         "All Talks" : "All Talks",
         "You" : "You",
         "started from %s on %s" : "started from %s on %s",
-        "user % answered on %s" : "user % answered on %s",
+        "user %s answered on %s" : "user %s answered on %s",
         "Answer directly" : "Answer directly",
         "uploaded" : "uploaded",
 

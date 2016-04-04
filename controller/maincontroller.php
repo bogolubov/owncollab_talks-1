@@ -25,7 +25,7 @@ class MainController extends Controller {
 	private $userId;
 	private $l10n;
 	private $isAdmin;
-    private $connect;
+	private $connect;
 	private $projectname = "Base project";
 
 	/**
@@ -117,10 +117,9 @@ class MainController extends Controller {
 	 */
 	//TODO: Використовувати метод з застосуванням засобів безпеки
 	public function read($id) {
-		//$usermessages = $this->getUserMessages($this->userId);
-		//$message = $usermessages->getMessageById($id);
+		$usermessages = $this->getUserMessages($this->userId);
+		$message = $usermessages->getMessageById($id);
 		$talks = $this->connect->messages();
-		//$talk = $talks->getById($message['mid'])[0];
 		$talk = $talks->getById($id)[0];
 		$subscribers = explode(',', $talk['subscribers']);
 		$files = $this->connect->files();
@@ -139,22 +138,22 @@ class MainController extends Controller {
 				$message['status'] = 1;
 				$usermessages->setStatus($message);
 			}
-		}
+		} 
 		if (!empty($message)) {
 			$params = array(
-                'user' => $this->userId,
-                'message' => $message,
-                'talk' => $talk,
+				'user' => $this->userId,
+				'message' => $message,
+				'talk' => $talk,
 				'subscribers' => $subscribers,
 				'files' => $files,
-                'mode' => 'read'
-            );
+				'mode' => 'read'
+			);
 
 			return new TemplateResponse($this->appName, 'talk', $params);  // templates/talk.php
 		}
 		else {
 			return;
-		}
+		} 
 	}
 
 	/**

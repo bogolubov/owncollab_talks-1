@@ -288,22 +288,24 @@ ul.messagelist li.title .id {
 	margin: 5px;
 }
 .talk-subscribers fieldset {
-	margin: 10px 0;
-	padding: 0 10px;
+	margin: 10px 0; 
+	padding: 0; 
 }
 .talk-subscribers fieldset .group-name {
 	font-weight: bold;
 	width: 200px;
 }
 .talk-subscribers fieldset .group-users {
-	display: flex;
+	/* display: flex;
 	display: -moz-flex;
-	display:-webkit-flex;
+	display:-webkit-flex; */ 
+	width: 520px; 
 }
 .talk-subscribers fieldset .group-user {
-	width: 150px;
-	height: 25px;
-	vertical-align: middle;
+	width: 130px; 
+	height: 25px; 
+	vertical-align: middle; 
+	float:left; 
 }
 .talk-subscribers label {
 	min-height: 25px;
