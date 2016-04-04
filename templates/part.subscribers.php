@@ -10,7 +10,8 @@
         <?php foreach ($_['subscribers'] as $group => $users) { ?>
         <fieldset class="usergroup">
             <div class="group-name">
-                <input type="checkbox" value="<?=$group;?>" class="groupname"><label><?=$group;?></label>
+                <input type="checkbox" value="<?=$group;?>" class="groupname" id="<?=$group;?>">
+                <label for="<?=$group;?>"> <span></span> <?=$group;?></label>
             </div>
             <div class="group-users" id="<?=$group;?>_users">
             <?php foreach ($users as $u => $user) { ?>

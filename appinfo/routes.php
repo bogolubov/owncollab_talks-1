@@ -30,6 +30,7 @@ $application->registerRoutes($this, ['routes' => [
 
     ['name' => 'main#index', 'url' => '/all', 'verb' => 'GET'],
     ['name' => 'main#mytalks', 'url' => '/mytalks', 'verb' => 'GET'],
+    ['name' => 'main#startedtalks', 'url' => '/startedtalks', 'verb' => 'GET'],
     ['name' => 'main#talk', 'url' => '/talk/{id}', 'verb' => 'GET'],
     ['name' => 'main#read', 'url' => '/read/{id}', 'verb' => 'GET'],
     ['name' => 'main#begin', 'url' => '/begin', 'verb' => 'GET'],

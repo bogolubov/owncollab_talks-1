@@ -3,7 +3,7 @@ if (!empty($_['talk'])) {
     $id = $_['talk']['id'];
     $messageid = $_['talk']['mid'];
     $title = "Re:".$_['talk']['title'];
-    $text = \OCA\Owncollab_Talks\Helper::generateRepliedText($_['talk']['text'], $_['talk']['author'], date("D, d M Y H:i:s", strtotime($_['talk']['date']))); //TODO: Написати функцію обробки вхідного тексту
+    $text = \OCA\Owncollab_Talks\Helper::generateRepliedText($_['talk']['text'], $_['talk']['author'], date("D, d M Y H:i:s", strtotime($_['talk']['date']))); 
     $selectedsubscribers = explode(',', $_['talk']['subscribers']);
     if (!($_['talk']['author'] == $_['user'])) {
         $selectedsubscribers[] = $_['talk']['author'];
@@ -17,28 +17,28 @@ $cancheckusers = ($_['user'] == $_['talk']['author'] || in_array($_['user'], arr
     <form action="/index.php/apps/owncollab_talks/send" method="post" id="begin-talk" enctype="multipart/form-data">
 
     <div class="left"><h2>
-        <span data-original-title="Start s Talk" class="has-tooltip" title="">Start a Talk</span>
+        <span data-original-title="Start s Talk" class="has-tooltip" title=""><?php p($l->t('Start a Talk'));?></span>
     </h2></div>
     <div class="right claer"><input type="submit" value="Submit"></div>
     <div class="talk-title">
-        <input type="text" name="title" value="<?=$title;?>"<?php if (!$title) { ?> placeholder="Title of the Talk"<?php } ?>>
+        <input type="text" name="title" value="<?=$title;?>"<?php if (!$title) { ?> placeholder="<?php p($l->t('Title of the Talk'));?>"<?php } ?>>
     </div>
     <div class="clear"></div>
     <div class="talk-body">
-        <textarea name="message-body" id="message-body" placeholder="Enter your text here"><?php if ($text) { echo "\n\n\n".$text; } ?></textarea>
+        <textarea name="message-body" id="message-body" placeholder="<?php p($l->t('Enter your text here'));?>"><?php if ($text) { echo "\n\n\n".$text; } ?></textarea>
 
     </div>
 
     <div class="choose-file">
-        <input type="text" id="uploadFile" placeholder="Choose File" class="left" />
+        <input type="text" id="uploadFile" placeholder="<?php p($l->t('Choose File'));?>" class="left" />
         <div class="fileUpload btn btn-default right">
-            <span id="fileUploadSpan">Choose File</span>
+            <span id="fileUploadSpan"><?php p($l->t('Choose'));?></span>
             <input class="upload" type="file" name="uploadfile" id="uploadBtn">
         </div>
     </div>
 
     <div class="talk-attachements">
-        <a id="ajax-showfiles">Chose files from saved</a>
+        <a id="ajax-showfiles"><?php p($l->t('Chose files from saved'));?></a>
         <div id="loadimg" class="loadimg">
             <img src="/core/img/loading-small.gif">
         </div>
@@ -63,6 +63,7 @@ $cancheckusers = ($_['user'] == $_['talk']['author'] || in_array($_['user'], arr
                 </div>
             </div>
         <?php } ?>
+	    <div class="clear"></div>
 
         </div>
     </fieldset>

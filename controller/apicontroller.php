@@ -303,11 +303,12 @@ class ApiController extends Controller {
 	public function getTalk($talkid) {
 		$messages = $this->connect->messages();
 		$talk = $messages->getById($talkid)[0];
-		$answers = $messages->getByParent($talk['id']);
+		$answers = $messages->getByParent($talk['id'], 'date ASC');
 		$params = array(
 			'user' => $this->userId,
 			'talk' => $talk,
 			'answers' => $answers,
+			'cananswer' => $messages->canAnswer($talk, $this->userId),
 			'appname' => $this->appName
 		);
 
@@ -321,5 +322,168 @@ class ApiController extends Controller {
 		);
 
 		return new DataResponse($params);
+	}
+
+	/**
+	 * @param int $talkid
+	 * Get files attached to selected talk
+	 *
+	 */
+	public function getTalkFiles($talkid) {
+		$messages = $this->connect->messages();
+		$talk = $messages->getById($talkid)[0];
+		$files = $this->connect->files();
+		if (!empty($talk['attachements'])) {
+			$filenames = $files->getByIdList(explode(',', $talk['attachements']), $this->userId);
+			$params = array(
+				'filenames' => $filenames,
+				'files' => $files,
+				'user' => $this->userId
+			);
+		}
+		else {
+			$params = array(
+				'talk' => $talk
+			);
+		}
+
+		$view = Helper::renderPartial($this->appName, 'api.talkfiles', $params);
+
+		$params = array(
+			'user' => $this->userId,
+			'view' => $view,
+			'requesttoken'  => (!\OC_Util::isCallRegistered()) ? '' : \OC_Util::callRegister(),
+		);
+
+		return new DataResponse($params);
+	}
+
+	/**
+	 * @param int $talkid
+	 * @param string $text
+	 * Save an answer to the talk
+	 */
+	public function answerTalk($args) {
+		$talkid = $args['talkid'];
+		$text = $args['text'];
+		$messages = $this->connect->messages();
+		$message = $messages->getByReply($talkid);
+		$talk = $messages->getById($talkid)[0];
+		$usermessages = $this->connect->userMessage();
+
+		$usermessages = $this->getUserMessages($this->userId);
+		if (!$usermessage = $usermessages->getMessageById($message['id'])) {
+			$usermessages->createStatus($message['id'], $this->userId);
+			$usermessage = $usermessages->getMessageById($message['id']);
+		}
+		if ($message['status'] < 2) {
+			$message['status'] = 2;
+			$messages->setStatus($message['mid'], 2);
+		}
+
+		$subscribers = explode(',', $talk['subscribers']);
+		if (!in_array($this->userId, $subscribers)) {
+			$subscribers[] = $this->userId;
+		}
+		else {
+			unset($subscribers[array_search($this->userId, $subscribers)]);
+			$talk['subscribers'] = $subscribers;
+			$subscribers[] = $talk['author'];
+			$subscribers[] = $this->userId;
+		} 
+		$messagedata = array(
+			'rid' => $talkid,
+			'date' => date("Y-m-d h:i:s"),
+			'title' => Helper::checkTxt($text),
+			'text' => '',
+			'author' => $this->userId,
+			'subscribers' => $talk['subscribers'],
+			'status' => 0
+		); 
+
+		$messages = $this->connect->messages();
+		$saved = $messages->save($messagedata); 
+		if ($saved) {
+			foreach ($subscribers as $s => $subscriber) {
+				$messagedata = [
+					'uid' => $subscriber,
+					'mid' => $saved,
+					'status' => 0
+				];
+				$usermessages->save($messagedata);
+			}
+
+			$this->sendMessage($saved, $talk['subscribers'], $this->userId, $messagedata); 
+
+			$params = array(
+				'answerid' => $saved,
+				'author' => $this->userId,
+				'date' => date("Y-m-d h:i:s"),
+				'title' => Helper::checkTxt($text),
+				'appname' => $this->appName
+			);
+		}
+		else {
+			$params = array(
+				'title' => Helper::checkTxt($text)
+			);
+		} 
+
+		$view = Helper::renderPartial($this->appName, 'api.addanswer', $params);
+
+		$params = array(
+			'user' => $this->userId,
+			'view' => $view,
+			'requesttoken'  => (!\OC_Util::isCallRegistered()) ? '' : \OC_Util::callRegister(),
+		); 
+
+		return new DataResponse($params);
+	}
+
+	/**
+	 * @param array $message
+	 * @param array $subscribers
+	 * Send the message to each user
+	 * in subscribers list
+	 */
+	public function sendMessage($message, $subscribers, $from = '', $messagedata = NULL) {
+		$um = $this->connect->userMessage();
+		$users = $this->connect->users();
+		//$isgroup = $users->isGroupSelected($subscribers);
+		foreach ($subscribers as $s => $subscriber) {
+			$data = [
+				'uid' => $s,
+				'mid' => $message,
+				'status' => 0
+			];
+			$um->save($data);
+		}
+		if (!empty($messagedata)) {
+			foreach ($subscribers as $s => $subscriber) {
+				$this->messageSend($subscriber, $from, $messagedata);
+			}
+		}
+	}
+
+	private function messageSend($subscriber, $fromuser, $messagedata) {
+		$to = isset($subscriber['settings']) ? $subscriber['settings'][0]['email'] : false;
+		$from = is_array($fromuser) && !empty($fromuser) ? $this->getGroupAlias($fromuser) : $this->getUserAlias();
+		$subject = isset($messagedata['title']) ? $messagedata['title'] : 'OwnCollab message';
+		$body = isset($messagedata['text']) ? $messagedata['text'] : '';
+
+		//echo $from; //TODO Розібратись
+
+		$mail = new PHPMailer();
+		$mail->setFrom($from);
+		$mail->addAddress($to);
+		$mail->Subject = $subject;
+		$mail->Body = $body;
+		$mail->isHTML();
+
+		if (!$mail->send()) {
+			return $mail->ErrorInfo;
+		} else {
+			return true;
+		}
 	}
 }

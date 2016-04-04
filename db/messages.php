@@ -54,8 +54,14 @@ class Messages
         return $messages;
     }
 
-    public function getByParent($parent) {
-        $sql = "SELECT * FROM ". $this->tableName ." WHERE rid = '".$parent."' ORDER BY date DESC";
+    public function getByParent($parent, $order = NULL) {
+        $sql = "SELECT * FROM ". $this->tableName ." WHERE rid = '".$parent."'";
+        if ($order) {
+            $sql .= " ORDER BY ".$order;
+        }
+        else {
+            $sql .= " ORDER BY date DESC";
+        }
         $messages = $this->connect->queryAll($sql);
         return $messages;
     }
@@ -79,7 +85,16 @@ class Messages
 
     public function canRead($message, $user) {
         $subscribers = explode(',', $message['subscribers']);
-        if (in_array($user, $subscribers)) {
+        if (in_array($user, $subscribers) || $message['author'] == $user) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
+    public function canAnswer($message, $user) {
+        if (stristr($message['subscribers'], $user) || $message['author'] == $user) {
             return true;
         }
         else {

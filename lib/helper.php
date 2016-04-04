@@ -269,7 +269,7 @@ class Helper
             if ($d >= 1)
             {
                 $r = round($d);
-                return $r . ' ' . ($r > 1 ? $a_plural[$str] : $str) . ' ago';
+                return [$r, ($r > 1 ? $a_plural[$str] : $str) . ' ago'];
             }
         }
     }
@@ -328,7 +328,7 @@ class Helper
         return $filetype;
     }
 
-    public function firstWords($text, $limit) {
+    static function firstWords($text, $limit) {
         if (str_word_count($text, 0) > $limit) {
             $words = str_word_count($text, 2);
             $pos = array_keys($words);
