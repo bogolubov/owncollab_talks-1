@@ -63,7 +63,7 @@ class Files
 
     public function getByIdList($idlist, $user) {
         if (is_array($idlist)) {
-            $sql = "SELECT fileid, path, name, mimetype, size".
+            $sql = "SELECT fileid, path, name, mimetype, size, storage_mtime".
                     " FROM oc_filecache fc".
                     " INNER JOIN oc_share s ON s.file_source = fc.fileid".
                     " WHERE (s.share_with = '".$user."' OR s.uid_owner = '".$user."') AND fileid IN (".implode(',',$idlist).")";
@@ -71,11 +71,11 @@ class Files
             return $files;
         }
         else {
-            $sql = "SELECT fileid, path, name, mimetype, size".
+            $sql = "SELECT fileid, path, name, mimetype, size, storage_mtime".
                 " FROM oc_filecache fc".
                 " INNER JOIN oc_share s ON s.file_source = fc.fileid".
-                " WHERE (s.share_with = '.$user.' OR s.uid_owner = '.$user.') AND fileid = ".$idlist;
-            $file = $this->connect->query($sql);
+                " WHERE (s.share_with = '".$user."' OR s.uid_owner = '".$user."') AND fileid = ".$idlist;
+            $file[] = $this->connect->query($sql);
             return $file;
         }
     }
@@ -98,5 +98,16 @@ class Files
         }
         $filtered = array_diff_key($files, $diff_keys);
         return $filtered;
+    }
+
+    public function getIcon($mimeid) {
+        $mimetype = $this->getMimeType($mimeid)[0]['mimetype'];
+        $filetypes = array('httpd' => 'file', 'httpd/unix-directory' => 'folder', 'application' => 'application', 'application/pdf' => 'application-pdf', 'application/vnd.oasis.opendocument.text' => 'text', 'image' => 'image', 'image/jpeg' => 'image', 'application/octet-stream' => 'text-code', 'text' => 'text', 'text/plain' => 'text', 'image/png' => 'image', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'x-office-document', 'application/vnd.oasis.opendocument.spreadsheet' => 'x-office-spreadsheet', 'application/vnd.oasis.opendocument.presentation' => 'x-office-presentation', 'audio' => 'audio', 'audio/mpeg' => 'audio', 'video' => 'video', 'video/x-msvideo' => 'video', 'application/msword' => 'x-office-document');
+        return $filetypes[$mimetype];
+    }
+
+    public function getMimeType($id) {
+        $mimetype = $this->connect->select("mimetype", "oc_mimetypes", "id = :id",[':id' => $id]);
+        return $mimetype;
     }
 }

@@ -28,6 +28,17 @@ class UserMessages
         return $message;
     }
 
+    public function getAll() {
+        $sql = "SELECT um.id as id, m.id as messageid, m.date, m.title, m.text, m.attachements, m.author, m.subscribers, um.status".
+            " FROM " . $this->tableName . " um".
+            " INNER JOIN oc_collab_messages m ON m.id = um.mid".
+            " WHERE m.rid = 0".
+            " GROUP BY um.mid".
+            " ORDER BY m.date DESC";
+        $messages = $this->connect->queryAll($sql);
+        return $messages;
+    }
+
     public function getMessageById($id) {
         $sql = "SELECT um.id as id, m.date, m.title, m.text, m.attachements, m.author, m.subscribers, um.mid as mid, um.status".
                 " FROM oc_collab_user_message um".
@@ -38,13 +49,17 @@ class UserMessages
         return $message;
     }
 
-    public function getBySubscriber($subscriber = NULL) {
+    public function getBySubscriber($subscriber = NULL, $parent = NULL) {
         $userid = !empty($subscriber) ? $subscriber : $this->user;
         if ($userid) {
             $sql = "SELECT um.id as id, m.id as messageid, m.date, m.title, m.text, m.attachements, m.author, m.subscribers, um.status".
                     " FROM " . $this->tableName . " um".
                     " INNER JOIN oc_collab_messages m ON m.id = um.mid".
-                    " WHERE um.uid = '" . $userid . "'".
+                    " WHERE um.uid = '" . $userid . "' AND NOT (m.author = '" . $userid . "')";
+                if (!($parent == NULL)) {
+                    $sql .= " AND m.rid = ".$parent;
+                }
+                    $sql .= " GROUP BY m.id".
                     " ORDER BY m.date DESC";
             $messages = $this->connect->queryAll($sql);
             return $messages;
@@ -54,13 +69,17 @@ class UserMessages
         }
     }
 
-    public function getByAuthorOrSubscriber($subscriber = NULL) {
+    public function getByAuthorOrSubscriber($subscriber = NULL, $parent = NULL) {
         $userid = !empty($subscriber) ? $subscriber : $this->user;
         if ($userid) {
             $sql = "SELECT um.id as id, m.id as messageid, m.date, m.title, m.text, m.attachements, m.author, m.subscribers, um.status".
                 " FROM " . $this->tableName . " um".
                 " INNER JOIN oc_collab_messages m ON m.id = um.mid".
-                " WHERE m.author = '" . $userid . "' OR m.subscribers LIKE '%" . $userid . "%'".
+                " WHERE (m.author = '" . $userid . "' OR m.subscribers LIKE '%" . $userid . "%')";
+            if (!($parent == NULL)) {
+                $sql .= " AND m.rid = ".$parent;
+            }
+            $sql .= " GROUP BY m.id".
                 " ORDER BY m.date DESC";
             $messages = $this->connect->queryAll($sql);
             return $messages;
@@ -92,6 +111,11 @@ class UserMessages
         else {
             return false;
         }
+    }
+
+    public function createStatus($message, $user) {
+        $status = $this->connect->insert($this->tableName, ['uid' => $user, 'mid' => $message, 'status' => 0]);
+        return $status;
     }
 
     public function setStatus($message, $status = NULL) {

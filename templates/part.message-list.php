@@ -1,54 +1,72 @@
-
-<table class="messagelist">
-	<?
+<div class="all-talks">
+<ul class="messagelist">
+	<?php
 	$files = $_['files'];
-	if (is_array($_['messages'])) {
-		foreach ($_['messages'] as $m => $message) {
-			$filenames = !empty($message['attachements']) ? $files->getByIdList(explode(',', $message['attachements']), $_['user']) : array();
-			?>
-		<tr class="messagerow <?php if ($message['status'] == 0) { echo ' unread'; } ?>">
-			<td class="id" id="messageid" value="<?=$message['messageid'];?>"></td>
-			<td class="title"><?=$message['title'];?></td>
-			<td class="date"><?=date("d.m.Y H:i", strtotime($message['date']));?></td>
-			<td class="author"><?=$message['author'];?></td>
-			<td class="subscribers"><?=$message['subscribers'];?></td> <!-- TODO: Зробити обробник адресатів -->
-			<td class="attachements">
-			<?
-			if (!empty($filenames)) {
-				$fnames = array();
-				foreach ($filenames as $f => $file) {
-					$fnames[] = $file['name'];
-				}
-				echo implode(', ', $fnames);
-			}
-			?>
-			</td>
-		</tr>
-		<?php }
+	if (is_array($_['messages']) && !empty($_['messages'])) {
+		$messages = $_['messages'];
+		$idkey = 'messageid';
 	}
 	else {
-		//TODO: Тут відображаються розмови, а не повідомлення. Подумати шо робити з ними
-		foreach ($_['talks'] as $m => $talk) {
-			$filenames = !empty($message['attachements']) ? $files->getByIdList(explode(',', $message['attachements']), $_['user']) : array();
-			?>
-		<tr class="messagerow <?php if ($talk['status'] == 0) { echo ' unread'; } ?>">
-			<td class="id" id="messageid" value="<?=$talk['id'];?>"></td>
-			<td class="title"><?=$talk['title'];?></td>
-			<td class="date"><?=date("d.m.Y H:i", strtotime($talk['date']));?></td>
-			<td class="author"><?=$talk['author'];?></td>
-			<td class="subscribers"><?=$talk['subscribers'];?></td> <!-- TODO: Зробити обробник адресатів -->
-			<td class="attachements">
-				<?
-				if (!empty($filenames)) {
-					$fnames = array();
-					foreach ($filenames as $f => $file) {
-						$fnames[] = $file['name'];
-					}
-					echo implode(', ', $fnames);
-				}
-				?>
-			</td>
-		</tr>
+		$messages = $_['talks'];
+		$idkey = 'id';
+	}
+	foreach ($messages as $m => $message) {
+		$liclass = $m == 0 ? 'activetalk' : '';
+		$filenames = !empty($message['attachements']) ? $files->getByIdList(explode(',', $message['attachements']), $_['user']) : array();
+	?>
+	<li class="<?=$liclass;?> title">
+		<div class="id" id="messageid" value="<?=$message[$idkey];?>"></div>
+		<?=$message['title'];?>
+	</li>
 	<?php }
-	} ?>
-</table>
+?>
+</ul>
+
+<div class="talk-body" id="talk-body">
+	<?php
+	$firsttalk = $messages[0];
+	$startedfrom = $message['author'] == $_['user'] ? $l->t('You') : $message['author'];
+	?>
+	<div class="talk-title"><a href="/index.php/apps/<?=$_['appname'];?>/read/<?=$firsttalk[$idkey];?>"><?=$firsttalk['title'];?></a></div>
+	<div class="talk-author"><?php p($l->t('started from %s on %s', [$startedfrom, date("d.m.Y H:i", strtotime($firsttalk['date']))]));?></div>
+	<div class="talk-preview"><?=\OCA\Owncollab_Talks\Helper::firstWords($firsttalk['text'], 10);?>
+	</div>
+	<div class="talk-answers" id="talk-answers">
+	<?php
+	foreach ($_['answers'] as $a => $answer) { ?>
+		<div class="talk-author"><?php p($l->t('user %s answered on %s', [$answer['author'], date("d.m.Y H:i", strtotime($answer['date']))]));?></div>
+		<div class="talk-title"><a href="/index.php/apps/<?=$_['appname'];?>/read/<?=$answer['id'];?>"><?=$answer['title'];?></a></div>
+	<?php } ?>
+	</div>
+	<?php if ($_['cananswer']) { ?>
+	<div class="newanswer">
+		<form id="newanswer">
+			<input type="text" name="answertext" placeholder="<?php p($l->t('Answer directly'));?>">
+			<input type="hidden" name="messageid" value="<?=$firsttalk[$idkey];?>">
+			<input type="submit">
+		</form>
+	</div>
+	<?php } ?>
+</div>
+<div class="attachements" id="talk-files">
+	<?php
+	if (!empty($filenames)) {
+		foreach ($filenames as $f => $file) {
+			$icon = $files->getIcon($file['mimetype']);
+			$link = $file['mimetype'] == 'httpd/unix-directory' ? "/index.php/apps/files?dir=//".$file['name'] : "/index.php/apps/files/ajax/download.php?dir=%2F&files=".$file['name'];
+			?>
+			<div class="file">
+				<a href="<?=$link;?>">
+					<img src="/core/img/filetypes/<?=$icon;?>.svg">
+					<div class="file-name"><?=$file['name'];?></div>
+				</a>
+				<div class="uploaded-time"><?php p($l->t('uploaded'));?> <?=date("d.m.Y H:i", $file['storage_mtime']);?></div>
+			</div>
+			<?php
+		}
+		echo "<div class=\"clear\"></div>";
+	}
+	?>
+</div>
+<div class="clear"></div>
+</div>

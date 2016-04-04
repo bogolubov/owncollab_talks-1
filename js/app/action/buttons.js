@@ -19,6 +19,7 @@
         switch (lastItem) {
             case 'begin':
             case 'reply':
+                $(document).ready(fileUploadInit);
                 $(document).ready(editorInit);
                 $(document).ready(linksInit);
                 $(document).ready(checkboxInit);
@@ -35,6 +36,22 @@
         }
     }
 
+    function fileUploadInit() {
+        document.getElementById("uploadBtn").onchange = function () {
+            document.getElementById("uploadFile").value = this.value;
+        };
+        $(".fileUpload").hover(
+            function(){
+                var fileUploadSpan = document.getElementById("fileUploadSpan");
+                fileUploadSpan.className = "hovered";
+            },
+            function(){
+                var fileUploadSpan = document.getElementById("fileUploadSpan");
+                fileUploadSpan.className = "";
+            }
+        );
+    }
+
     function menuInit() {
         //alert("menu");
         $(".mark-talk-as").hover(
@@ -48,12 +65,49 @@
     }
 
     function linksInit() {
-        //alert("links");
-        $(".messagerow").click(
-            function(){
-                var messid;
-                messid = $(this).find('#messageid').attr('value');
-                window.location = '/index.php/apps/owncollab_talks/read/'+messid;
+        $("li.title").click(
+            function(event) {
+                var activerow = $('.messagelist .activetalk')[0];
+                activerow.className = 'title';
+                this.className = "activetalk";
+
+                var talkid = $(this).find('#messageid').attr('value');
+
+                app.api('getTalk', function (response) {
+                    if (response.requesttoken) {
+                        app.requesttoken = response.requesttoken;
+
+                        $("#talk-body").html("");
+                        $("#talk-body").append(response.view);
+                    }
+                }, talkid);
+
+                app.api('getTalkFiles', function (response) {
+                    console.log(response);
+                    if (response.requesttoken) {
+                        app.requesttoken = response.requesttoken;
+
+                        $("#talk-files").html("");
+                        $("#talk-files").append(response.view);
+                    }
+                }, talkid);
+            }
+        );
+
+        $("body").on('submit', 'form#newanswer',
+            function(event) {
+                event.preventDefault();
+                var text = $(this).find("input[name=answertext]").val();
+                var talkid = $(this).find("input[name=messageid]").val();
+
+                app.api('answerTalk', function (response) {
+                    if (response.requesttoken) {
+                        app.requesttoken = response.requesttoken;
+			console.log(response); 
+
+                        $("#talk-answers").append(response.view);
+                    }
+                }, {'talkid' : talkid, 'text' : text});
             }
         );
 
@@ -65,22 +119,11 @@
                 if (!filesresult) {
                     $('#loadimg').show();
                     app.api('getuserfiles', function (response) {
-                        //if (response.requesttoken && response.files instanceof Array) {
                         if (response.requesttoken) {
                             app.requesttoken = response.requesttoken;
 
                             $("#attach-files").append(response.view);
-                                /* response.files.map(function(item){
-
-                                 console.log(item);
-
-                                 var p = document.createElement('p');
-                                 p.className = '';
-                                 p.innerHTML = 'File: ' + item['file_target'];
-                                 document.querySelector('#talk-attachements').appendChild(p);
-                                 }); */
-
-                            }
+                        }
                         //console.log(response);
                     });
                     filesresult = 1;
@@ -118,7 +161,6 @@
      }
 
     function checkboxInit() {
-        //alert("checkbox");
         $(function(){
             var checked = null;
             $("input.groupname").click(
@@ -135,7 +177,7 @@
         });
 
         //Select the same user in different groups
-        $(function(){
+        /* $(function(){
             $(".group-user input").click(
                 function(){
                     var uid = $(this)[0].value;
@@ -149,7 +191,7 @@
                     };
                 }
             );
-        });
+        }); */
     }
 
     function buttonsInit() {

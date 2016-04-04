@@ -42,10 +42,40 @@ class Messages
         return $messages;
     }
 
-    public function getByAuthor($author) {
+    public function getByAuthor($author, $parent = NULL, $orderby = false) {
         $sql = "SELECT * FROM ". $this->tableName ." WHERE author = '".$author."'";
+        if (isset($parent)) {
+            $sql .= " AND rid = ".$parent;
+        }
+        if ($orderby) {
+            $sql .= " ORDER BY ".$orderby;
+        }
         $messages = $this->connect->queryAll($sql);
         return $messages;
+    }
+
+    public function getByParent($parent, $order = NULL) {
+        $sql = "SELECT * FROM ". $this->tableName ." WHERE rid = '".$parent."'";
+        if ($order) {
+            $sql .= " ORDER BY ".$order;
+        }
+        else {
+            $sql .= " ORDER BY date DESC";
+        }
+        $messages = $this->connect->queryAll($sql);
+        return $messages;
+    }
+
+    public function getMessageTopParent($id) {
+        $rid = $id;
+        if ($rid > 0) {
+            while ($rid > 0) {
+                $parent = $rid;
+                $res = $this->connect->select("rid", $this->tableName, "id = :id", [':id' => $rid]);
+                $rid = $res[0]['rid'];
+            }
+        }
+        return $parent;
     }
 
     public function setStatus($id, $status) {
@@ -55,7 +85,16 @@ class Messages
 
     public function canRead($message, $user) {
         $subscribers = explode(',', $message['subscribers']);
-        if (in_array($user, $subscribers)) {
+        if (in_array($user, $subscribers) || $message['author'] == $user) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
+    public function canAnswer($message, $user) {
+        if (stristr($message['subscribers'], $user) || $message['author'] == $user) {
             return true;
         }
         else {

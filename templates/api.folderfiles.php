@@ -1,12 +1,11 @@
 <?php
 $files = $_['files'];
-//var_dump($files);
 ?>
 
 <table id="filestable" data-allow-public-upload="yes" data-preview-x="32" data-preview-y="32" style="top:0px;">
     <tbody id="fileList">
 
-    <?
+    <?php
     $countfolders = 0;
     $countfiles = 0;
     $totalsize = 0;
@@ -23,6 +22,7 @@ $files = $_['files'];
             $countfiles++;
         }
         $totalsize += $file['size'];
+        $modified = \OCA\Owncollab_Talks\Helper::time_elapsed_string($file['timestamp']);
         ?>
 
         <?php if ($file['mimetype'] == 'httpd/unix-directory') { // If folder ?>
@@ -43,7 +43,7 @@ $files = $_['files'];
                 </td>
                 <td style="color:rgb(160,160,160); text-align:right;" class="filesize"><?=\OCA\Owncollab_Talks\Helper::sizeRoundedString($file['size']);?></td>
                 <td class="date">
-                    <span data-original-title="<?=date('F d, Y h:i A', $file['timestamp']);?>" style="color:rgb(51,51,51)" title="" class="modified"><?=\OCA\Owncollab_Talks\Helper::time_elapsed_string($file['timestamp']);?></span>
+                    <span data-original-title="<?=date('F d, Y h:i A', $file['timestamp']);?>" style="color:rgb(51,51,51)" title="" class="modified"><?=$modified[0];?> <?php p($l->t($modified[1]));?></span>
                 </td>
             </tr>
             <tr style="height: 0px;">
@@ -71,7 +71,7 @@ $files = $_['files'];
                 </td>
                 <td style="color:rgb(160,160,160); text-align:right;" class="filesize"><?=\OCA\Owncollab_Talks\Helper::sizeRoundedString($file['size']);?></td>
                 <td class="date">
-                    <span data-original-title="<?=date('F d, Y h:i A', $file['timestamp']);?>" style="color:rgb(51,51,51)" title="" class="modified"><?=\OCA\Owncollab_Talks\Helper::time_elapsed_string($file['timestamp']);?></span>
+                    <span data-original-title="<?=date('F d, Y h:i A', $file['timestamp']);?>" style="color:rgb(51,51,51)" title="" class="modified"><?=$modified[0];?> <?php p($l->t($modified[1]));?></span>
                 </td>
             </tr>
         <?php } ?>

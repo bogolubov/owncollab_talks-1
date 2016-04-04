@@ -25,7 +25,7 @@ class MainController extends Controller {
 	private $userId;
 	private $l10n;
 	private $isAdmin;
-    private $connect;
+	private $connect;
 	private $projectname = "Base project";
 
 	/**
@@ -68,10 +68,16 @@ class MainController extends Controller {
 
 		if ($usermessages = $this->getUserMessages()) {
 			$files = $this->connect->files();
-			$messages = $usermessages->getByAuthorOrSubscriber($this->userId);
+			$messages = $this->connect->messages();
+			$talks = $usermessages->getAll();
+			$firsttalk = $messages->getByParent($talks[0]['messageid'], 'date ASC');
 			$params = array(
 				'user' => $this->userId,
-				'messages' => $messages,
+				//'talks' => $talks,
+				'messages' => $talks,
+				'answers' => $firsttalk,
+				'cananswer' => $messages->canAnswer($messages->getById($talks[0]['messageid'])[0], $this->userId),
+				'appname' => $this->appName,
 				'files' => $files,
 				'menu' => 'all'
 			);
@@ -80,18 +86,6 @@ class MainController extends Controller {
 		return new TemplateResponse($this->appName, 'talk', $params);  // templates/talk.php
 	}
 
-	/**
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
-	 *
-	 * @return DataResponse
-	 */
-	public function page() {
-
-        $project = $this->connect->project()->get();
-
-		return new DataResponse(['echo' => $project]);
-	}
 
 	/**
 	 * @NoAdminRequired
@@ -123,10 +117,9 @@ class MainController extends Controller {
 	 */
 	//TODO: Використовувати метод з застосуванням засобів безпеки
 	public function read($id) {
-		//$usermessages = $this->getUserMessages($this->userId);
-		//$message = $usermessages->getMessageById($id);
+		$usermessages = $this->getUserMessages($this->userId);
+		$message = $usermessages->getMessageById($id);
 		$talks = $this->connect->messages();
-		//$talk = $talks->getById($message['mid'])[0];
 		$talk = $talks->getById($id)[0];
 		$subscribers = explode(',', $talk['subscribers']);
 		$files = $this->connect->files();
@@ -134,6 +127,7 @@ class MainController extends Controller {
 			return;
 		}
 		if ($talk['author'] == $this->userId) { // If it's author
+			//$talks = $this->connect->messages();
 			$usermessages = $this->getUserMessages($subscribers[0]);
 			$message = $usermessages->getMessageById($id);
 		}
@@ -144,22 +138,22 @@ class MainController extends Controller {
 				$message['status'] = 1;
 				$usermessages->setStatus($message);
 			}
-		}
+		} 
 		if (!empty($message)) {
 			$params = array(
-                'user' => $this->userId,
-                'message' => $message,
-                'talk' => $talk,
+				'user' => $this->userId,
+				'message' => $message,
+				'talk' => $talk,
 				'subscribers' => $subscribers,
 				'files' => $files,
-                'mode' => 'read'
-            );
+				'mode' => 'read'
+			);
 
 			return new TemplateResponse($this->appName, 'talk', $params);  // templates/talk.php
 		}
 		else {
 			return;
-		}
+		} 
 	}
 
 	/**
@@ -171,9 +165,16 @@ class MainController extends Controller {
 	public function reply($id) {
 		$messages = $this->connect->messages();
 		$message = $messages->getByReply($id);
+		//$message = $messages->getById($id)[0];
 		$usermessages = $this->getUserMessages($this->userId);
-		$usermessage = $usermessages->getMessageById($message['mid']);
-		$userstatus = $usermessages->getUserStatus($message['mid']);
+		if (!$usermessage = $usermessages->getMessageById($message['id'])) {
+			$usermessages->createStatus($message['id'], $this->userId);
+			$usermessage = $usermessages->getMessageById($message['id']);
+		}
+		if (!$userstatus = $usermessages->getUserStatus($message['id'])) {
+			$usermessages->createStatus($message['id'], $this->userId);
+			$userstatus = $usermessages->getUserStatus($message['id']);
+		}
 		$subscribers = $this->getUsers();
 		//$helper = new Helper();
 		if ($messages->canRead($message, $this->userId)) {
@@ -181,13 +182,14 @@ class MainController extends Controller {
 				$message['status'] = 2;
 				$messages->setStatus($message['mid'], 2);
 			}
-			if ($usermessage['status'] < 2) {
+			if ($usermessage && $usermessage['status'] < 2) {
 				$usermessage['status'] = 2;
 				$usermessages->setStatus($usermessage);
 			}
 			$params = array(
 				'user' => $this->userId,
 				'talk' => $message,
+				'replyid' => $messages->getMessageTopParent($message['mid']),
 				'subscribers' => $subscribers,
 				'userstatus' => $userstatus,
 				'mode' => 'reply'
@@ -277,7 +279,8 @@ class MainController extends Controller {
 	public function save() {
 		$files = $this->connect->files();
 		$users = $this->connect->users();
-		//$subscribers = array_unique($_POST['users']);
+		//print_r($_FILES);
+		Helper::uploadFile($_FILES['uploadfile'], $this->userId);
 		foreach ($_POST['users'] as $s => $subscriber) {
 			$subscribers[$subscriber] = $users->getUserDetails($subscriber);
 		}
@@ -303,7 +306,7 @@ class MainController extends Controller {
 			}
 		}
 
-		$messagedata = array( //TODO: Зробити перевірку допустимості тексту
+		$messagedata = array(
 			'rid' => $_POST['replyid'],
 			'date' => date("Y-m-d h:i:s"),
 			'title' => $_POST['title'],
@@ -322,11 +325,15 @@ class MainController extends Controller {
 		$canwrite = true; //TODO: Створити перевірку на право починати бесіди
 
 		$usermessages = $this->getUserMessages();
+		$talks = $usermessages->getByAuthorOrSubscriber($this->userId, '0');
+		$firsttalk = $messages->getByParent($talks[0]['id']);
 		if ($canwrite) {
 			$params = array(
 				'user' => $this->userId,
 				'message' => $_POST,
-				'messages' => $usermessages->getByAuthorOrSubscriber($this->userId),
+				'messages' => $talks,
+				'answers' => $firsttalk,
+				'appname' => $this->appName,
 				'mode' => 'list',
 				'menu' => 'all'
 			);
@@ -344,12 +351,46 @@ class MainController extends Controller {
 	 * @return TemplateResponse
 	 */
 	//TODO: Використовувати метод з застосуванням засобів безпеки
-	public function mytalks() {
+	public function startedtalks() {
 		$messages = $this->connect->messages();
-		$talks = $messages->getByAuthor($this->userId);
+		$talks = $messages->getByAuthor($this->userId, 0, 'date DESC');
+		$firsttalk = $messages->getByParent($talks[0]['id'], 'date ASC');
+		$files = $this->connect->files();
 		$params = array(
 			'user' => $this->userId,
 			'talks' => $talks,
+			'answers' => $firsttalk,
+			'cananswer' => true,
+			'files' => $files,
+			'appname' => $this->appName,
+			'mode' => 'list',
+			'menu' => 'startedtalks'
+		);
+
+		return new TemplateResponse($this->appName, 'talk', $params);  // templates/talk.php
+	}
+
+	/**
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 * @return TemplateResponse
+	 */
+	//TODO: Використовувати метод з застосуванням засобів безпеки
+	public function mytalks() {
+		$messages = $this->connect->messages();
+		//$talks = $messages->getByAuthor($this->userId, 0, 'date DESC');
+		$usermessages = $this->getUserMessages();
+		$talks = $usermessages->getBySubscriber($this->userId, '0');
+		$firsttalk = $messages->getByParent($talks[0]['messageid'], 'date ASC');
+		$files = $this->connect->files();
+		$params = array(
+			'user' => $this->userId,
+			//'talks' => $talks,
+			'messages' => $talks,
+			'answers' => $firsttalk,
+			'cananswer' => true,
+			'files' => $files,
+			'appname' => $this->appName,
 			'mode' => 'list',
 			'menu' => 'mytalks'
 		);
@@ -548,7 +589,7 @@ class MainController extends Controller {
 		$subject = isset($messagedata['title']) ? $messagedata['title'] : 'OwnCollab message';
 		$body = isset($messagedata['text']) ? $messagedata['text'] : '';
 
-		echo $from;
+		//echo $from; //TODO Розібратись
 
 		$mail = new PHPMailer();
 		$mail->setFrom($from);
