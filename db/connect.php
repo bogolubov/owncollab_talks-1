@@ -9,14 +9,6 @@ class Connect
 {
     /** @var IDBConnection  */
     public $db;
-    /** @var Project database table */
-    private $project;
-    /** @var Task  database table */
-    private $task;
-    /** @var Link  database table */
-    private $link;
-    /** @var Resource  database table */
-    private $resource;
     /** @var Messages  database table */
     private $messages;
     /** @var UserMessage  database table */
@@ -34,10 +26,6 @@ class Connect
         $this->db = $db;
 
         // Register tables models
-        $this->project = new Project($this, 'collab_project');
-        $this->task = new Task($this, 'collab_tasks');
-        $this->link = new Link($this, 'collab_links');
-        $this->resource = new Resource($this, 'collab_resources');
         $this->messages = new Messages($this, 'collab_messages');
         $this->user_message = new UserMessages($this, 'collab_user_message');
         $this->users = new Users($this, 'users');
@@ -124,45 +112,7 @@ class Connect
 
     /**
      * Access to tables
-     * @return Project
      */
-
-    /**
-     * Retry instance of class working with database
-     * Table of collab_projects
-     * @return Project
-     */
-    public function project() {
-        return $this->project;
-    }
-
-
-    /**
-     * Retry instance of class working with database
-     * Table of collab_gantt_tasks
-     * @return Task
-     */
-    public function task() {
-        return $this->task;
-    }
-
-    /**
-     * Retry instance of class working with database
-     * Table of collab_gantt_links
-     * @return Link
-     */
-    public function link() {
-        return $this->link;
-    }
-
-    /**
-     * Retry instance of class working with database
-     * Table of collab_task_resources
-     * @return Resource
-     */
-    public function resource() {
-        return $this->resource;
-    }
 
     /**
      * Retry instance of class working with database
@@ -176,7 +126,7 @@ class Connect
     /**
      * Retry instance of class working with database
      * Table of collab_task_user_message
-     * @return UserMessage
+     * @return UserMessages
      */
     public function userMessage() {
         return $this->user_message;

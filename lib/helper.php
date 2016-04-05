@@ -185,17 +185,16 @@ class Helper
      * @param $user string
      * @return bool
      */
-    static public function shareFile($filename, $fromuser, $touser) {
+    static public function shareFile($filename, $user) {
         $ch = curl_init();
         $host = \OC::$server->getRequest()->getServerHost();
-        $path = $fromuser['uid'].'@'.$host.'/ocs/v1.php/apps/files_sharing/api/v1/shares'; //TODO: Змінити абсолютну адресу на динамічну
-        //$path = 'http://admin:admin@'.$host.'/ocs/v1.php/apps/files_sharing/api/v1/shares';
+        $path = 'http://'.$user.':admin@'.$host.'/ocs/v1.php/apps/files_sharing/api/v1/shares'; //TODO: Змінити абсолютну адресу на динамічну
         $postfields = array(
             'path' => $filename,
             'shareType' => 0,
-            'shareWith' => $touser,
+            'shareWith' => $user,
             'publicUpload' => true,
-            'password' => '',
+            'password' => 'admin',
             'permissions' => 1
         );
 

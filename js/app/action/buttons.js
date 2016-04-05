@@ -116,6 +116,7 @@
                 app.api('answerTalk', function (response) {
                     if (response.requesttoken) {
                         app.requesttoken = response.requesttoken;
+			console.log(response); 
 
                         $("#talk-answers").append(response.view);
                     }

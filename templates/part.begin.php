@@ -3,7 +3,7 @@ if (!empty($_['talk'])) {
     $id = $_['talk']['id'];
     $messageid = $_['talk']['mid'];
     $title = "Re:".$_['talk']['title'];
-    $text = \OCA\Owncollab_Talks\Helper::generateRepliedText($_['talk']['text'], $_['talk']['author'], date("D, d M Y H:i:s", strtotime($_['talk']['date'])));
+    $text = \OCA\Owncollab_Talks\Helper::generateRepliedText($_['talk']['text'], $_['talk']['author'], date("D, d M Y H:i:s", strtotime($_['talk']['date']))); //TODO: Написати функцію обробки вхідного тексту
     $selectedsubscribers = explode(',', $_['talk']['subscribers']);
     if (!($_['talk']['author'] == $_['user'])) {
         $selectedsubscribers[] = $_['talk']['author'];
