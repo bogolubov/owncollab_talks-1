@@ -1,7 +1,7 @@
 OC.L10N.register(
     "owncollab_talks",
     {
-        "name" : "Балачки",
+        "Talks" : "Розмови",
         "Start Talk" : "Почати Розмову",
         "Your started Talks" : "Розмови, розпочаті Вами",
         "Talks you are participating" : "Розмови, з Вашою участю",

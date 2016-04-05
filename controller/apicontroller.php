@@ -359,6 +359,31 @@ class ApiController extends Controller {
 	}
 
 	/**
+	 * @param int $fileid
+	 * Get file by id
+	 *
+	 */
+	public function getFile($fileid) {
+		$files = $this->connect->files();
+		$file = $files->getById($fileid);
+		$params = array(
+			'file' => $file,
+			'requesttoken'  => (!\OC_Util::isCallRegistered()) ? '' : \OC_Util::callRegister(),
+		);
+		$view = Helper::renderPartial($this->appName, 'api.uploadedfiles', $params);
+		//$view = "User files!";
+
+		$params = array(
+			'user' => $this->userId,
+			'file' => $file,
+			'view' => $view,
+			'requesttoken'  => (!\OC_Util::isCallRegistered()) ? '' : \OC_Util::callRegister(),
+		);
+
+		return new DataResponse($params);
+	}
+
+	/**
 	 * @param int $talkid
 	 * @param string $text
 	 * Save an answer to the talk
@@ -371,8 +396,7 @@ class ApiController extends Controller {
 		$talk = $messages->getById($talkid)[0];
 		$usermessages = $this->connect->userMessage();
 
-		//TODO Додати оновлення статуса
-		$usermessages = $this->getUserMessages($this->userId);
+		//$usermessages = $this->getUserMessages($this->userId);
 		if (!$usermessage = $usermessages->getMessageById($message['id'])) {
 			$usermessages->createStatus($message['id'], $this->userId);
 			$usermessage = $usermessages->getMessageById($message['id']);
@@ -381,7 +405,6 @@ class ApiController extends Controller {
 			$message['status'] = 2;
 			$messages->setStatus($message['mid'], 2);
 		}
-		//TODO Протестувати
 
 		$subscribers = explode(',', $talk['subscribers']);
 		if (!in_array($this->userId, $subscribers)) {
@@ -391,7 +414,7 @@ class ApiController extends Controller {
 			unset($subscribers[array_search($this->userId, $subscribers)]);
 			$talk['subscribers'] = $subscribers;
 			$subscribers[] = $talk['author'];
-			$subscribers[] = $this->userId;
+			//$subscribers[] = $this->userId;
 		}
 		$messagedata = array(
 			'rid' => $talkid,
@@ -399,7 +422,8 @@ class ApiController extends Controller {
 			'title' => Helper::checkTxt($text),
 			'text' => '',
 			'author' => $this->userId,
-			'subscribers' => implode(',', $talk['subscribers']),
+			//'subscribers' => is_array($talk['subscribers']) ? implode(',', $talk['subscribers']) : $talk['subscribers'],
+			'subscribers' => is_array($subscribers) ? implode(',', $subscribers) : $subscribers,
 			'status' => 0
 		);
 

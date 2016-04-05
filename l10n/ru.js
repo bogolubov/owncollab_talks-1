@@ -1,7 +1,7 @@
 OC.L10N.register(
     "owncollab",
     {
-        "name"                       : "Разговоры",
+        "Talks"                       : "Разговоры",
         "Start Talk"                 : "Начать Разговор",
         "Your started Talks"         : "Разговоры, начатые Вами",
         "Talks you are participating" : "Разговоры с Вашим участием",

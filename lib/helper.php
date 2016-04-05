@@ -185,16 +185,17 @@ class Helper
      * @param $user string
      * @return bool
      */
-    static public function shareFile($filename, $user) {
+    static public function shareFile($filename, $fromuser, $touser) {
         $ch = curl_init();
         $host = \OC::$server->getRequest()->getServerHost();
-        $path = 'http://'.$user.':admin@'.$host.'/ocs/v1.php/apps/files_sharing/api/v1/shares'; //TODO: Змінити абсолютну адресу на динамічну
+        $path = $fromuser['uid'].'@'.$host.'/ocs/v1.php/apps/files_sharing/api/v1/shares'; //TODO: Змінити абсолютну адресу на динамічну
+        //$path = 'http://admin:admin@'.$host.'/ocs/v1.php/apps/files_sharing/api/v1/shares';
         $postfields = array(
             'path' => $filename,
             'shareType' => 0,
-            'shareWith' => $user,
+            'shareWith' => $touser,
             'publicUpload' => true,
-            'password' => 'admin',
+            'password' => '',
             'permissions' => 1
         );
 
@@ -328,7 +329,7 @@ class Helper
         return $filetype;
     }
 
-    public function firstWords($text, $limit) {
+    static public function firstWords($text, $limit) {
         if (str_word_count($text, 0) > $limit) {
             $words = str_word_count($text, 2);
             $pos = array_keys($words);

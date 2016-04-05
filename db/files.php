@@ -66,7 +66,8 @@ class Files
             $sql = "SELECT fileid, path, name, mimetype, size, storage_mtime".
                     " FROM oc_filecache fc".
                     " INNER JOIN oc_share s ON s.file_source = fc.fileid".
-                    " WHERE (s.share_with = '".$user."' OR s.uid_owner = '".$user."') AND fileid IN (".implode(',',$idlist).")";
+                    " WHERE (s.share_with = '".$user."' OR s.uid_owner = '".$user."') AND fileid IN (".implode(',',$idlist).")".
+                    " GROUP BY fileid";
             $files = $this->connect->queryAll($sql);
             return $files;
         }

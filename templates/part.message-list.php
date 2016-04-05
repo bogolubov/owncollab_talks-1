@@ -1,7 +1,6 @@
 <div class="all-talks">
 <ul class="messagelist">
 	<?php
-	//var_dump($_['talks']);
 	$files = $_['files'];
 	if (is_array($_['messages']) && !empty($_['messages'])) {
 		$messages = $_['messages'];
@@ -13,7 +12,7 @@
 	}
 	foreach ($messages as $m => $message) {
 		$liclass = $m == 0 ? 'activetalk' : '';
-		$filenames = !empty($message['attachements']) ? $files->getByIdList(explode(',', $message['attachements']), $_['user']) : array();
+		//$filenames = !empty($message['attachements']) ? $files->getByIdList(explode(',', $message['attachements']), $_['user']) : array();
 	?>
 	<li class="<?=$liclass;?> title">
 		<div class="id" id="messageid" value="<?=$message[$idkey];?>"></div>
@@ -27,6 +26,7 @@
 	<?php
 	$firsttalk = $messages[0];
 	$startedfrom = $message['author'] == $_['user'] ? $l->t('You') : $message['author'];
+	$filenames = !empty($firsttalk['attachements']) ? $files->getByIdList(explode(',', $firsttalk['attachements']), $_['user']) : array();
 	?>
 	<div class="talk-title"><a href="/index.php/apps/<?=$_['appname'];?>/read/<?=$firsttalk[$idkey];?>"><?=$firsttalk['title'];?></a></div>
 	<div class="talk-author"><?php p($l->t('started from %s on %s', [$startedfrom, date("d.m.Y H:i", strtotime($firsttalk['date']))]));?></div>
@@ -35,7 +35,7 @@
 	<div class="talk-answers" id="talk-answers">
 	<?php
 	foreach ($_['answers'] as $a => $answer) { ?>
-		<div class="talk-author"><?php p($l->t('user % answered on %s', [$answer['author'], date("d.m.Y H:i", strtotime($answer['date']))]));?></div>
+		<div class="talk-author"><?php p($l->t('user %s answered on %s', [$answer['author'], date("d.m.Y H:i", strtotime($answer['date']))]));?></div>
 		<div class="talk-title"><a href="/index.php/apps/<?=$_['appname'];?>/read/<?=$answer['id'];?>"><?=$answer['title'];?></a></div>
 	<?php } ?>
 	</div>
