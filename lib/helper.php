@@ -269,7 +269,12 @@ class Helper
             if ($d >= 1)
             {
                 $r = round($d);
-                return [$r, ($r > 1 ? $a_plural[$str] : $str) . ' ago'];
+                if ($r > 1) {
+                    return ['key' => '%s '.$a_plural[$str].' ago', 'value' => $r];
+                }
+                else {
+                    return ['key' => '1 '.$str.' ago', 'value' => $r .' '. $str . ' ago'];
+                }
             }
         }
     }

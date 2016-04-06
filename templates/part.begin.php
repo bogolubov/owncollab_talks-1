@@ -45,7 +45,7 @@ $cancheckusers = ($_['user'] == $_['talk']['author'] || in_array($_['user'], arr
     </div>
 
     <div class="talk-attachements">
-        <a id="ajax-showfiles"><?php p($l->t('Chose files from saved'));?></a>
+        <a id="ajax-showfiles"><?php p($l->t('Choose files from saved'));?></a>
         <div id="loadimg" class="loadimg">
             <img src="/core/img/loading-small.gif">
         </div>

@@ -13,7 +13,6 @@
          * But after the DOM is loaded
          */
         var path = window.location.pathname.split( '/' );
-        //var lastItem = path[path.length-1];
         var lastItem = path[4];
 
         switch (lastItem) {
@@ -40,7 +39,6 @@
         document.getElementById("uploadBtn").onchange = function () {
             document.getElementById("uploadFile").value = this.value;
             var file = document.getElementById('uploadBtn').files[0];
-            var fileName = this.value;
             $('#uploadimg').show();
             uploadFile(file, function(response){
                 try {
@@ -116,7 +114,6 @@
                 app.api('answerTalk', function (response) {
                     if (response.requesttoken) {
                         app.requesttoken = response.requesttoken;
-			console.log(response); 
 
                         $("#talk-answers").append(response.view);
                     }
@@ -137,7 +134,6 @@
 
                             $("#attach-files").append(response.view);
                         }
-                        //console.log(response);
                     });
                     filesresult = 1;
                     $('#loadimg').hide();
@@ -188,23 +184,6 @@
                 }
             );
         });
-
-        //Select the same user in different groups
-        /* $(function(){
-            $(".group-user input").click(
-                function(){
-                    var uid = $(this)[0].value;
-                    var allusers = $(this).parents('fieldset').parent();
-                    //alert(uid);
-                    if ($(this).is(':checked')) {
-                        allusers.find('#'+uid).attr('checked', true);
-                    }
-                    else {
-                        allusers.find('#'+uid).attr('checked', false);
-                    };
-                }
-            );
-        }); */
     }
 
     function buttonsInit() {
