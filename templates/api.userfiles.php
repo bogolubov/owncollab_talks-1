@@ -58,7 +58,7 @@ $files = $_['files'];
         </td>
         <td style="color:rgb(160,160,160); text-align:right;" class="filesize"><?=\OCA\Owncollab_Talks\Helper::sizeRoundedString($file['size']);?></td>
         <td class="date">
-            <span data-original-title="<?=date('F d, Y h:i A', $file['timestamp']);?>" style="color:rgb(51,51,51)" title="" class="modified"><?=$modified[0];?> <?php p($l->t($modified[1]));?></span>
+            <span data-original-title="<?=date('F d, Y h:i A', $file['timestamp']);?>" style="color:rgb(51,51,51)" title="" class="modified"><?php p($l->t($modified['key'], $modified['value']));?></span>
         </td>
     </tr>
     <tr style="height: 0px;">
@@ -86,7 +86,7 @@ $files = $_['files'];
         </td>
         <td style="color:rgb(160,160,160); text-align:right;" class="filesize"><?=\OCA\Owncollab_Talks\Helper::sizeRoundedString($file['size']);?></td>
         <td class="date">
-            <span data-original-title="<?=date('F d, Y h:i A', $file['timestamp']);?>" style="color:rgb(51,51,51)" title="" class="modified"><?=$modified[0];?> <?php p($l->t($modified[1]));?></span>
+            <span data-original-title="<?=date('F d, Y h:i A', $file['timestamp']);?>" style="color:rgb(51,51,51)" title="" class="modified"><?php p($l->t($modified['key'], $modified['value']));?></span>
         </td>
     </tr>
         <?php } ?>

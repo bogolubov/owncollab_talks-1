@@ -39,11 +39,12 @@ class UserMessages
         return $messages;
     }
 
-    public function getMessageById($id) {
+    public function getMessageById($id, $user = NULL) {
+        $userid = !empty($user) ? $user : $this->user;
         $sql = "SELECT um.id as id, m.date, m.title, m.text, m.attachements, m.author, m.subscribers, um.mid as mid, um.status".
                 " FROM oc_collab_user_message um".
                 " INNER JOIN oc_collab_messages m ON m.id = um.mid".
-                " WHERE um.mid = " . $id . " AND um.uid = '" . $this->user . "'".
+                " WHERE um.mid = " . $id . " AND um.uid = '" . $userid . "'".
                 " ORDER BY m.date DESC";
         $message = $this->connect->query($sql);
         return $message;
@@ -119,9 +120,6 @@ class UserMessages
     }
 
     public function setStatus($message, $status = NULL) {
-        /* $sql = 'UPDATE '.$this->tableName.' SET status = '.$message['status'].' WHERE id = '.$message['id'].' LIMIT 1';
-        echo $sql;
-        $message = $this->connect->query($sql); */
         $id = is_array($message) && $message['id'] ? $message['id'] : $message;
         if (isset($status) && $status) {
             $mstatus = $status;

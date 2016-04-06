@@ -18,6 +18,7 @@ use OCP\IRequest;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Http\DataResponse;
 use OCP\AppFramework\Controller;
+use OCP\Share;
 
 class MainController extends Controller {
 
@@ -127,7 +128,6 @@ class MainController extends Controller {
 			return;
 		}
 		if ($talk['author'] == $this->userId) { // If it's author
-			//$talks = $this->connect->messages();
 			$usermessages = $this->getUserMessages($subscribers[0]);
 			$message = $usermessages->getMessageById($id);
 		}
@@ -279,8 +279,8 @@ class MainController extends Controller {
 	public function save() {
 		$files = $this->connect->files();
 		$users = $this->connect->users();
-		//print_r($_FILES);
-		Helper::uploadFile($_FILES['uploadfile'], $this->userId);
+		//$user = $users->getById($this->userId)[0];
+		//Helper::uploadFile($_FILES['uploadfile'], $this->userId);
 		foreach ($_POST['users'] as $s => $subscriber) {
 			$subscribers[$subscriber] = $users->getUserDetails($subscriber);
 		}
@@ -297,10 +297,17 @@ class MainController extends Controller {
 		// Share selected files with selected users
 		foreach ($_POST['users'] as $userid) {
 			$filesid = array();
+			foreach ($_POST['upload-files'] as $id) {
+				$file = $files->getById($id)[0];
+				$sharetype = $file['mimetype'] == 'httpd/unix-directory' ? 'folder' : 'file';
+				\OCP\Share::shareItem($sharetype, $file['fileid'], \OCP\Share::SHARE_TYPE_USER, $userid, 1);
+				$filesid[] = $id;
+			}
 			foreach ($_POST['select-files'] as $id => $on) {
 				if ($on == 'on') {
 					$file = $files->getById($id)[0];
-					Helper::shareFile($file['name'], $userid);
+					//Helper::shareFile($file['name'], $user, $userid);
+					\OCP\Share::shareItem($sharetype, $file['fileid'], \OCP\Share::SHARE_TYPE_USER, $userid, 1);
 					$filesid[] = $id;
 				}
 			}
@@ -326,7 +333,7 @@ class MainController extends Controller {
 
 		$usermessages = $this->getUserMessages();
 		$talks = $usermessages->getByAuthorOrSubscriber($this->userId, '0');
-		$firsttalk = $messages->getByParent($talks[0]['id']);
+		$firsttalk = $messages->getByParent($talks[0]['messageid'], 'date ASC');
 		if ($canwrite) {
 			$params = array(
 				'user' => $this->userId,
@@ -334,6 +341,7 @@ class MainController extends Controller {
 				'messages' => $talks,
 				'answers' => $firsttalk,
 				'appname' => $this->appName,
+				'files' => $files,
 				'mode' => 'list',
 				'menu' => 'all'
 			);

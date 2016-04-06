@@ -287,9 +287,29 @@ ul.messagelist li.title .id {
 	border-radius: 5px;
 	margin: 5px;
 }
+.uploadedfiles {
+	width: 100%;
+	height: auto;
+}
+.uploadedfiles ul li {
+	min-width:200px;
+	/* float: left; */
+}
+.uploadedfiles #uploadimg {
+	display: none;
+}
+.uploadedfiles .thumbnail {
+	width: 16px;
+	height: 16px;
+	float: left;
+}
+.uploadedfiles .name, .uploadedfiles .size {
+	margin-left: 10px;
+	float: left;
+}
 .talk-subscribers fieldset {
-	margin: 10px 0; 
-	padding: 0; 
+	margin: 10px 0;
+	padding: 0;
 }
 .talk-subscribers fieldset .group-name {
 	font-weight: bold;
@@ -298,14 +318,14 @@ ul.messagelist li.title .id {
 .talk-subscribers fieldset .group-users {
 	/* display: flex;
 	display: -moz-flex;
-	display:-webkit-flex; */ 
-	width: 520px; 
+	display:-webkit-flex; */
+	width: 520px;
 }
 .talk-subscribers fieldset .group-user {
-	width: 130px; 
-	height: 25px; 
-	vertical-align: middle; 
-	float:left; 
+	width: 130px;
+	height: 25px;
+	vertical-align: middle;
+	float:left;
 }
 .talk-subscribers label {
 	min-height: 25px;
@@ -372,7 +392,7 @@ input[type="text"], input[type="password"], input[type="search"], input[type="nu
 .fileUpload span {
 	width: 110px;
 	height: 30px;
-	min-width: 25px;
+	min-width: 70px;
 	padding: 5px 10px;
 	margin-left: 16px;
 	background-color: rgba(240,240,240,.9);

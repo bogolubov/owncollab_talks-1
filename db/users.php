@@ -29,7 +29,7 @@ class Users
     }
 
     public function getById($id) {
-        $user = $this->connect->select("*", $this->tableName, "id = :id",[':id' => 1]);
+        $user = $this->connect->select("*", $this->tableName, "uid = :id",[':id' => $id]);
         return $user;
     }
 

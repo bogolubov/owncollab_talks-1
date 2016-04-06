@@ -359,6 +359,31 @@ class ApiController extends Controller {
 	}
 
 	/**
+	 * @param int $fileid
+	 * Get file by id
+	 *
+	 */
+	public function getFile($fileid) {
+		$files = $this->connect->files();
+		$file = $files->getById($fileid);
+		$params = array(
+			'file' => $file,
+			'requesttoken'  => (!\OC_Util::isCallRegistered()) ? '' : \OC_Util::callRegister(),
+		);
+		$view = Helper::renderPartial($this->appName, 'api.uploadedfiles', $params);
+		//$view = "User files!";
+
+		$params = array(
+			'user' => $this->userId,
+			'file' => $file,
+			'view' => $view,
+			'requesttoken'  => (!\OC_Util::isCallRegistered()) ? '' : \OC_Util::callRegister(),
+		);
+
+		return new DataResponse($params);
+	}
+
+	/**
 	 * @param int $talkid
 	 * @param string $text
 	 * Save an answer to the talk
@@ -371,7 +396,7 @@ class ApiController extends Controller {
 		$talk = $messages->getById($talkid)[0];
 		$usermessages = $this->connect->userMessage();
 
-		$usermessages = $this->getUserMessages($this->userId);
+		//$usermessages = $this->getUserMessages($this->userId);
 		if (!$usermessage = $usermessages->getMessageById($message['id'])) {
 			$usermessages->createStatus($message['id'], $this->userId);
 			$usermessage = $usermessages->getMessageById($message['id']);
@@ -389,20 +414,21 @@ class ApiController extends Controller {
 			unset($subscribers[array_search($this->userId, $subscribers)]);
 			$talk['subscribers'] = $subscribers;
 			$subscribers[] = $talk['author'];
-			$subscribers[] = $this->userId;
-		} 
+			//$subscribers[] = $this->userId;
+		}
 		$messagedata = array(
 			'rid' => $talkid,
 			'date' => date("Y-m-d h:i:s"),
 			'title' => Helper::checkTxt($text),
 			'text' => '',
 			'author' => $this->userId,
-			'subscribers' => $talk['subscribers'],
+			//'subscribers' => is_array($talk['subscribers']) ? implode(',', $talk['subscribers']) : $talk['subscribers'],
+			'subscribers' => is_array($subscribers) ? implode(',', $subscribers) : $subscribers,
 			'status' => 0
-		); 
+		);
 
 		$messages = $this->connect->messages();
-		$saved = $messages->save($messagedata); 
+		$saved = $messages->save($messagedata);
 		if ($saved) {
 			foreach ($subscribers as $s => $subscriber) {
 				$messagedata = [
@@ -413,7 +439,7 @@ class ApiController extends Controller {
 				$usermessages->save($messagedata);
 			}
 
-			$this->sendMessage($saved, $talk['subscribers'], $this->userId, $messagedata); 
+			$this->sendMessage($saved, $talk['subscribers'], $this->userId, $messagedata);
 
 			$params = array(
 				'answerid' => $saved,
@@ -427,7 +453,7 @@ class ApiController extends Controller {
 			$params = array(
 				'title' => Helper::checkTxt($text)
 			);
-		} 
+		}
 
 		$view = Helper::renderPartial($this->appName, 'api.addanswer', $params);
 
@@ -435,7 +461,7 @@ class ApiController extends Controller {
 			'user' => $this->userId,
 			'view' => $view,
 			'requesttoken'  => (!\OC_Util::isCallRegistered()) ? '' : \OC_Util::callRegister(),
-		); 
+		);
 
 		return new DataResponse($params);
 	}

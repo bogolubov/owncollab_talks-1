@@ -3,7 +3,7 @@ if (!empty($_['talk'])) {
     $id = $_['talk']['id'];
     $messageid = $_['talk']['mid'];
     $title = "Re:".$_['talk']['title'];
-    $text = \OCA\Owncollab_Talks\Helper::generateRepliedText($_['talk']['text'], $_['talk']['author'], date("D, d M Y H:i:s", strtotime($_['talk']['date']))); 
+    $text = \OCA\Owncollab_Talks\Helper::generateRepliedText($_['talk']['text'], $_['talk']['author'], date("D, d M Y H:i:s", strtotime($_['talk']['date']))); //TODO: Написати функцію обробки вхідного тексту
     $selectedsubscribers = explode(',', $_['talk']['subscribers']);
     if (!($_['talk']['author'] == $_['user'])) {
         $selectedsubscribers[] = $_['talk']['author'];
@@ -37,8 +37,15 @@ $cancheckusers = ($_['user'] == $_['talk']['author'] || in_array($_['user'], arr
         </div>
     </div>
 
+    <div class="clear uploadedfiles">
+        <ul></ul>
+        <div id="uploadimg" class="loadimg">
+            <img src="/core/img/loading-small.gif">
+        </div>
+    </div>
+
     <div class="talk-attachements">
-        <a id="ajax-showfiles"><?php p($l->t('Chose files from saved'));?></a>
+        <a id="ajax-showfiles"><?php p($l->t('Choose files from saved'));?></a>
         <div id="loadimg" class="loadimg">
             <img src="/core/img/loading-small.gif">
         </div>
@@ -58,7 +65,7 @@ $cancheckusers = ($_['user'] == $_['talk']['author'] || in_array($_['user'], arr
                 <div class="oneline">
                     <input name="users[]" type="checkbox" value="<?=$user['uid'];?>" id="<?=$group.'-'.$user['uid'];?>"
                         <?php if (in_array($user['uid'],$selectedsubscribers) && $userstatus[$user['uid']] < 3 && !($user['uid'] == $_['user'])) { ?> checked<?php } ?>
-                        <?php if (!$cancheckusers || $userstatus[$user['uid']] == 3) { ?> disabled<?php } ?>
+                        <?php /* if (!$cancheckusers || $userstatus[$user['uid']] == 3) { ?> disabled<?php } */ ?>
                     ><label for="<?=$group.'-'.$user['uid'];?>"> <span></span> <?=$user['displayname'];?></label>
                 </div>
             </div>

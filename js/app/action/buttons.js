@@ -13,7 +13,6 @@
          * But after the DOM is loaded
          */
         var path = window.location.pathname.split( '/' );
-        //var lastItem = path[path.length-1];
         var lastItem = path[4];
 
         switch (lastItem) {
@@ -39,7 +38,19 @@
     function fileUploadInit() {
         document.getElementById("uploadBtn").onchange = function () {
             document.getElementById("uploadFile").value = this.value;
+            var file = document.getElementById('uploadBtn').files[0];
+            $('#uploadimg').show();
+            uploadFile(file, function(response){
+                try {
+                    var r = JSON.parse(response);
+                    var file = r[0];
+                    $(".uploadedfiles ul").append('<li><div class="thumbnail" style="background-image: url('+file.icon+')"></div><div class="name">'+file.name+'</div><div class="size">'+sizeRoundedString(file.size)+'</div><div class="clear"></div><input type="hidden" name="upload-files[]" value="'+file.id+'"></li>');
+
+                }catch (e){}
+            });
+            $('#uploadimg').hide();
         };
+
         $(".fileUpload").hover(
             function(){
                 var fileUploadSpan = document.getElementById("fileUploadSpan");
@@ -103,7 +114,6 @@
                 app.api('answerTalk', function (response) {
                     if (response.requesttoken) {
                         app.requesttoken = response.requesttoken;
-			console.log(response); 
 
                         $("#talk-answers").append(response.view);
                     }
@@ -124,7 +134,6 @@
 
                             $("#attach-files").append(response.view);
                         }
-                        //console.log(response);
                     });
                     filesresult = 1;
                     $('#loadimg').hide();
@@ -175,23 +184,6 @@
                 }
             );
         });
-
-        //Select the same user in different groups
-        /* $(function(){
-            $(".group-user input").click(
-                function(){
-                    var uid = $(this)[0].value;
-                    var allusers = $(this).parents('fieldset').parent();
-                    //alert(uid);
-                    if ($(this).is(':checked')) {
-                        allusers.find('#'+uid).attr('checked', true);
-                    }
-                    else {
-                        allusers.find('#'+uid).attr('checked', false);
-                    };
-                }
-            );
-        }); */
     }
 
     function buttonsInit() {
@@ -260,6 +252,53 @@
                 }
             }
         })
+    }
+
+    function uploadFile(myFile, callback) {
+        var fd = new FormData();
+        var success = false;
+        fd.append('files[]', myFile);
+        fd.append('requesttoken', $('head').attr('data-requesttoken'));
+        fd.append('dir', '/');
+        fd.append('file_directory', 'Talks');
+
+        $.ajax({
+            url: "/index.php/apps/files/ajax/upload.php",
+            type: "POST",
+            data: fd,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                callback.call({}, response);
+                //success = response;
+                console.log(response);
+            },
+            error: function(jqXHR, textStatus, errorMessage) {
+                console.log(errorMessage); // Optional
+            }
+        });
+        return success;
+    }
+
+    function sizeRoundedString(size) {
+        if (size < 1) { return '0 bytes'; }
+
+        var a = { 1099511628648 : 'TB', 1073741824 : 'GB', 1048576 : 'MB', 1024 : 'kB', 1 : "B" };
+
+        var r = 0;
+        var k = 0;
+        for(var key in a){
+            k = key;
+            var d = size / key;
+            if (d < r && d >= 1) {
+                r = Math.round(d*100)/100;
+                break;
+            }
+            else {
+                r = d;
+            }
+        }
+        return r+' '+a[k];
     }
 
 })(jQuery, OC, app);

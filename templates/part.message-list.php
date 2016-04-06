@@ -12,7 +12,7 @@
 	}
 	foreach ($messages as $m => $message) {
 		$liclass = $m == 0 ? 'activetalk' : '';
-		$filenames = !empty($message['attachements']) ? $files->getByIdList(explode(',', $message['attachements']), $_['user']) : array();
+		//$filenames = !empty($message['attachements']) ? $files->getByIdList(explode(',', $message['attachements']), $_['user']) : array();
 	?>
 	<li class="<?=$liclass;?> title">
 		<div class="id" id="messageid" value="<?=$message[$idkey];?>"></div>
@@ -26,6 +26,7 @@
 	<?php
 	$firsttalk = $messages[0];
 	$startedfrom = $message['author'] == $_['user'] ? $l->t('You') : $message['author'];
+	$filenames = !empty($firsttalk['attachements']) ? $files->getByIdList(explode(',', $firsttalk['attachements']), $_['user']) : array();
 	?>
 	<div class="talk-title"><a href="/index.php/apps/<?=$_['appname'];?>/read/<?=$firsttalk[$idkey];?>"><?=$firsttalk['title'];?></a></div>
 	<div class="talk-author"><?php p($l->t('started from %s on %s', [$startedfrom, date("d.m.Y H:i", strtotime($firsttalk['date']))]));?></div>
