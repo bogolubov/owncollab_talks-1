@@ -11,9 +11,10 @@
 
 namespace OCA\Owncollab_Talks\Controller;
 
+use OC\Files\Filesystem;
 use OCA\Owncollab_Talks\Db\Connect;
 use OCA\Owncollab_Talks\Helper;
-use OCA\Owncollab_Talks\PHPMailer\PHPMailer;
+use OCP\Files;
 use OCP\IRequest;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Http\DataResponse;
@@ -87,6 +88,26 @@ class MainController extends Controller {
 		return new TemplateResponse($this->appName, 'talk', $params);  // templates/talk.php
 	}
 
+	/**
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 * @return TemplateResponse
+	 */
+	//TODO: Використовувати метод з застосуванням засобів безпеки
+	public function testFiles() {
+		$files = \OCA\Files\Helper::getFiles('/');
+		foreach($files as $f => $file){
+			$files[$f] = \OCA\Files\Helper::formatFileInfo($file);
+			$files[$f]['mtime'] = $files[$f]['mtime']/1000;
+		}
+
+		$params = array(
+			'files' => $files,
+			'mode' => 'files'
+		);
+
+		return new TemplateResponse($this->appName, 'talk', $params);  // templates/talk.php
+	}
 
 	/**
 	 * @NoAdminRequired
@@ -282,7 +303,9 @@ class MainController extends Controller {
 		//$user = $users->getById($this->userId)[0];
 		//Helper::uploadFile($_FILES['uploadfile'], $this->userId);
 		foreach ($_POST['users'] as $s => $subscriber) {
-			$subscribers[$subscriber] = $users->getUserDetails($subscriber);
+			if (!($subscriber == $this->userId)) {
+				$subscribers[$subscriber] = $users->getUserDetails($subscriber);
+			}
 		}
 
 		// Get subscribers group
@@ -295,20 +318,31 @@ class MainController extends Controller {
 		$from = count($groupsid) > 0 ? $groupsid : $this->userId;
 
 		// Share selected files with selected users
-		foreach ($_POST['users'] as $userid) {
-			$filesid = array();
-			foreach ($_POST['upload-files'] as $id) {
-				$file = $files->getById($id)[0];
-				$sharetype = $file['mimetype'] == 'httpd/unix-directory' ? 'folder' : 'file';
-				\OCP\Share::shareItem($sharetype, $file['fileid'], \OCP\Share::SHARE_TYPE_USER, $userid, 1);
-				$filesid[] = $id;
-			}
-			foreach ($_POST['select-files'] as $id => $on) {
-				if ($on == 'on') {
-					$file = $files->getById($id)[0];
-					//Helper::shareFile($file['name'], $user, $userid);
+		$filesid = array();
+		foreach ($_POST['upload-files'] as $id) {
+			$file = $files->getById($id)[0];
+			$fileOwner = \OC\Files\Filesystem::getOwner($file['path']);
+			$sharetype = $file['mimetype'] == 2 ? 'folder' : 'file';
+			$sharedWith = \OCP\Share::getUsersItemShared($sharetype, $file['fileid'], $fileOwner, false, true);
+			foreach ($subscribers as $userid => $user) {
+				if (isset($file['fileid']) && is_array($file) && isset($file['fileid']) && !in_array($userid, $sharedWith)) {
 					\OCP\Share::shareItem($sharetype, $file['fileid'], \OCP\Share::SHARE_TYPE_USER, $userid, 1);
 					$filesid[] = $id;
+				}
+			}
+		}
+		foreach ($_POST['select-files'] as $id => $on) {
+			if ($on == 'on') {
+				$file = $files->getById($id)[0];
+				$fileOwner = \OC\Files\Filesystem::getOwner($file['path']);
+				$sharetype = $file['mimetype'] == 2 ? 'folder' : 'file';
+				$sharedWith = \OCP\Share::getUsersItemShared($sharetype, $file['fileid'], $fileOwner, false, true);
+				foreach ($subscribers as $userid => $user) {
+					if (isset($file['fileid']) && is_array($file) && isset($file['fileid']) && !in_array($userid, $sharedWith)) {
+						//Helper::shareFile($file['name'], $user, $userid);
+						\OCP\Share::shareItem($sharetype, $file['fileid'], \OCP\Share::SHARE_TYPE_USER, $userid, 1);
+						$filesid[] = $id;
+					}
 				}
 			}
 		}
@@ -547,7 +581,7 @@ class MainController extends Controller {
 		}
 		if (!empty($messagedata)) {
 			foreach ($subscribers as $s => $subscriber) {
-				$this->messageSend($subscriber, $from, $messagedata);
+				Helper::messageSend($subscriber, $from, $messagedata, $this->getProjectName());
             }
 		}
 	}
@@ -590,48 +624,7 @@ class MainController extends Controller {
 		return new DataResponse(['echo' => $echo]);
 	}
 
-	private function messageSend($subscriber, $fromuser, $messagedata) {
-		$to = isset($subscriber['settings']) ? $subscriber['settings'][0]['email'] : false;
-		//$from = isset($fromuser['settings']) ? $fromuser['settings'][0]['email'] : "no-reply@".\OC::$server->getRequest()->getServerHost();
-		$from = is_array($fromuser) && !empty($fromuser) ? $this->getGroupAlias($fromuser) : $this->getUserAlias();
-		$subject = isset($messagedata['title']) ? $messagedata['title'] : 'OwnCollab message';
-		$body = isset($messagedata['text']) ? $messagedata['text'] : '';
-
-		//echo $from; //TODO Розібратись
-
-		$mail = new PHPMailer();
-		$mail->setFrom($from);
-		$mail->addAddress($to);
-		$mail->Subject = $subject;
-		$mail->Body = $body;
-		$mail->isHTML();
-
-		if (!$mail->send()) {
-			return $mail->ErrorInfo;
-		} else {
-			return true;
-		}
-	}
-
 	public function getProjectName() {
 		return $this->projectname;
-	}
-
-	private function getUserAlias($userid) {
-		$project = str_replace(" ", '_', strtolower($this->getProjectName()));
-		$project = preg_replace("/[^A-Za-z0-9_]/", '', $project);
-		$alias = $this->userId.'@'.$project.'.'.$_SERVER['HTTP_HOST'];
-		return $alias;
-	}
-
-	private function getGroupAlias($groupid) {
-		$project = str_replace(" ", '_', strtolower($this->getProjectName()));
-		$project = preg_replace("/[^A-Za-z0-9_]/", '', $project);
-		$aliases = array();
-		foreach ($groupid as $i => $item) {
-			$aliases[] = strtolower($item).'@'.$project.'.'.$_SERVER['HTTP_HOST'];
-		}
-		$alias = implode(', ', $aliases);
-		return $alias;
 	}
 }

@@ -286,15 +286,22 @@
         var a = { 1099511628648 : 'TB', 1073741824 : 'GB', 1048576 : 'MB', 1024 : 'kB', 1 : "B" };
 
         var r = 0;
-        var k = 0;
+        var k = pk = 0;
         for(var key in a){
             k = key;
             var d = size / key;
-            if (d < r && d >= 1) {
+            if (r > 0 && d < r && d >= 1 && d < 1024) {
                 r = Math.round(d*100)/100;
                 break;
             }
+            else if (r > 0 && d < 1) {
+                d = size / pk;
+                r = Math.round(d*100)/100;
+                k = pk;
+                break;
+            }
             else {
+                pk = k;
                 r = d;
             }
         }

@@ -1,6 +1,5 @@
-OC.L10N.register(
-    "owncollab",
-    {
+{
+    "translations": {
         "Talks"                         : "Gespräch",
         "Start Talk"                    : "Gespräch Beginnen",
         "Your started Talks"            : "Ihre gestarteten Gespräche.",
@@ -16,24 +15,25 @@ OC.L10N.register(
         "Enter your text here"          : "Geben Sie hier Ihren Text ein",
         "Choose File"                   : "Datei hochladen",
         "Choose"                        : "Datei wählen",
-        "Choose files from saved"       : "Aus hochgeladenen Dateien wählen",
+        "Chose files from saved"        : "Aus hochgeladenen Dateien wählen",
         "FileName"                      : "Dateiname",
         "Size"                          : "Größe",
         "Modified"                      : "Geändert",
         "%s folders"                    : "%s Ordner",
         "and"                           : "und",
         "%s files"                      : "%s Dateien",
-        "1 year ago"                    : "Vor einem Jahr",
-        "1 month ago"                   : "Vor einem Monat",
-        "1 day ago"                     : "Vor einem Tag",
-        "1 hour ago"                    : "Vor einer Stunde",
-        "1 minute ago"                  : "Vor einer Minute",
-        "1 second ago"                  : "Vor einer Sekunde",
-        "%s years ago"                  : "Vor %s Jahren",
-        "%s months ago"                 : "Vor %s Monaten",
-        "%s days ago"                   : "Vor %s Tagen",
-        "%s hours ago"                  : "Vor %s Stunden",
-        "%s minutes ago"                : "Vor %s Minuten",
-        "%s seconds ago"                : "Vor %s Sekunden"
+        "year ago"                      : "Vor einem Jahr",
+        "month ago"                     : "Vor einem Monat",
+        "day ago"                       : "Vor einem Tag",
+        "hour ago"                      : "Vor einer Stunde",
+        "minute ago"                    : "Vor einer Minute",
+        "second ago"                    : "Vor einer Sekunde",
+        "years ago"                     : "Vor %s Jahren",
+        "months ago"                    : "Vor %s Monaten",
+        "days ago"                      : "Vor %s Tagen",
+        "hours ago"                     : "Vor %s Stunden",
+        "minutes ago"                   : "Vor %s Minuten",
+        "seconds ago"                   : "Vor %s Sekunden"
     },
-"nplurals=2; plural=(n != 1);");
+    "pluralForm": "nplurals=2; plural=(n != 1);"
+}

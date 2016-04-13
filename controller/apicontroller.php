@@ -2,8 +2,10 @@
 
 namespace OCA\Owncollab_Talks\Controller;
 
+use OC\Files\Filesystem;
 use OCA\Owncollab_Talks\Helper;
 use OCA\Owncollab_Talks\Db\Connect;
+use OCP\Files;
 use OCP\IRequest;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Http\DataResponse;
@@ -221,8 +223,13 @@ class ApiController extends Controller {
 	//TODO: Використовувати метод з застосуванням засобів безпеки
 	public function getuserfiles() {
 
-		$files = $this->connect->files();
-		$userfiles = $files->getByUser($this->userId);
+		//$files = $this->connect->files();
+		//$userfiles = $files->getByUser($this->userId);
+		$userfiles = \OCA\Files\Helper::getFiles('/');
+		foreach($userfiles as $f => $file){
+			$userfiles[$f] = \OCA\Files\Helper::formatFileInfo($file);
+			$userfiles[$f]['mtime'] = $userfiles[$f]['mtime']/1000;
+		}
 
 		$params = array(
 			'files' => $userfiles,
@@ -248,9 +255,14 @@ class ApiController extends Controller {
 	 */
 	//TODO: Використовувати метод з застосуванням засобів безпеки
 	public function getfolderfiles($folderid) {
-
 		$files = $this->connect->files();
-		$userfiles = $files->getByFolder($folderid, $this->userId);
+		$path = $files->getFolderPath($folderid, $this->userId);
+		//$userfiles = \OCA\Files\Helper::getFiles('../'.$path);
+		$userfiles = \OCA\Files\Helper::getFiles('/'.$path);
+		foreach($userfiles as $f => $file){
+			$userfiles[$f] = \OCA\Files\Helper::formatFileInfo($file);
+			$userfiles[$f]['mtime'] = $userfiles[$f]['mtime']/1000;
+		}
 
 		$params = array(
 			'files' => $userfiles,
@@ -415,6 +427,7 @@ class ApiController extends Controller {
 			$talk['subscribers'] = $subscribers;
 			$subscribers[] = $talk['author'];
 			//$subscribers[] = $this->userId;
+			$talk['subscribers'] = $subscribers;
 		}
 		$messagedata = array(
 			'rid' => $talkid,
@@ -473,6 +486,9 @@ class ApiController extends Controller {
 	 * in subscribers list
 	 */
 	public function sendMessage($message, $subscribers, $from = '', $messagedata = NULL) {
+		if (!is_array($subscribers) && is_string($subscribers)) {
+			$subscribers = explode(',', $subscribers);
+		}
 		$um = $this->connect->userMessage();
 		$users = $this->connect->users();
 		//$isgroup = $users->isGroupSelected($subscribers);
@@ -486,12 +502,16 @@ class ApiController extends Controller {
 		}
 		if (!empty($messagedata)) {
 			foreach ($subscribers as $s => $subscriber) {
-				$this->messageSend($subscriber, $from, $messagedata);
+				Helper::messageSend($subscriber, $from, $messagedata, $this->getProjectName());
 			}
 		}
 	}
 
-	private function messageSend($subscriber, $fromuser, $messagedata) {
+	public function getProjectName() {
+		return $this->projectname;
+	}
+
+	/* private function messageSend($subscriber, $fromuser, $messagedata) {
 		$to = isset($subscriber['settings']) ? $subscriber['settings'][0]['email'] : false;
 		$from = is_array($fromuser) && !empty($fromuser) ? $this->getGroupAlias($fromuser) : $this->getUserAlias();
 		$subject = isset($messagedata['title']) ? $messagedata['title'] : 'OwnCollab message';
@@ -512,4 +532,22 @@ class ApiController extends Controller {
 			return true;
 		}
 	}
+
+	private function getUserAlias($userid) {
+		$project = str_replace(" ", '_', strtolower($this->getProjectName()));
+		$project = preg_replace("/[^A-Za-z0-9_]/", '', $project);
+		$alias = $userid.'@'.$project.'.'.$_SERVER['HTTP_HOST'];
+		return $alias;
+	}
+
+	private function getGroupAlias($groupid) {
+		$project = str_replace(" ", '_', strtolower($this->getProjectName()));
+		$project = preg_replace("/[^A-Za-z0-9_]/", '', $project);
+		$aliases = array();
+		foreach ($groupid as $i => $item) {
+			$aliases[] = strtolower($item).'@'.$project.'.'.$_SERVER['HTTP_HOST'];
+		}
+		$alias = implode(', ', $aliases);
+		return $alias;
+	} */
 }
