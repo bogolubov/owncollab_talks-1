@@ -61,6 +61,18 @@ class Files
         return $filtered;
     }
 
+    public function getFolderPath($folderid) {
+        $folderid = !is_int($folderid) ? substr($folderid, 7) : $folderid;
+        //echo $folder;
+        $sql = "SELECT path " .
+            " FROM ".$this->tableName.
+            " WHERE fileid = ".$folderid;
+        $folder = $this->connect->queryAll($sql)[0];
+        $path = explode('/', $folder['path']);
+        unset($path[0]);
+        return implode('/', $path);
+    }
+
     public function getByIdList($idlist, $user) {
         if (is_array($idlist)) {
             $sql = "SELECT fileid, path, name, mimetype, size, storage_mtime".

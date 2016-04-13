@@ -76,7 +76,7 @@ $cancheckusers = ($_['user'] == $_['talk']['author'] || in_array($_['user'], arr
     </fieldset>
     <?php } ?>
 
-    <?php if (!$cancheckusers) {
+    <?php /* if (!$cancheckusers) {
         $uarray = array();
         foreach ($users as $u => $user) {
             if (!in_array($user['uid'], $uarray)) {
@@ -84,7 +84,7 @@ $cancheckusers = ($_['user'] == $_['talk']['author'] || in_array($_['user'], arr
                 <input type="hidden" name="users[]" value="<?=$user['uid'];?>">
             <?php }
         }
-    } ?>
+    } */ ?>
     <input type="hidden" name="replyid" value="<?=$_['replyid'];?>">
     </div>
 

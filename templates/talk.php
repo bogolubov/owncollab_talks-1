@@ -32,8 +32,8 @@ script('owncollab_talks', 'trumbowyg/trumbowyg');
 				case 'attachments':
 					print_unescaped($this->inc('api.userfiles'));
 					break;
-				case 'save':
-					var_dump($_['saved']);
+				case 'files':
+					print_unescaped($this->inc('part.userfiles'));
 					break;
 				default:
 					print_unescaped($this->inc('part.message-list'));
