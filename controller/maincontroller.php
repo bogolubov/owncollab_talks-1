@@ -20,6 +20,7 @@ use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Http\DataResponse;
 use OCP\AppFramework\Controller;
 use OCP\Share;
+use OCA\Owncollab_Talks\MailParser;
 
 class MainController extends Controller {
 
@@ -84,27 +85,6 @@ class MainController extends Controller {
 				'menu' => 'all'
 			);
 		}
-
-		return new TemplateResponse($this->appName, 'talk', $params);  // templates/talk.php
-	}
-
-	/**
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
-	 * @return TemplateResponse
-	 */
-	//TODO: Використовувати метод з застосуванням засобів безпеки
-	public function testFiles() {
-		$files = \OCA\Files\Helper::getFiles('/');
-		foreach($files as $f => $file){
-			$files[$f] = \OCA\Files\Helper::formatFileInfo($file);
-			$files[$f]['mtime'] = $files[$f]['mtime']/1000;
-		}
-
-		$params = array(
-			'files' => $files,
-			'mode' => 'files'
-		);
 
 		return new TemplateResponse($this->appName, 'talk', $params);  // templates/talk.php
 	}
@@ -355,6 +335,7 @@ class MainController extends Controller {
 			'attachements' => implode(',', $filesid),
 			'author' => $this->userId,
 			'subscribers' => implode(',', array_keys($subscribers)),
+			'hash' => isset($_POST['talkhash']) && !empty($_POST['talkhash']) ? $_POST['talkhash'] : md5(date("Y-m-d h:i:s").''.$_POST['title']),
 			'status' => 0
 		);
 
@@ -363,6 +344,7 @@ class MainController extends Controller {
 		if ($saved) {
 			$this->sendMessage($saved, $subscribers, $from, $messagedata);
 		}
+
 		$canwrite = true; //TODO: Створити перевірку на право починати бесіди
 
 		$usermessages = $this->getUserMessages();
@@ -483,6 +465,34 @@ class MainController extends Controller {
 		);
 
 		return new TemplateResponse($this->appName, 'talk', $params);  // templates/talk.php
+	}
+
+	/**
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 * @return TemplateResponse
+	 */
+	//TODO: Використовувати метод з застосуванням засобів безпеки
+	public function parseMail() {
+		$checkMail = new MailParser();
+		$message = $checkMail->checkMail();
+
+		$messagedata = array(
+			'rid' => $message['replyid'], //TODO Створити і розпарсити id
+			'date' => date("Y-m-d h:i:s", strtotime($message['date'])),
+			'title' => $message['subject'],
+			'text' => Helper::checkTxt($message['message-body']),
+			//'attachements' => implode(',', $filesid),
+			'author' => $message['author'],
+			'subscribers' => implode(',', $message['subscribers']),
+			'status' => 0
+		);
+
+		$messages = $this->connect->messages();
+		$saved = $messages->save($messagedata);
+		if ($saved) {
+			$this->sendMessage($saved, $message['subscribers'], $message['author'], $messagedata);
+		}
 	}
 
 	/**

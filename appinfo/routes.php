@@ -44,7 +44,7 @@ $application->registerRoutes($this, ['routes' => [
     ['name' => 'main#removeUser', 'url' => '/removeuser/{talk}/{user}', 'verb' => 'GET'],
     ['name' => 'main#markMessage', 'url' => '/mark/{id}/{flag}', 'verb' => 'GET'],
 
-    ['name' => 'main#testFiles', 'url' => '/testfiles', 'verb' => 'GET'],
+    ['name' => 'main#parseMail', 'url' => '/checkmail', 'verb' => 'GET'],
 ]]);
 
 \OCP\API::register(

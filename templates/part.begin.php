@@ -86,6 +86,7 @@ $cancheckusers = ($_['user'] == $_['talk']['author'] || in_array($_['user'], arr
         }
     } */ ?>
     <input type="hidden" name="replyid" value="<?=$_['replyid'];?>">
+    <input type="hidden" name="talkhash" value="<?=$_['talkhash'];?>">
     </div>
 
     <div class="right clear"><input type="submit" value="Submit"></div>
