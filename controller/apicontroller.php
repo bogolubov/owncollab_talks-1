@@ -437,6 +437,7 @@ class ApiController extends Controller {
 			'author' => $this->userId,
 			//'subscribers' => is_array($talk['subscribers']) ? implode(',', $talk['subscribers']) : $talk['subscribers'],
 			'subscribers' => is_array($subscribers) ? implode(',', $subscribers) : $subscribers,
+			'hash' => isset($talk['hash']) && !empty($talk['hash']) ? $talk['hash'] : md5(date("Y-m-d h:i:s").''.$text),
 			'status' => 0
 		);
 
@@ -452,13 +453,14 @@ class ApiController extends Controller {
 				$usermessages->save($messagedata);
 			}
 
-			$this->sendMessage($saved, $talk['subscribers'], $this->userId, $messagedata);
+			$sent = $this->sendMessage($saved, $talk['subscribers'], $this->userId, $messagedata);
 
 			$params = array(
 				'answerid' => $saved,
 				'author' => $this->userId,
 				'date' => date("Y-m-d h:i:s"),
 				'title' => Helper::checkTxt($text),
+				'sent' => $sent, 
 				'appname' => $this->appName
 			);
 		}
@@ -502,52 +504,13 @@ class ApiController extends Controller {
 		}
 		if (!empty($messagedata)) {
 			foreach ($subscribers as $s => $subscriber) {
-				Helper::messageSend($subscriber, $from, $messagedata, $this->getProjectName());
+				$sent = Helper::messageSend($subscriber, $from, $messagedata, $this->getProjectName());
 			}
 		}
+		return $sent; 
 	}
 
 	public function getProjectName() {
-		return $this->projectname;
+		return $this->appName;
 	}
-
-	/* private function messageSend($subscriber, $fromuser, $messagedata) {
-		$to = isset($subscriber['settings']) ? $subscriber['settings'][0]['email'] : false;
-		$from = is_array($fromuser) && !empty($fromuser) ? $this->getGroupAlias($fromuser) : $this->getUserAlias();
-		$subject = isset($messagedata['title']) ? $messagedata['title'] : 'OwnCollab message';
-		$body = isset($messagedata['text']) ? $messagedata['text'] : '';
-
-		//echo $from; //TODO Розібратись
-
-		$mail = new PHPMailer();
-		$mail->setFrom($from);
-		$mail->addAddress($to);
-		$mail->Subject = $subject;
-		$mail->Body = $body;
-		$mail->isHTML();
-
-		if (!$mail->send()) {
-			return $mail->ErrorInfo;
-		} else {
-			return true;
-		}
-	}
-
-	private function getUserAlias($userid) {
-		$project = str_replace(" ", '_', strtolower($this->getProjectName()));
-		$project = preg_replace("/[^A-Za-z0-9_]/", '', $project);
-		$alias = $userid.'@'.$project.'.'.$_SERVER['HTTP_HOST'];
-		return $alias;
-	}
-
-	private function getGroupAlias($groupid) {
-		$project = str_replace(" ", '_', strtolower($this->getProjectName()));
-		$project = preg_replace("/[^A-Za-z0-9_]/", '', $project);
-		$aliases = array();
-		foreach ($groupid as $i => $item) {
-			$aliases[] = strtolower($item).'@'.$project.'.'.$_SERVER['HTTP_HOST'];
-		}
-		$alias = implode(', ', $aliases);
-		return $alias;
-	} */
 }

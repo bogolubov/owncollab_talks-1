@@ -347,11 +347,13 @@ class Helper
         $to = isset($subscriber['settings']) ? $subscriber['settings'][0]['email'] : false;
         //$from = isset($fromuser['settings']) ? $fromuser['settings'][0]['email'] : "no-reply@".\OC::$server->getRequest()->getServerHost();
         $from = is_array($fromuser) && !empty($fromuser) ? self::getGroupAlias($fromuser, $projectName) : self::getUserAlias($fromuser, $projectName);
+        $replyto = is_array($fromuser) && !empty($fromuser) ? self::getGroupAlias($fromuser, $projectName, $messagedata['hash']) : self::getUserAlias($fromuser, $projectName, $messagedata['hash']);
         $subject = isset($messagedata['title']) ? $messagedata['title'] : 'OwnCollab message';
         $body = isset($messagedata['text']) ? $messagedata['text'] : '';
 
         $mail = new PHPMailer();
         $mail->setFrom($from);
+        $mail->AddReplyTo($replyto, $fromuser);
         $mail->addAddress($to);
         $mail->Subject = $subject;
         $mail->Body = $body;
@@ -368,19 +370,22 @@ class Helper
         }
     }
 
-    static function getUserAlias($userid, $projectName) {
+    static function getUserAlias($userid, $projectName, $hash = '') {
         $project = str_replace(" ", '_', strtolower($projectName));
-        $project = preg_replace("/[^A-Za-z0-9_]/", '', $project);
-        $alias = $userid.'@'.$project.'.'.$_SERVER['HTTP_HOST'];
+        $project = preg_replace("/[^A-Za-z0-9]/", '', $project);
+        $name = !empty($hash) ? $userid.'+'.substr($hash, 0, 16) : $userid;
+        $alias = strtolower($name).'@'.$_SERVER['HTTP_HOST'];
         return $alias;
     }
 
-    static function getGroupAlias($groupid, $projectName) {
+    static function getGroupAlias($groupid, $projectName, $hash = '') {
         $project = str_replace(" ", '_', strtolower($projectName));
-        $project = preg_replace("/[^A-Za-z0-9_]/", '', $project);
+        $project = preg_replace("/[^A-Za-z0-9]/", '', $project);
         $aliases = array();
         foreach ($groupid as $i => $item) {
-            $aliases[] = strtolower($item).'@'.$project.'.'.$_SERVER['HTTP_HOST'];
+            $name = !empty($hash) ? $item.'+'.substr($hash, 0, 16) : $item;
+            //$aliases[] = strtolower($name).'@'.$project.'.'.$_SERVER['HTTP_HOST'];
+            $aliases[] = strtolower($name).'@'.$_SERVER['HTTP_HOST'];
         }
         $alias = implode(', ', $aliases);
         return $alias;

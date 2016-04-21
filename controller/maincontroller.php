@@ -20,6 +20,7 @@ use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Http\DataResponse;
 use OCP\AppFramework\Controller;
 use OCP\Share;
+use OCA\Owncollab_Talks\MailParser;
 
 class MainController extends Controller {
 
@@ -94,27 +95,6 @@ class MainController extends Controller {
 	 * @return TemplateResponse
 	 */
 	//TODO: Використовувати метод з застосуванням засобів безпеки
-	public function testFiles() {
-		$files = \OCA\Files\Helper::getFiles('/');
-		foreach($files as $f => $file){
-			$files[$f] = \OCA\Files\Helper::formatFileInfo($file);
-			$files[$f]['mtime'] = $files[$f]['mtime']/1000;
-		}
-
-		$params = array(
-			'files' => $files,
-			'mode' => 'files'
-		);
-
-		return new TemplateResponse($this->appName, 'talk', $params);  // templates/talk.php
-	}
-
-	/**
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
-	 * @return TemplateResponse
-	 */
-	//TODO: Використовувати метод з застосуванням засобів безпеки
 	public function talk($id) {
 		$messages = $this->connect->messages();
 		$talk = $messages->getById($id)[0];
@@ -154,7 +134,7 @@ class MainController extends Controller {
 		}
 		if (in_array($this->userId, $subscribers)) { // If it's subscriber
 			$usermessages = $this->getUserMessages($this->userId);
-			$message = $usermessages->getMessageById($id);
+			$message = $usermessages->getMessageById($id, $talk['author']);
 			if ($message['status'] == 0) {
 				$message['status'] = 1;
 				$usermessages->setStatus($message);
@@ -230,14 +210,23 @@ class MainController extends Controller {
 	 */
 	//TODO: Використовувати метод з застосуванням засобів безпеки
 	public function begin() {
+		$errors = array();
 		$subscribers = $this->getUsers();
 		$canwrite = true; //TODO: Створити перевірку на право починати бесіди
+		$permissions = $this->checkUserDirPermissions();
+		if (substr($permissions, -1) < 7) {
+			$setPermissions = $this->setUserDirPermissions(7, $permissions);
+			if (!($setPermissions == 'success')) {
+				$errors[] = $setPermissions;
+			}
+		}
 		if ($canwrite) {
 			$params = array(
 				'user' => $this->userId,
 				'subscribers' => $subscribers,
 				'mode' => 'begin',
-				'menu' => 'begin'
+				'menu' => 'begin',
+				'errors' => !empty($errors) ? $errors : NULL
 			);
 
 			return new TemplateResponse($this->appName, 'talk', $params);  // templates/talk.php
@@ -325,7 +314,7 @@ class MainController extends Controller {
 			$sharetype = $file['mimetype'] == 2 ? 'folder' : 'file';
 			$sharedWith = \OCP\Share::getUsersItemShared($sharetype, $file['fileid'], $fileOwner, false, true);
 			foreach ($subscribers as $userid => $user) {
-				if (isset($file['fileid']) && is_array($file) && isset($file['fileid']) && !in_array($userid, $sharedWith)) {
+				if (isset($file['fileid']) && is_array($file) && isset($file['fileid']) && !in_array($userid, $sharedWith) && !($userid == $this->userId)) {
 					\OCP\Share::shareItem($sharetype, $file['fileid'], \OCP\Share::SHARE_TYPE_USER, $userid, 1);
 					$filesid[] = $id;
 				}
@@ -338,7 +327,7 @@ class MainController extends Controller {
 				$sharetype = $file['mimetype'] == 2 ? 'folder' : 'file';
 				$sharedWith = \OCP\Share::getUsersItemShared($sharetype, $file['fileid'], $fileOwner, false, true);
 				foreach ($subscribers as $userid => $user) {
-					if (isset($file['fileid']) && is_array($file) && isset($file['fileid']) && !in_array($userid, $sharedWith)) {
+					if (isset($file['fileid']) && is_array($file) && isset($file['fileid']) && !in_array($userid, $sharedWith) && !($userid == $this->userId)) {
 						//Helper::shareFile($file['name'], $user, $userid);
 						\OCP\Share::shareItem($sharetype, $file['fileid'], \OCP\Share::SHARE_TYPE_USER, $userid, 1);
 						$filesid[] = $id;
@@ -355,6 +344,7 @@ class MainController extends Controller {
 			'attachements' => implode(',', $filesid),
 			'author' => $this->userId,
 			'subscribers' => implode(',', array_keys($subscribers)),
+			'hash' => isset($_POST['talkhash']) && !empty($_POST['talkhash']) ? $_POST['talkhash'] : md5(date("Y-m-d h:i:s").''.$_POST['title']),
 			'status' => 0
 		);
 
@@ -363,6 +353,7 @@ class MainController extends Controller {
 		if ($saved) {
 			$this->sendMessage($saved, $subscribers, $from, $messagedata);
 		}
+
 		$canwrite = true; //TODO: Створити перевірку на право починати бесіди
 
 		$usermessages = $this->getUserMessages();
@@ -486,6 +477,45 @@ class MainController extends Controller {
 	}
 
 	/**
+	 * @PublicPage
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 */
+	//TODO: Використовувати метод з застосуванням засобів безпеки
+	public function parseMail() {
+
+		$messages = $this->connect->messages();
+		$usermessages = $this->connect->userMessage();
+		$message = $_POST['message'];
+
+		$checkMail = new MailParser();
+		$message = $checkMail->checkMail($message);
+		$messageid = $messages->getIdByHash($message['hash']);
+		$author = $this->getUserByExternalEmail($message['author']);
+
+		$messagedata = array(
+			'rid' => $messageid,
+			'date' => date("Y-m-d h:i:s", strtotime($message['date'])),
+			'title' => $message['title'],
+			'text' => Helper::checkTxt($message['text']),
+			//'attachements' => implode(',', $filesid),
+			'author' => $author,
+			'subscribers' => is_array($message['subscribers']) ? implode(',', $message['subscribers']) : $message['subscribers'],
+			'hash' => $message['hash'],
+			'status' => 0
+		);
+
+		if (!$usermessage = $usermessages->getMessageById($messageid)) {
+			$usermessages->createStatus($messageid, $author);
+			$usermessage = $usermessages->getMessageById($messageid);
+		}
+		if ($messageid && $author && $message['title'] && $message['subscribers']) {
+			$saved = $messages->save($messagedata);
+		}
+		return true;
+	}
+
+	/**
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
 	 * @param $id int
@@ -581,7 +611,7 @@ class MainController extends Controller {
 		}
 		if (!empty($messagedata)) {
 			foreach ($subscribers as $s => $subscriber) {
-				Helper::messageSend($subscriber, $from, $messagedata, $this->getProjectName());
+				$sent = Helper::messageSend($subscriber, $from, $messagedata, $this->getProjectName());
             }
 		}
 	}
@@ -626,5 +656,47 @@ class MainController extends Controller {
 
 	public function getProjectName() {
 		return $this->projectname;
+	}
+
+	public function getUserByExternalEmail($email) {
+		//file_put_contents('/tmp/inb.log', "getUserByExternalEmail email : ".$email."\n", FILE_APPEND);
+		$users = $this->connect->users();
+		$userid = $users->getByExternalEmail($email);
+		if ($userid && !empty($userid)) {
+			return $userid;
+		}
+		else {
+			return false;
+		}
+	}
+
+	private function checkUserDirPermissions() {
+		$cwd = getcwd();
+		$fileperms = fileperms($cwd.'/data/'.$this->userId);
+		return sprintf('%o', $fileperms);
+	}
+
+	private function setUserDirPermissions($permission, $current = NULL) {
+		if (!$current) {
+			$current = $this->checkUserDirPermissions();
+		}
+		$current = substr($current, 2, 2);
+		$cwd = getcwd();
+		try {
+			chmod($cwd . '/data/' . $this->userId, octdec($current.''.$permission));
+			return 'success';
+		}
+		catch (\Exception $e) {
+			$error = 'You have no rights to upload files!';
+			return $error;
+		}
+	}
+
+	private function checkUserEmailAlias($user) {
+		return false;
+	}
+
+	private function setUserEmailAlias($user) {
+		return false;
 	}
 }
