@@ -9,20 +9,13 @@ use OCA\Owncollab_Talks\Helper;
 
 class MailParser
 {
-    public function checkMail() {
-        $dir = '/var/mail/';
-        if (file_exists($dir.'testmail.txt')) {
-            $mail = fopen("/var/mail/testmail.txt", 'r+');
-            $message = $this->parseMessage("/var/mail/testmail.txt");
-            fclose($mail);
-        }
+    public function checkMail($msg) {
+        $message = $this->parseMessage($msg);
         return $message;
     }
 
-    public function parseMessage($file) {
+    public function parseMessage($msg) {
         $message = array();
-
-        $msg = file_get_contents($file);
 
         $sender = getenv('SENDER');
 
@@ -36,52 +29,68 @@ class MailParser
         $headerArr = explode("\n", $header);
         foreach ($headerArr as $str) {
             if (strpos($str, 'Subject:') === 0) {
-                $subject = $str;
+                $subject = substr($str, 8);
             }
             if (strpos($str, 'From:') === 0) {
                 $from = $str;
-                $author = $this->getUserIdFromAddress($from);
+                $author = $this->getFrom($from);
             }
             if (strpos($str, 'To:') === 0) {
                 $to = $str;
-                $subscribers = $this->getSubscribers($from);
+                $subscribers = $this->getSubscribers($to);
             }
-            if (strpos($str, 'Delivery-date:') === 0) {
-                $date = $str;
+            if (strpos($str, 'Date:') === 0) {
+                $date = substr($str, 5);
             }
         }
 
-//        $logMsg = "=== MSG ===\n";
-//        $logMsg .= "SENDER: $sender\n";
-//        $logMsg .= "RECIPIENT: $recipient\n";
-//        $logMsg .= "$from\n";
-//        $logMsg .= "$to\n";
-//        $logMsg .= "$subject\n\n";
-//        $logMsg .= "$msg\n";
-//        file_put_contents('/var/mail/inb.log',$logMsg, FILE_APPEND);
-        $message['sender'] = $sender;
-        $message['recipient'] = $recipient;
-        $message['from'] = $from;
-        $message['author'] = $author;
-        $message['subscribers'] = $subscribers;
-        $message['date'] = $date;
-        $message['to'] = $to;
-        $message['subkect'] = $subject;
-        $message['message-body'] = $msg;
+        $message = array(
+            //'rid' => $talkid,
+            'date' => $date,
+            'title' => trim($subject),
+            'text' => trim($msg),
+            'attachements' => NULL,
+            'author' => $author,
+            'subscribers' => implode(',', array_column($subscribers, 'userid')),
+            'hash' => $subscribers[0]['hash'],
+            'status' => 0
+        );
+
 
         return $message;
     }
 
-    private function getSubscribers($address) {
-        $subscribers = array();
-        $addr = is_array($address) ? $address : explode(', ', $address);
-        foreach ($addr as $a => $addres) {
-            $subscribers[] = $this->getUserIdFromAddress($addres);
+    private function getFrom($from) {
+        if (strpos($from, '<') && strpos($from, '>')) {
+            preg_match('/<(.*?)>/', $from, $match);
+            $address = $match[1];
         }
+        return $address;
+    }
+
+    private function getSubscribers($address) {
+        if (strpos($address, '<') && strpos($address, '>')) {
+            preg_match('/<(.*?)>/', $address, $match);
+            $address = $match[1];
+        }
+        $subscribers = array();
+        $subscribers[] = $this->getUserIdFromAddress($address);
         return $subscribers;
     }
 
     private function getUserIdFromAddress($address) {
-        return substr($address, 0, strpos($address, '@'));
+        if (strpos($address, '<') && strpos($address, '>')) {
+            preg_match('/<(.*?)>/', $address, $match);
+            $address = $match[1];
+        }
+        $to = substr($address, 0, strpos($address, '@'));
+        if ($delimiter = strpos($to, '+')) {
+            $userid = substr($to, 0, $delimiter);
+            $hash = substr($to, $delimiter+1);
+            return ['userid' => $userid, 'hash' => $hash];
+        }
+        else {
+            return $to;
+        }
     }
 }

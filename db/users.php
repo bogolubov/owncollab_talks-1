@@ -107,4 +107,21 @@ class Users
         }
         return $userinfo;
     }
+
+    /**
+     * Get userid by external email
+     * @param $user string
+     * @return array
+     */
+    public function getByExternalEmail($email) {
+
+        $sql = "SELECT userid
+                FROM *PREFIX*preferences
+                WHERE appid = 'settings' AND configkey = 'email' AND configvalue = '".$email."'";
+
+        $res = $this->connect->queryAll($sql);
+        $userinfo = array();
+        $row = $res[0];
+        return $row['userid'];
+    }
 }

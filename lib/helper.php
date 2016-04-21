@@ -372,19 +372,20 @@ class Helper
 
     static function getUserAlias($userid, $projectName, $hash = '') {
         $project = str_replace(" ", '_', strtolower($projectName));
-        $project = preg_replace("/[^A-Za-z0-9_]/", '', $project);
-        $name = !empty($hash) ? $userid.'-'.substr($hash, 0, 16) : $userid;
-        $alias = strtolower($name).'@'.$project.'.'.$_SERVER['HTTP_HOST'];
+        $project = preg_replace("/[^A-Za-z0-9]/", '', $project);
+        $name = !empty($hash) ? $userid.'+'.substr($hash, 0, 16) : $userid;
+        $alias = strtolower($name).'@'.$_SERVER['HTTP_HOST'];
         return $alias;
     }
 
     static function getGroupAlias($groupid, $projectName, $hash = '') {
         $project = str_replace(" ", '_', strtolower($projectName));
-        $project = preg_replace("/[^A-Za-z0-9_]/", '', $project);
+        $project = preg_replace("/[^A-Za-z0-9]/", '', $project);
         $aliases = array();
         foreach ($groupid as $i => $item) {
-            $name = !empty($hash) ? $item.'-'.substr($hash, 0, 16) : $item;
-            $aliases[] = strtolower($name).'@'.$project.'.'.$_SERVER['HTTP_HOST'];
+            $name = !empty($hash) ? $item.'+'.substr($hash, 0, 16) : $item;
+            //$aliases[] = strtolower($name).'@'.$project.'.'.$_SERVER['HTTP_HOST'];
+            $aliases[] = strtolower($name).'@'.$_SERVER['HTTP_HOST'];
         }
         $alias = implode(', ', $aliases);
         return $alias;

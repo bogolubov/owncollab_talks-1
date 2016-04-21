@@ -26,6 +26,11 @@ class Messages
         return $message;
     }
 
+    public function getIdByHash($hash) {
+        $message = $this->connect->query("SELECT id FROM ".$this->tableName." WHERE hash LIKE '".$hash."%'");
+        return $message['id'];
+    }
+
     public function getByReply($id) {
         $sql = "SELECT um.id as id, um.mid as mid, m.date, m.title, m.text, m.attachements, m.author, m.subscribers, um.status".
             " FROM oc_collab_user_message um".

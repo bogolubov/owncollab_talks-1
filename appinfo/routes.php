@@ -45,6 +45,7 @@ $application->registerRoutes($this, ['routes' => [
     ['name' => 'main#markMessage', 'url' => '/mark/{id}/{flag}', 'verb' => 'GET'],
 
     ['name' => 'main#parseMail', 'url' => '/checkmail', 'verb' => 'GET'],
+    ['name' => 'main#parse_mail', 'url' => '/parsemail', 'verb' => 'GET|POST'],
 ]]);
 
 \OCP\API::register(

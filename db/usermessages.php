@@ -41,6 +41,12 @@ class UserMessages
 
     public function getMessageById($id, $user = NULL) {
         $userid = !empty($user) ? $user : $this->user;
+        $sql = "SELECT id FROM oc_collab_user_message WHERE mid = " . $id . " AND uid = '" . $userid . "'";
+        $um = $this->connect->query($sql);
+        if (empty($um['id'])) {
+            echo "CreateStatus";
+            $this->createStatus($id, $userid, 0);
+        }
         $sql = "SELECT um.id as id, m.date, m.title, m.text, m.attachements, m.author, m.subscribers, um.mid as mid, um.status".
                 " FROM oc_collab_user_message um".
                 " INNER JOIN oc_collab_messages m ON m.id = um.mid".
