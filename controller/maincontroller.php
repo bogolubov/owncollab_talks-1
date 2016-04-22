@@ -14,13 +14,14 @@ namespace OCA\Owncollab_Talks\Controller;
 use OC\Files\Filesystem;
 use OCA\Owncollab_Talks\Db\Connect;
 use OCA\Owncollab_Talks\Helper;
+use OCA\Owncollab_Talks\MailParser;
+use OCA\Owncollab_Talks\ParseMail;
 use OCP\Files;
 use OCP\IRequest;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Http\DataResponse;
 use OCP\AppFramework\Controller;
 use OCP\Share;
-use OCA\Owncollab_Talks\MailParser;
 
 class MainController extends Controller {
 
@@ -488,10 +489,16 @@ class MainController extends Controller {
 		$usermessages = $this->connect->userMessage();
 		$message = $_POST['message'];
 
-		$checkMail = new MailParser();
+		//$checkMail = new MailParser();
+		$checkMail = new ParseMail();
 		$message = $checkMail->checkMail($message);
+		//file_put_contents('/tmp/inb.log', "\nhash : ".$message['hash']."\n", FILE_APPEND);
+
 		$messageid = $messages->getIdByHash($message['hash']);
+		//file_put_contents('/tmp/inb.log', "\nmessageid : ".$messageid."\n", FILE_APPEND);
+
 		$author = $this->getUserByExternalEmail($message['author']);
+		//file_put_contents('/tmp/inb.log', "\nauthor : ".$author."\n", FILE_APPEND);
 
 		$messagedata = array(
 			'rid' => $messageid,
@@ -512,7 +519,19 @@ class MainController extends Controller {
 		if ($messageid && $author && $message['title'] && $message['subscribers']) {
 			$saved = $messages->save($messagedata);
 		}
-		return true;
+		/* else {
+			$error = "MessageID : ".$messageid."\n".
+				"Author : ".$author."\n".
+				"Title : ".$message['title']."\n".
+				"Subscribers : ".$messagedata['subscribers']."\n";
+		}
+		if ($saved) {
+			file_put_contents('/tmp/inb.log', "Message saved!\n", FILE_APPEND);
+		}
+		else {
+			file_put_contents('/tmp/inb.log', "Message not saved! Database error! \n", FILE_APPEND);
+		} */
+		die;
 	}
 
 	/**
@@ -659,7 +678,6 @@ class MainController extends Controller {
 	}
 
 	public function getUserByExternalEmail($email) {
-		//file_put_contents('/tmp/inb.log', "getUserByExternalEmail email : ".$email."\n", FILE_APPEND);
 		$users = $this->connect->users();
 		$userid = $users->getByExternalEmail($email);
 		if ($userid && !empty($userid)) {

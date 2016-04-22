@@ -7,15 +7,9 @@ use OCP\AppFramework\Http\DataResponse;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCA\Owncollab_Talks\Helper;
 
-class MailParser
+class ParseMail
 {
-    function __construct()
-    {
-        file_put_contents('/tmp/inb.log', "CheckMail...\n", FILE_APPEND);
-    }
-
     public function checkMail($msg) {
-        file_put_contents('/tmp/inb.log', "\nParsing mail!\n", FILE_APPEND);
         $message = $this->parseMessage($msg);
         return $message;
     }
@@ -37,7 +31,7 @@ class MailParser
             if (strpos($str, 'Subject:') === 0) {
                 $subject = substr($str, 8);
             }
-            if (strpos($str, 'From:') === 0) {
+            if (strpos($str, 'Return-Path:') === 0) {
                 $from = $str;
                 $author = $this->getFrom($from);
             }
@@ -49,6 +43,10 @@ class MailParser
                 $date = substr($str, 5);
             }
         }
+
+        $str = explode("\n\n", $msg);
+        unset($str[0]);
+        $msg = "\n".implode("\n", $str);
 
         $message = array(
             //'rid' => $talkid,
