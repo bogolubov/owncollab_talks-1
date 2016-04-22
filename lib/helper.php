@@ -390,4 +390,5 @@ class Helper
         $alias = implode(', ', $aliases);
         return $alias;
     }
+
 }
