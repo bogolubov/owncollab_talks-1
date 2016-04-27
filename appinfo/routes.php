@@ -44,16 +44,6 @@ $application->registerRoutes($this, ['routes' => [
     ['name' => 'main#removeUser', 'url' => '/removeuser/{talk}/{user}', 'verb' => 'GET'],
     ['name' => 'main#markMessage', 'url' => '/mark/{id}/{flag}', 'verb' => 'GET'],
 
-    ['name' => 'main#parseMail', 'url' => '/checkmail', 'verb' => 'GET'],
+    //['name' => 'main#parseMail', 'url' => '/checkmail', 'verb' => 'GET'],
     ['name' => 'main#parse_mail', 'url' => '/parsemail', 'verb' => 'GET|POST'],
 ]]);
-
-\OCP\API::register(
-    'get',
-    '/apps/owncollab_talks/url',
-    function($urlParameters) {
-        return new \OC_OCS_Result($data);
-    },
-    'owncollab_talks',
-    \OC_API::ADMIN_AUTH
-);

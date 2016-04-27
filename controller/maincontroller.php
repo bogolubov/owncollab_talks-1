@@ -348,11 +348,7 @@ class MainController extends Controller {
 			'status' => 0
 		);
 
-		if ($this->checkUserEmailAlias($this->userId)) {
-			$this->setUserEmailAlias($this->userId);
-		}
-
-			$messages = $this->connect->messages();
+		$messages = $this->connect->messages();
 		$saved = $messages->save($messagedata);
 		if ($saved) {
 			$this->sendMessage($saved, $subscribers, $from, $messagedata);
@@ -494,9 +490,7 @@ class MainController extends Controller {
 
 		$checkMail = new MailParser();
 		$message = $checkMail->checkMail($message);
-
 		$messageid = $messages->getIdByHash($message['hash']);
-
 		$author = $this->getUserByExternalEmail($message['author']);
 
 		$messagedata = array(
@@ -699,35 +693,10 @@ class MainController extends Controller {
 	}
 
 	private function checkUserEmailAlias($user) {
-		//$db = 'dbconnect';
-		$email = Helper::getUserAlias($user);
-
-		$conn = DriverManager::getConnection($params, $config);
-		$sql = "SELECT id".
-				" FROM virtual_users".
-				" WHERE email = '".$email."'";
-		$res = $conn->query($sql);
-		if (!empty($res)) {
-			return $res['id'];
-		}
-		else {
-			return false;
-		}
+		return false;
 	}
 
 	private function setUserEmailAlias($user) {
-		$db = 'dbconnect';
-		$email = Helper::getUserAlias($user);
-		$sql = "INSERT INTO virtual_users (`domain_id`, `password` , `email`)".
-				" VALUES ('1',".
-				" ENCRYPT('newpassword', CONCAT('$6$', SUBSTRING(SHA(RAND()), -16))),".
-				" '".$email."')";
-		$res = $this->connect->query($sql);
-		if (!empty($res)) {
-			return $res['id'];
-		}
-		else {
-			return false;
-		}
+		return false;
 	}
 }

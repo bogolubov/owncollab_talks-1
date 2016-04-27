@@ -200,6 +200,7 @@ ul.messagelist li.title .id {
 	float: left;
 }
 .read-message .talk-body {
+	margin-top:10px;
 	min-width: 55px;
 	min-height: 100px;
 	float:none !important;

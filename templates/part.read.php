@@ -16,7 +16,7 @@ $filetypes = array('file', 'file', 'folder', 'file', 'application-pdf', 'file', 
         <div><div class="rowheader">Subject: </div><strong><?=$message['title'];?></strong></div>
     </div>
     <div class="talk-body">
-        <pre><?=$message['text'];?></pre>
+        <?=$message['text'];?>
     </div>
     <?php if ($message['attachements']) { ?>
     <div class="talk-attachements">
