@@ -31,7 +31,7 @@ class UserMessages
     public function getAll() {
         $sql = "SELECT um.id as id, m.id as messageid, m.date, m.title, m.text, m.attachements, m.author, m.subscribers, um.status".
             " FROM " . $this->tableName . " um".
-            " INNER JOIN oc_collab_messages m ON m.id = um.mid".
+            " INNER JOIN *PREFIX*collab_messages m ON m.id = um.mid".
             " WHERE m.rid = 0".
             " GROUP BY um.mid".
             " ORDER BY m.date DESC";
@@ -41,28 +41,37 @@ class UserMessages
 
     public function getMessageById($id, $user = NULL) {
         $userid = !empty($user) ? $user : $this->user;
-        $sql = "SELECT id FROM oc_collab_user_message WHERE mid = " . $id . " AND uid = '" . $userid . "'";
+        $sql = "SELECT id FROM *PREFIX*collab_user_message WHERE mid = " . $id . " AND uid = '" . $userid . "'";
         $um = $this->connect->query($sql);
         if (empty($um['id'])) {
-            echo "CreateStatus";
             $this->createStatus($id, $userid, 0);
         }
         $sql = "SELECT um.id as id, m.date, m.title, m.text, m.attachements, m.author, m.subscribers, um.mid as mid, um.status".
-                " FROM oc_collab_user_message um".
-                " INNER JOIN oc_collab_messages m ON m.id = um.mid".
+                " FROM *PREFIX*collab_user_message um".
+                " INNER JOIN *PREFIX*collab_messages m ON m.id = um.mid".
                 " WHERE um.mid = " . $id . " AND um.uid = '" . $userid . "'".
                 " ORDER BY m.date DESC";
         $message = $this->connect->query($sql);
         return $message;
     }
 
-    public function getBySubscriber($subscriber = NULL, $parent = NULL) {
+    public function getBySubscriber($subscriber = NULL, $parent = NULL, $userGroups = NULL) {
         $userid = !empty($subscriber) ? $subscriber : $this->user;
         if ($userid) {
             $sql = "SELECT um.id as id, m.id as messageid, m.date, m.title, m.text, m.attachements, m.author, m.subscribers, um.status".
                     " FROM " . $this->tableName . " um".
-                    " INNER JOIN oc_collab_messages m ON m.id = um.mid".
+                    " INNER JOIN *PREFIX*collab_messages m ON m.id = um.mid"; 
                     " WHERE um.uid = '" . $userid . "' AND NOT (m.author = '" . $userid . "')";
+                    /* if ($userGroups) { 
+											$sql .= " WHERE (um.uid = '" . $userid . "'"; 
+											foreach ($userGroups as $ug => $group) { 
+												$sql .= " OR m.subscribers like '%".$group."%') "; 
+											} 
+                    } 
+                    else { 
+											$sql .= " WHERE um.uid = '" . $userid . "'"; 
+                    } 
+                    $sql .= " AND NOT (m.author = '" . $userid . "')"; */ 
                 if (!($parent == NULL)) {
                     $sql .= " AND m.rid = ".$parent;
                 }
@@ -81,7 +90,7 @@ class UserMessages
         if ($userid) {
             $sql = "SELECT um.id as id, m.id as messageid, m.date, m.title, m.text, m.attachements, m.author, m.subscribers, um.status".
                 " FROM " . $this->tableName . " um".
-                " INNER JOIN oc_collab_messages m ON m.id = um.mid".
+                " INNER JOIN *PREFIX*collab_messages m ON m.id = um.mid".
                 " WHERE (m.author = '" . $userid . "' OR m.subscribers LIKE '%" . $userid . "%')";
             if (!($parent == NULL)) {
                 $sql .= " AND m.rid = ".$parent;
@@ -120,8 +129,8 @@ class UserMessages
         }
     }
 
-    public function createStatus($message, $user) {
-        $status = $this->connect->insert($this->tableName, ['uid' => $user, 'mid' => $message, 'status' => 0]);
+    public function createStatus($message, $user, $status = 0) {
+        $status = $this->connect->insert($this->tableName, ['uid' => $user, 'mid' => $message, 'status' => $status]);
         return $status;
     }
 

@@ -17,6 +17,10 @@ class Connect
     private $users;
     /** @var Files  database table */
     private $files;
+    /** @var Talks */
+    private $talks;
+    /** @var Answers */
+    private $answers;
 
     /**
      * Connect constructor.
@@ -30,6 +34,8 @@ class Connect
         $this->user_message = new UserMessages($this, 'collab_user_message');
         $this->users = new Users($this, 'users');
         $this->files = new Files($this, 'filecache');
+        $this->talks = new Talks($this, $this->messages);
+        $this->answers = new Answers($this, $this->messages);
     }
 
     /**
@@ -148,5 +154,21 @@ class Connect
      */
     public function files() {
         return $this->files;
+    }
+
+    /**
+     * Object of Talks
+     * @return Talks
+     */
+    public function talks() {
+        return $this->talks;
+    }
+
+    /**
+     * Object of Answers
+     * @return Answers
+     */
+    public function answers() {
+        return $this->answers;
     }
 }

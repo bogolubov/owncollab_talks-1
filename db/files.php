@@ -123,4 +123,61 @@ class Files
         $mimetype = $this->connect->select("mimetype", "oc_mimetypes", "id = :id",[':id' => $id]);
         return $mimetype;
     }
+
+    /**
+     * Inserts uploaded file into database
+     * @param array $file
+     */
+    public function newFile($file) {
+        $sql = "SELECT id FROM *PREFIX*mimetypes WHERE mimetype = '".$file['mimetype']."'";
+        $res = $this->connect->query($sql);
+        $mimetype = $res['id'];
+
+        $sql = "SELECT numeric_id FROM *PREFIX*storages WHERE id = 'home::".$file['owner']."'";
+        $res = $this->connect->query($sql);
+        $storage = $res['numeric_id'];
+
+        $sql = "SELECT fileid FROM *PREFIX*filecache WHERE path = '".$file['path']."'";
+        $res = $this->connect->query($sql);
+        $parent = $res['fileid'];
+
+        $data = array(
+            'storage' => $storage,
+            'path' => $file['path'].'/'.$file['filename'],
+            'path_hash' => md5($file['path'].'/'.$file['filename']),
+            'parent' => $parent,
+            'name' => $file['filename'],
+            'mimetype' => $mimetype,
+            'size' => $file['size'],
+            'mtime' => $file['mtime'],
+            'storage_mtime' => $file['storage_mtime'],
+            'permissions' => 31
+            );
+        $filecache = $this->save($data);
+
+        $activity = array(
+                    'activity_id' => NULL,
+                    'timestamp' => $file['mtime'],
+                    'priority' => 30,
+                    'type' => 'file_created',
+                    'user' => $file['owner'],
+                    'affecteduser' => $file['owner'],
+                    'app' => 'files',
+                    'subject' => 'created_self',
+                    'subjectparams' => '["\/Talks\/'.$file['filename'].'"]',
+                    'message' => '',
+                    'messageparams' => '[]',
+                    'file' => '/Talks/'.$file['filename'],
+                    'link' => $file['domain'].'/index.php/apps/files?dir=%2FTalks',
+                    'object_type' => 'files',
+                    'object_id' => $filecache
+                    );
+        $id = $this->connect->insert('*PREFIX*activity', $activity);
+        if ($id) {
+            return $filecache;
+        }
+        else {
+            return false;
+        }
+    }
 }

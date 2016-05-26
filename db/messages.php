@@ -12,9 +12,9 @@ namespace OCA\Owncollab_Talks\Db;
 class Messages
 {
     /** @var  Connect */
-    private $connect;
+    protected $connect;
 
-    private $tableName;
+    protected $tableName;
 
     public function __construct($connect, $tableName) {
         $this->connect = $connect;
@@ -26,9 +26,9 @@ class Messages
         return $message;
     }
 
-    public function getIdByHash($hash) {
-        $message = $this->connect->query("SELECT id FROM ".$this->tableName." WHERE hash LIKE '".$hash."%'");
-        return $message['id'];
+    public function getTalkByHash($hash) {
+        $talk = $this->connect->query("SELECT * FROM ".$this->tableName." WHERE hash LIKE '".$hash."%' AND rid = 0");
+        return $talk;
     }
 
     public function getByReply($id) {
@@ -88,8 +88,10 @@ class Messages
         return $message;
     }
 
-    public function canRead($message, $user) {
-        $subscribers = explode(',', $message['subscribers']);
+    public function canRead($message, $user, $subscribers = NULL) {
+        if (empty($subscribers)) {
+            $subscribers = explode(',', $message['subscribers']);
+        }
         if (in_array($user, $subscribers) || $message['author'] == $user) {
             return true;
         }

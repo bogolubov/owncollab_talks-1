@@ -343,18 +343,55 @@ class Helper
         return $text;
     }
 
-    static function messageSend($subscriber, $fromuser, $messagedata, $projectName) {
+    static function messageSendBkp($subscriber, $fromuser, $messagedata, $projectName, $directanswer = false) {
         $to = isset($subscriber['settings']) ? $subscriber['settings'][0]['email'] : false;
         //$from = isset($fromuser['settings']) ? $fromuser['settings'][0]['email'] : "no-reply@".\OC::$server->getRequest()->getServerHost();
-        $from = is_array($fromuser) && !empty($fromuser) ? self::getGroupAlias($fromuser, $projectName) : self::getUserAlias($fromuser, $projectName);
-        $replyto = is_array($fromuser) && !empty($fromuser) ? self::getGroupAlias($fromuser, $projectName, $messagedata['hash']) : self::getUserAlias($fromuser, $projectName, $messagedata['hash']);
+        $from = !empty($messagedata['groupsid']) ? self::getGroupAlias($fromuser, $projectName) : self::getUserAlias($fromuser, $projectName);
+        $replyto = !empty($messagedata['groupsid']) ? self::getGroupAlias($fromuser, $projectName, $messagedata['hash']) : self::getUserAlias($fromuser, $projectName, $messagedata['hash']);
+        //$from = is_array($messagedata['groupsid']) && !empty($messagedata['groupsid']) ? self::getGroupAlias($fromuser, $projectName) : self::getUserAlias($fromuser, $projectName);
+        //$replyto = is_array($messagedata['groupsid']) && !empty($messagedata['groupsid']) ? self::getGroupAlias($fromuser, $projectName, $messagedata['hash']) : self::getUserAlias($fromuser, $projectName, $messagedata['hash']);
         $subject = isset($messagedata['title']) ? $messagedata['title'] : 'OwnCollab message';
-        $body = isset($messagedata['text']) ? $messagedata['text'] : '';
+        if ($directanswer) {
+            $body = $subject;
+        }
+        else {
+            if (!empty($messagedata['attachlinks'])) {
+                $body = "<br><br>" . $messagedata['attachlinks'];
+            }
+            $body .= isset($messagedata['text']) ? $messagedata['text'] : '';
+        }
 
+        //echo "from: ".$from."<br>to: ".$to."<br>subject: ".$subject."<br>body: ".$body."<br><br>";
         $mail = new PHPMailer();
         $mail->setFrom($from);
         $mail->AddReplyTo($replyto, $fromuser);
         $mail->addAddress($to);
+        $mail->Subject = $subject;
+        $mail->Body = $body;
+        $mail->isHTML();
+
+        if (!empty($to) && !empty($from)) {
+            if (!$mail->send()) {
+                return $mail->ErrorInfo;
+            } else {
+                return true;
+            }
+        } else {
+            return false;
+        }
+    }
+
+    static function messageSend($address, $messagedata) {
+        $to = $address['email'];
+        $from = $address['fromaddress'];
+        $replyto = $address['replyto'];
+        $subject = isset($messagedata['title']) ? $messagedata['title'] : 'OwnCollab message';
+        $body = isset($messagedata['text']) ? $messagedata['text'] : 'OwnCollab message';
+
+        $mail = new PHPMailer();
+        $mail->setFrom($from, $address['fromname']);
+        $mail->AddReplyTo($replyto, $address['fromname']);
+        $mail->addAddress($to, $address['name']);
         $mail->Subject = $subject;
         $mail->Body = $body;
         $mail->isHTML();
@@ -382,13 +419,26 @@ class Helper
         $project = str_replace(" ", '_', strtolower($projectName));
         $project = preg_replace("/[^A-Za-z0-9]/", '', $project);
         $aliases = array();
-        foreach ($groupid as $i => $item) {
+        /* foreach ($groupid as $i => $item) {
             $name = !empty($hash) ? $item.'+'.substr($hash, 0, 16) : $item;
             //$aliases[] = strtolower($name).'@'.$project.'.'.$_SERVER['HTTP_HOST'];
             $aliases[] = strtolower($name).'@'.$_SERVER['HTTP_HOST'];
-        }
-        $alias = implode(', ', $aliases);
+        } */
+
+        $name = !empty($hash) ? $groupid.'+'.substr($hash, 0, 16) : $groupid;
+        $alias = strtolower($name).'@'.$_SERVER['HTTP_HOST'];
         return $alias;
     }
 
+    static public function makeAttachLinks($filesid, $files) {
+        $host = \OC::$server->getRequest()->getServerHost();
+        $links = '';
+        foreach ($filesid as $f => $id) {
+            $file = $files->getById($id)[0];
+            $dir = explode('/', $file['path'])[1];
+            $link = $file['mimetype'] == 'httpd/unix-directory' ? "/index.php/apps/files?dir=//".$file['name'] : "/index.php/apps/files/ajax/download.php?dir=".$dir."&files=".$file['name'];
+            $links = '<a href="'.$host.$link.'">'.$file['name'].'</a><br>';
+        }
+        return $links;
+    }
 }
