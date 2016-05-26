@@ -40,6 +40,7 @@ $filetypes = array('file', 'file', 'folder', 'file', 'application-pdf', 'file', 
     <?php } ?>
     <div class="message-buttons">
         <button <?php if ($message['status'] < 3 && $talk['status'] < 3) { ?>data-link="reply" <?php } else { ?>data-link="no-reply" class="disabled"<?php } ?>>Reply</button>
+        <button data-link="back" id="HistoryBack">Back</button>
         <input type="hidden" value="<?=$message['mid'];?>" id="messageId"/>
         <input type="hidden" value="<?=$_['user'];?>" id="userId"/>
     </div>

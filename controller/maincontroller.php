@@ -74,7 +74,13 @@ class MainController extends Controller {
 			$files = $this->connect->files();
 			$messages = $this->connect->messages();
 			$talks = $usermessages->getAll();
-			$firsttalk = $messages->getByParent($talks[0]['messageid'], 'date ASC');
+
+			$talk = $this->connect->talks();
+			$talk->getTalk($talks[0]['messageid']);
+			$answers = $this->connect->answers();
+			$firsttalk = $answers->talkAnswerList($talk->talkId);
+
+			//$firsttalk = $messages->getByParent($talks[0]['messageid'], 'date ASC');
 			$params = array(
 				'user' => $this->userId,
 				//'talks' => $talks,
@@ -127,7 +133,11 @@ class MainController extends Controller {
 		$subscribers = explode(',', $talk['subscribers']);
 		$files = $this->connect->files();
 		if (!($talk['author'] == $this->userId) && !(in_array($this->userId, $subscribers))) {
-			return;
+			$usermessages = $this->getUserMessages($this->userId);
+			$message = $usermessages->getMessageById($id, $talk['author']);
+			//print_r($message);
+			//TODO: Створити темплейт з повідомленням про відсутність прав на читання
+			//return;
 		}
 		if ($talk['author'] == $this->userId) { // If it's author
 			$usermessages = $this->getUserMessages($subscribers[0]);
@@ -166,20 +176,23 @@ class MainController extends Controller {
 	//TODO: Використовувати метод з застосуванням засобів безпеки
 	public function reply($id) {
 		$messages = $this->connect->messages();
+		$users = $this->connect->users();
+
 		$message = $messages->getByReply($id);
 		//$message = $messages->getById($id)[0];
 		$usermessages = $this->getUserMessages($this->userId);
-		if (!$usermessage = $usermessages->getMessageById($message['id'])) {
-			$usermessages->createStatus($message['id'], $this->userId);
-			$usermessage = $usermessages->getMessageById($message['id']);
+		if (!$usermessage = $usermessages->getMessageById($message['mid'])) {
+			$usermessages->createStatus($message['mid'], $this->userId);
+			$usermessage = $usermessages->getMessageById($message['mid']);
 		}
-		if (!$userstatus = $usermessages->getUserStatus($message['id'])) {
-			$usermessages->createStatus($message['id'], $this->userId);
-			$userstatus = $usermessages->getUserStatus($message['id']);
+		if (!$userstatus = $usermessages->getUserStatus($message['mid'])) {
+			$usermessages->createStatus($message['mid'], $this->userId);
+			$userstatus = $usermessages->getUserStatus($message['mid']);
 		}
 		$subscribers = $this->getUsers();
 		//$helper = new Helper();
-		if ($messages->canRead($message, $this->userId)) {
+		$allusers = $users->getAllUsers($message['subscribers']);
+		if ($messages->canRead($message, $this->userId, $allusers)) {
 			if ($message['status'] < 2) {
 				$message['status'] = 2;
 				$messages->setStatus($message['mid'], 2);
@@ -287,96 +300,164 @@ class MainController extends Controller {
 	 * @return TemplateResponse
 	 */
 	//TODO: Використовувати метод з застосуванням засобів безпеки
-	public function save() {
-		$files = $this->connect->files();
-		$users = $this->connect->users();
-		//$user = $users->getById($this->userId)[0];
-		//Helper::uploadFile($_FILES['uploadfile'], $this->userId);
-		foreach ($_POST['users'] as $s => $subscriber) {
-			if (!($subscriber == $this->userId)) {
-				$subscribers[$subscriber] = $users->getUserDetails($subscriber);
-			}
+	public function saveTalk() {
+		$talks = $this->connect->talks();
+
+		if ($_POST['replyid']) {
+			$talks->setTalkId($_POST['replyid']);
+			$talks->setReplyId($_POST['replyid']);
+			$talks->setReply(true);
+			$messages = $this->connect->messages();
+			$thetalk = $messages->getById($_POST['replyid'])[0];
+			$hash = $thetalk['hash'];
+		}
+		$talks->setTitle($_POST['title']);
+		$talks->setText(Helper::checkTxt($_POST['message-body']));
+		$talks->setAuthor($this->userId);
+		if (isset($_POST['users']) && !empty($_POST['users'])) {
+			$talks->setSubscriberPersons($_POST['users']);
+		}
+		if (isset($_POST['groups']) && !empty($_POST['groups'])) {
+			$talks->setSubscriberGroups($_POST['groups']);
+		}
+		$talks->setHash(isset($_POST['talkhash']) && !empty($_POST['talkhash']) ? $_POST['talkhash'] : isset($hash) && !empty($hash) ? $hash : md5(date("Y-m-d h:i:s").''.$_POST['title']));
+		$talks->setProjectName($this->projectname);
+
+		//Prepare subscribers lists
+		$talks->prepareSubscribers();
+
+		//Share files
+		if (!empty($_POST['select-files'])) {
+			$talks->selectedFiles($_POST['select-files']);
+		}
+		if (!empty($_POST['upload-files'])) {
+			$talks->uploadedFiles($_POST['upload-files']);
+		}
+		if (!empty($talks->files)) {
+			$talks->shareFiles();
 		}
 
-		// Get subscribers group
-		foreach ($_POST['groups'] as $group) {
-			$groupsid = array();
-			if (!empty($group)) {
-				$groupsid[] = $group;
-			}
+		//Prepare data for saving
+		$talks->prepareForSave();
+		$talkid = $talks->save();
+		foreach ($talks->subscriberToSave as $s => $item) {
+			$this->setUserMessageStatus($item, $talks->talkId);
 		}
-		$from = count($groupsid) > 0 ? $groupsid : $this->userId;
+		$this->setUserMessageStatus($talks->author, $talks->talkId);
 
-		// Share selected files with selected users
-		$filesid = array();
-		foreach ($_POST['upload-files'] as $id) {
-			$file = $files->getById($id)[0];
-			$fileOwner = \OC\Files\Filesystem::getOwner($file['path']);
-			$sharetype = $file['mimetype'] == 2 ? 'folder' : 'file';
-			$sharedWith = \OCP\Share::getUsersItemShared($sharetype, $file['fileid'], $fileOwner, false, true);
-			foreach ($subscribers as $userid => $user) {
-				if (isset($file['fileid']) && is_array($file) && isset($file['fileid']) && !in_array($userid, $sharedWith) && !($userid == $this->userId)) {
-					\OCP\Share::shareItem($sharetype, $file['fileid'], \OCP\Share::SHARE_TYPE_USER, $userid, 1);
-					$filesid[] = $id;
-				}
+		$talks->prepareForSend();
+		foreach ($talks->forSend['emails'] as $e => $email) {
+			//$this->setUserMessageStatus($email['name'], $talks->forSend['talkid']);
+
+			if (!empty($talks->forSend['data'])) {
+				$sent = Helper::messageSend($email, $talks->forSend['data']);
 			}
-		}
-		foreach ($_POST['select-files'] as $id => $on) {
-			if ($on == 'on') {
-				$file = $files->getById($id)[0];
-				$fileOwner = \OC\Files\Filesystem::getOwner($file['path']);
-				$sharetype = $file['mimetype'] == 2 ? 'folder' : 'file';
-				$sharedWith = \OCP\Share::getUsersItemShared($sharetype, $file['fileid'], $fileOwner, false, true);
-				foreach ($subscribers as $userid => $user) {
-					if (isset($file['fileid']) && is_array($file) && isset($file['fileid']) && !in_array($userid, $sharedWith) && !($userid == $this->userId)) {
-						//Helper::shareFile($file['name'], $user, $userid);
-						\OCP\Share::shareItem($sharetype, $file['fileid'], \OCP\Share::SHARE_TYPE_USER, $userid, 1);
-						$filesid[] = $id;
-					}
-				}
-			}
-		}
-
-		$messagedata = array(
-			'rid' => $_POST['replyid'],
-			'date' => date("Y-m-d h:i:s"),
-			'title' => $_POST['title'],
-			'text' => Helper::checkTxt($_POST['message-body']),
-			'attachements' => implode(',', $filesid),
-			'author' => $this->userId,
-			'subscribers' => implode(',', array_keys($subscribers)),
-			'hash' => isset($_POST['talkhash']) && !empty($_POST['talkhash']) ? $_POST['talkhash'] : md5(date("Y-m-d h:i:s").''.$_POST['title']),
-			'status' => 0
-		);
-
-		$messages = $this->connect->messages();
-		$saved = $messages->save($messagedata);
-		if ($saved) {
-			$this->sendMessage($saved, $subscribers, $from, $messagedata);
 		}
 
 		$canwrite = true; //TODO: Створити перевірку на право починати бесіди
 
-		$usermessages = $this->getUserMessages();
-		$talks = $usermessages->getByAuthorOrSubscriber($this->userId, '0');
-		$firsttalk = $messages->getByParent($talks[0]['messageid'], 'date ASC');
 		if ($canwrite) {
-			$params = array(
-				'user' => $this->userId,
-				'message' => $_POST,
-				'messages' => $talks,
-				'answers' => $firsttalk,
-				'appname' => $this->appName,
-				'files' => $files,
-				'mode' => 'list',
-				'menu' => 'all'
-			);
-
-			return new TemplateResponse($this->appName, 'talk', $params);  // templates/talk.php
+			header('Location: /index.php/apps/'.$this->appName.'/all');
+			exit();
 		}
 		else {
 			return;
 		}
+	}
+
+	/**
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 * @return TemplateResponse
+	 */
+	//TODO: Використовувати метод з застосуванням засобів безпеки
+	public function saveDirectAnswer() {
+		$answers = $this->connect->answers();
+
+		$answers->setTalkId($_POST['replyid']);
+		$answers->setTitle($_POST['title']);
+		$answers->setText(Helper::checkTxt($_POST['message-body']));
+		$answers->setAuthor($this->userId);
+		$answers->setSubscriberPersons($_POST['users']);
+		$answers->setSubscriberGroups($_POST['groups']);
+		$answers->setHash(isset($_POST['talkhash']) && !empty($_POST['talkhash']) ? $_POST['talkhash'] : md5(date("Y-m-d h:i:s").''.$_POST['title']));
+		$answers->setProjectName($this->projectname);
+
+		//Prepare subscribers lists
+		$answers->prepareSubscribers();
+
+		//Prepare data for saving
+		$answers->prepareForSave();
+		$answers->save();
+
+		$forSend = $answers->send();
+
+		foreach ($forSend['emails'] as $e => $email) {
+			$this->setUserMessageStatus($email['name'], $forSend['answerid']);
+
+			if (!empty($messagedata)) {
+				$sent = Helper::messageSend($email, $forSend['data']);
+			}
+		}
+	}
+
+	/**
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 * @return TemplateResponse
+	 */
+	public function saveEmailAnswer() {
+		//file_put_contents('/tmp/inb.log', "\nsaveEmailAnswer\n", FILE_APPEND);
+		//die();
+		echo "saveEmailAnswer";
+		$talk = $this->connect->talks();
+		$answers = $this->connect->answers();
+
+		$answers->setAuthor('olexiy');
+		$answers->saveFiles(array(['contentType' => 'image/png', 'encoding' => 'base64', 'filename' => "banana.png", 'contents' => 'iVBORw0KGgoAAAANSUhEUgAAAZAAAAELCAYAAAD3HtBMAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJ']));
+
+		/* $author = $this->getUserByExternalEmail($_POST['from']);
+		file_put_contents('/tmp/inb.log', "author : ".$author."\n", FILE_APPEND);
+
+		$talk->getByHash($_POST['hash']);
+		file_put_contents('/tmp/inb.log', "talkId : ".$talk->talkId."\n", FILE_APPEND);
+
+		$answers->setTalkId($talk->talkId);
+		$answers->setReply(true);
+		$answers->setTitle(Helper::checkTxt($_POST['subject']));
+		$answers->setText(Helper::checkTxt($_POST['contents']));
+		$answers->setAuthor($author, $talk->author);
+		$answers->setSubscribers($talk->subscribers);
+		$answers->setHash($talk->hash);
+		$answers->setProjectName($this->getProjectName()); */
+
+		//Prepare subscribers lists
+		/* $answers->devideSubscribers();
+		$answers->prepareSubscribers();
+
+		//Share files
+		if (!empty($_POST['attachments'])) {
+			$answers->saveFiles($_POST['attachments']);
+			$answers->shareFiles();
+		}
+
+		//Prepare data for saving
+		$answers->prepareForSave();
+		file_put_contents('/tmp/inb.log', "subscribersToSave : \n".print_r($answers->subscriberToSave, true)."\n", FILE_APPEND);
+		$answerId = $answers->save();
+
+		foreach ($answers->subscriberToSave as $s => $item) {
+			$this->setUserMessageStatus($item, $answerId);
+		} */
+		//Send replies to all subscribers
+		/* $answers->prepareForSend();
+		foreach ($answers->forSend['emails'] as $e => $email) {
+			$this->setUserMessageStatus($email['name'], $answers->forSend['talkid']);
+
+			if (!empty($answers->forSend['data'])) {
+				$sent = Helper::messageSend($email, $answers->forSend['data']);
+			}
+		} */
 	}
 
 	/**
@@ -412,9 +493,16 @@ class MainController extends Controller {
 	//TODO: Використовувати метод з застосуванням засобів безпеки
 	public function mytalks() {
 		$messages = $this->connect->messages();
+		$users = $this->connect->users(); 
+		$userGroups = $users->getUserGroups($this->userId); 
+
 		//$talks = $messages->getByAuthor($this->userId, 0, 'date DESC');
 		$usermessages = $this->getUserMessages();
 		$talks = $usermessages->getBySubscriber($this->userId, '0');
+		//if (count($userGroups) > 0)) { 
+		//	$talks = $usermessages->getBySubscriber($this->userId, '0', $userGroups); 
+		//} 
+		
 		$firsttalk = $messages->getByParent($talks[0]['messageid'], 'date ASC');
 		$files = $this->connect->files();
 		$params = array(
@@ -494,11 +582,48 @@ class MainController extends Controller {
 		$message = $checkMail->checkMail($message);
 		//file_put_contents('/tmp/inb.log', "\nhash : ".$message['hash']."\n", FILE_APPEND);
 
-		$messageid = $messages->getIdByHash($message['hash']);
+		$talk = $messages->getTalkByHash($message['hash']);
+		$messageid = $talk['id'];
 		//file_put_contents('/tmp/inb.log', "\nmessageid : ".$messageid."\n", FILE_APPEND);
 
 		$author = $this->getUserByExternalEmail($message['author']);
 		//file_put_contents('/tmp/inb.log', "\nauthor : ".$author."\n", FILE_APPEND);
+
+		//file_put_contents('/tmp/inb.log', "\nMessageSubscribers : ".$message['subscribers']."\t", FILE_APPEND);
+
+		if (strpos($message['subscribers'], '-group')) { // If group conversation 
+			//file_put_contents('/tmp/inb.log', "\nGroup conversation!\n", FILE_APPEND);
+			$groupname = substr($message['subscribers'], 0, strpos($message['subscribers'], '-')); 
+			//file_put_contents('/tmp/inb.log', "\ngroupname : ".$groupname."\n", FILE_APPEND);
+			$subscribers = $this->getCorrectGroupId($groupname).'-group'; 
+			//file_put_contents('/tmp/inb.log', "\nSubscribers : ".$subscribers."\n", FILE_APPEND);
+		} 
+		else { // If private conversation 
+			$talksubscribers = explode(',', $talk['subscribers']);
+			$talksubscribers[] = $talk['author'];
+			if (is_array($message['subscribers'])) {
+				$messagesubscribers = array();
+				foreach($message['subscribers'] as $s => $subscriber) {
+					$messagesubscribers[] = $this->getCorrectUserId($subscriber); 
+				}
+				array_merge($messagesubscribers, array_diff($talksubscribers, $messagesubscribers));
+				unset($messagesubscribers[array_search($author, $messagesubscribers)]);
+				$subscribers = implode(',', $messagesubscribers);
+			} 
+			else {
+				if (is_string($message['subscribers'])) { 
+					//file_put_contents('/tmp/inb.log', "\nMessageSubscribers is string!\n", FILE_APPEND);
+					$subscribers = $this->getCorrectUserId($message['subscribers']);
+					//file_put_contents('/tmp/inb.log', "\nuserid : ".$subscribers."\t", FILE_APPEND);
+					if (!in_array($subscribers, $talksubscribers)) {
+						$talksubscribers[] = $subscribers;
+					}
+					unset($talksubscribers[array_search($author, $talksubscribers)]);
+					$subscribers = implode(',', $talksubscribers);
+				}
+			} 
+		} 
+		//file_put_contents('/tmp/inb.log', "\nSubscribers : ".$subscribers."\n", FILE_APPEND);
 
 		$messagedata = array(
 			'rid' => $messageid,
@@ -507,7 +632,7 @@ class MainController extends Controller {
 			'text' => Helper::checkTxt($message['text']),
 			//'attachements' => implode(',', $filesid),
 			'author' => $author,
-			'subscribers' => is_array($message['subscribers']) ? implode(',', $message['subscribers']) : $message['subscribers'],
+			'subscribers' => $subscribers,
 			'hash' => $message['hash'],
 			'status' => 0
 		);
@@ -519,6 +644,102 @@ class MainController extends Controller {
 		if ($messageid && $author && $message['title'] && $message['subscribers']) {
 			$saved = $messages->save($messagedata);
 		}
+		/* else {
+			$error = "MessageID : ".$messageid."\n".
+				"Author : ".$author."\n".
+				"Title : ".$message['title']."\n".
+				"Subscribers : ".$messagedata['subscribers']."\n";
+		}
+		if ($saved) {
+			file_put_contents('/tmp/inb.log', "Message saved!\n", FILE_APPEND);
+		}
+		else {
+			file_put_contents('/tmp/inb.log', "Message not saved! Database error! \n", FILE_APPEND);
+		} */ 
+		die;
+	}
+
+	/**
+	 * @PublicPage
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 */
+	//TODO: Використовувати метод з застосуванням засобів безпеки
+	public function savemail() {
+
+		echo "Hello";
+		print_r($_POST);
+		/* $messages = $this->connect->messages();
+		$usermessages = $this->connect->userMessage();
+		$message = $_POST['message'];
+
+		//$checkMail = new MailParser();
+		$checkMail = new ParseMail();
+		$message = $checkMail->checkMail($message);
+		//file_put_contents('/tmp/inb.log', "\nhash : ".$message['hash']."\n", FILE_APPEND);
+
+		$talk = $messages->getTalkByHash($message['hash']);
+		$messageid = $talk['id'];
+		//file_put_contents('/tmp/inb.log', "\nmessageid : ".$messageid."\n", FILE_APPEND);
+
+		$author = $this->getUserByExternalEmail($message['author']);
+		//file_put_contents('/tmp/inb.log', "\nauthor : ".$author."\n", FILE_APPEND);
+
+		//file_put_contents('/tmp/inb.log', "\nMessageSubscribers : ".$message['subscribers']."\t", FILE_APPEND);
+
+		if (strpos($message['subscribers'], '-group')) { // If group conversation
+			//file_put_contents('/tmp/inb.log', "\nGroup conversation!\n", FILE_APPEND);
+			$groupname = substr($message['subscribers'], 0, strpos($message['subscribers'], '-'));
+			//file_put_contents('/tmp/inb.log', "\ngroupname : ".$groupname."\n", FILE_APPEND);
+			$subscribers = $this->getCorrectGroupId($groupname).'-group';
+			//file_put_contents('/tmp/inb.log', "\nSubscribers : ".$subscribers."\n", FILE_APPEND);
+		}
+		else { // If private conversation
+			$talksubscribers = explode(',', $talk['subscribers']);
+			$talksubscribers[] = $talk['author'];
+			if (is_array($message['subscribers'])) {
+				$messagesubscribers = array();
+				foreach($message['subscribers'] as $s => $subscriber) {
+					$messagesubscribers[] = $this->getCorrectUserId($subscriber);
+				}
+				array_merge($messagesubscribers, array_diff($talksubscribers, $messagesubscribers));
+				unset($messagesubscribers[array_search($author, $messagesubscribers)]);
+				$subscribers = implode(',', $messagesubscribers);
+			}
+			else {
+				if (is_string($message['subscribers'])) {
+					//file_put_contents('/tmp/inb.log', "\nMessageSubscribers is string!\n", FILE_APPEND);
+					$subscribers = $this->getCorrectUserId($message['subscribers']);
+					//file_put_contents('/tmp/inb.log', "\nuserid : ".$subscribers."\t", FILE_APPEND);
+					if (!in_array($subscribers, $talksubscribers)) {
+						$talksubscribers[] = $subscribers;
+					}
+					unset($talksubscribers[array_search($author, $talksubscribers)]);
+					$subscribers = implode(',', $talksubscribers);
+				}
+			}
+		}
+		//file_put_contents('/tmp/inb.log', "\nSubscribers : ".$subscribers."\n", FILE_APPEND);
+
+		$messagedata = array(
+			'rid' => $messageid,
+			'date' => date("Y-m-d h:i:s", strtotime($message['date'])),
+			'title' => $message['title'],
+			'text' => Helper::checkTxt($message['text']),
+			//'attachements' => implode(',', $filesid),
+			'author' => $author,
+			'subscribers' => $subscribers,
+			'hash' => $message['hash'],
+			'status' => 0
+		);
+
+		if (!$usermessage = $usermessages->getMessageById($messageid)) {
+			$usermessages->createStatus($messageid, $author);
+			$usermessage = $usermessages->getMessageById($messageid);
+		}
+		if ($messageid && $author && $message['title'] && $message['subscribers']) {
+			$saved = $messages->save($messagedata);
+		} */
 		/* else {
 			$error = "MessageID : ".$messageid."\n".
 				"Author : ".$author."\n".
@@ -620,14 +841,18 @@ class MainController extends Controller {
 		$um = $this->connect->userMessage();
 		$users = $this->connect->users();
 		//$isgroup = $users->isGroupSelected($subscribers);
+		//$groups = $messagedata['groupsid'];
 		foreach ($subscribers as $s => $subscriber) {
-			$data = [
-				'uid' => $s,
-				'mid' => $message,
-				'status' => 0
-			];
-			$um->save($data);
+			if (is_string($s) && !empty($s)) {
+				$data = [
+					'uid' => $s,
+					'mid' => $message,
+					'status' => 0
+                ];
+				$um->save($data);
+			}
 		}
+		//print_r($messagedata);
 		if (!empty($messagedata)) {
 			foreach ($subscribers as $s => $subscriber) {
 				$sent = Helper::messageSend($subscriber, $from, $messagedata, $this->getProjectName());
@@ -642,8 +867,9 @@ class MainController extends Controller {
 	public function getUsers() {
 		$users = $this->connect->users();
 		//$userlist = $users->getAll();
-		$userlist = $users->getGroupsUsersList();
-
+		$groupusers = $users->getGroupsUsersList();
+		$ungroupusers = $users->getUngroupUserList();
+		$userlist = array_merge($groupusers, $ungroupusers);
 		return $userlist;
 	}
 
@@ -688,6 +914,28 @@ class MainController extends Controller {
 		}
 	}
 
+	public function getCorrectUserId($user) {
+		$users = $this->connect->users();
+		$userid = $users->getCaseInsensitiveId($user);
+		if ($userid && !empty($userid)) {
+			return $userid;
+		}
+		else {
+			return false;
+		}
+	}
+
+	public function getCorrectGroupId($user) {
+		$users = $this->connect->users();
+		$groupid = $users->getCaseInsensitiveGroupId($user);
+		if ($groupid && !empty($groupid)) {
+			return $groupid;
+		}
+		else {
+			return false;
+		}
+	}
+
 	private function checkUserDirPermissions() {
 		$cwd = getcwd();
 		$fileperms = fileperms($cwd.'/data/'.$this->userId);
@@ -707,6 +955,18 @@ class MainController extends Controller {
 		catch (\Exception $e) {
 			$error = 'You have no rights to upload files!';
 			return $error;
+		}
+	}
+
+	private function setUserMessageStatus($userid, $messageid) {
+		$um = $this->connect->userMessage();
+		if (is_string($userid) && !empty($userid) && !empty($messageid)) {
+			$data = [
+				'uid' => $userid,
+				'mid' => $messageid,
+				'status' => 0
+			];
+			$um->save($data);
 		}
 	}
 

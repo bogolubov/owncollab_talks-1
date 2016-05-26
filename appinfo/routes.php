@@ -36,7 +36,7 @@ $application->registerRoutes($this, ['routes' => [
     ['name' => 'main#begin', 'url' => '/begin', 'verb' => 'GET'],
     ['name' => 'main#selectSubscribers', 'url' => '/subscribers', 'verb' => 'GET'],
     ['name' => 'main#attachments', 'url' => '/attachments', 'verb' => 'GET'],
-    ['name' => 'main#save', 'url' => '/send', 'verb' => 'POST'],
+    ['name' => 'main#saveTalk', 'url' => '/send', 'verb' => 'POST'],
     //['name' => 'main#save', 'url' => '/send', 'verb' => 'GET'],
     ['name' => 'main#reply', 'url' => '/reply/{id}', 'verb' => 'GET'],
 
@@ -46,4 +46,7 @@ $application->registerRoutes($this, ['routes' => [
 
     //['name' => 'main#parseMail', 'url' => '/checkmail', 'verb' => 'GET'],
     ['name' => 'main#parse_mail', 'url' => '/parsemail', 'verb' => 'GET|POST'],
+    ['name' => 'main#save_mail', 'url' => '/savemail', 'verb' => 'GET|POST'],
+
+    ['name' => 'main#save_email_answer', 'url' => '/saveemailanswer', 'verb' => 'GET|POST'],
 ]]);

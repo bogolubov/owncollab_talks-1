@@ -18,6 +18,7 @@ class ApiController extends Controller {
 	private $l10n;
 	private $isAdmin;
 	private $connect;
+	private $projectname = "Base project";
 
 	/**
 	 * ApiController constructor.
@@ -400,9 +401,86 @@ class ApiController extends Controller {
 	 * @param string $text
 	 * Save an answer to the talk
 	 */
+	//TODO: Використовувати метод з застосуванням засобів безпеки
+	public function saveDirectAnswer($args) {
+		//echo "Hello";
+		$talkid = $args['talkid'];
+		$users = $this->connect->users();
+		$messages = $this->connect->messages();
+		$message = $messages->getByReply($talkid);
+		$talk = $messages->getById($talkid)[0];
+		$usermessages = $this->connect->userMessage();
+
+		$answers = $this->connect->answers();
+
+		$answers->setTalkId($args['talkid']);
+		$answers->setReply(true);
+		$answers->setTitle(Helper::checkTxt($args['text']));
+		//$answers->setText(Helper::checkTxt($args['text']));
+		$answers->setAuthor($this->userId, $talk['author']);
+		$answers->setSubscribers($talk['subscribers']);
+		$answers->setHash($talk['hash']);
+		$answers->setProjectName($this->projectname);
+
+		//Prepare subscribers lists
+		$answers->devideSubscribers();
+		$answers->prepareSubscribers();
+
+		//Prepare data for saving
+		$answers->prepareForSave();
+		$answerId = $answers->save();
+		foreach ($answers->subscriberToSave as $s => $item) {
+			$this->setUserMessageStatus($item, $answers->answerId);
+		}
+		$this->setUserMessageStatus($answers->author, $answerId->talkId);
+
+		$forSend = $answers->send();
+
+		foreach ($answers->forSend['emails'] as $e => $email) {
+			$this->setUserMessageStatus($email['name'], $forSend['answerid']);
+
+			if (!empty($messagedata)) {
+				$sent = Helper::messageSend($email, $forSend['data']);
+			}
+		}
+
+		//$answerid = 1;
+		if ($answerId) {
+			$params = array(
+				'answerid' => $answerId,
+				'author' => $this->userId,
+				'date' => date("Y-m-d h:i:s"),
+				'title' => Helper::checkTxt($answers->title),
+				'sent' => $sent,
+				'appname' => $this->appName
+			);
+		}
+		else {
+			$params = array(
+				'title' => Helper::checkTxt($answers->title)
+			);
+		}
+
+		$view = Helper::renderPartial($this->appName, 'api.addanswer', $params);
+
+		$params = array(
+			'user' => $this->userId,
+			'view' => $view,
+			'requesttoken'  => (!\OC_Util::isCallRegistered()) ? '' : \OC_Util::callRegister(),
+		);
+
+		return new DataResponse($params);
+	}
+
+	/**
+	 * @param int $talkid
+	 * @param string $text
+	 * Save an answer to the talk
+	 */
 	public function answerTalk($args) {
 		$talkid = $args['talkid'];
 		$text = $args['text'];
+		$users = $this->connect->users();
 		$messages = $this->connect->messages();
 		$message = $messages->getByReply($talkid);
 		$talk = $messages->getById($talkid)[0];
@@ -429,6 +507,37 @@ class ApiController extends Controller {
 			//$subscribers[] = $this->userId;
 			$talk['subscribers'] = $subscribers;
 		}
+
+		$mailsubscribers = array();
+		$groupspref = array();
+		foreach ($subscribers as $s => $subscriber) {
+			if (strstr($subscriber, "-group")) {
+				$group = substr($subscriber, 0, strpos($subscriber, "-group"));
+				if ($group && is_string($group)) {
+					foreach ($users->getUsersFromGroup($group) as $gu => $groupuser) {
+						$user = $users->getUserDetails($groupuser['uid']);
+						$groupusers[$groupuser['uid']] = $user;
+					}
+					$mailsubscribers[$group] = ['groupid' => $group, 'grouppref' => $group . '-group', 'groupusers' => $groupusers];
+					$groupspref[] = $group.'-group';
+				}
+			}
+			else if (!($subscriber == $this->userId)) {
+				$allusers[$subscriber] = $users->getUserDetails($subscriber);
+			}
+		}
+		$mailsubscribers['ungroupped'] = ['groupusers' => $allusers];
+
+		if (count($mailsubscribers) > 0 && count($groupspref) > 0) {
+			$messageSubscribers = implode(',', $groupspref);
+			if (count($mailsubscribers['ungroupped']['groupusers']) > 0) {
+				$messageSubscribers .= ',' . implode(',', array_keys($mailsubscribers['ungroupped']['groupusers']));
+			}
+		}
+		else {
+			$messageSubscribers = implode(',', array_keys($mailsubscribers['ungroupped']['groupusers']));
+		}
+
 		$messagedata = array(
 			'rid' => $talkid,
 			'date' => date("Y-m-d h:i:s"),
@@ -436,31 +545,44 @@ class ApiController extends Controller {
 			'text' => '',
 			'author' => $this->userId,
 			//'subscribers' => is_array($talk['subscribers']) ? implode(',', $talk['subscribers']) : $talk['subscribers'],
-			'subscribers' => is_array($subscribers) ? implode(',', $subscribers) : $subscribers,
+			//'subscribers' => is_array($subscribers) ? implode(',', $subscribers) : $subscribers,
+			'subscribers' => $messageSubscribers,
 			'hash' => isset($talk['hash']) && !empty($talk['hash']) ? $talk['hash'] : md5(date("Y-m-d h:i:s").''.$text),
 			'status' => 0
 		);
 
 		$messages = $this->connect->messages();
 		$saved = $messages->save($messagedata);
+		//$saved = 1;
 		if ($saved) {
 			foreach ($subscribers as $s => $subscriber) {
-				$messagedata = [
-					'uid' => $subscriber,
-					'mid' => $saved,
-					'status' => 0
-				];
-				$usermessages->save($messagedata);
+				if (is_string($subscriber) && !empty($subscriber)) {
+					$usermessagedata = [
+						'uid' => $subscriber,
+						'mid' => $saved,
+						'status' => 0
+                    ];
+					$usermessages->save($usermessagedata);
+				}
 			}
 
-			$sent = $this->sendMessage($saved, $talk['subscribers'], $this->userId, $messagedata);
+			$sent = $this->sendMessage($saved, $mailsubscribers, $this->userId, $messagedata);
+			foreach ($mailsubscribers as $m => $ms) {
+				if ($m == 'ungroupped') {
+					$sent = $this->sendMessage($saved, $ms['groupusers'], $this->userId, $messagedata);
+				}
+				else {
+					$messagedata['groupsid'] = $ms['grouppref'];
+					$sent = $this->sendMessage($saved, $ms['groupusers'], $ms['grouppref'], $messagedata);
+				}
+			}
 
 			$params = array(
 				'answerid' => $saved,
 				'author' => $this->userId,
 				'date' => date("Y-m-d h:i:s"),
 				'title' => Helper::checkTxt($text),
-				'sent' => $sent, 
+				'sent' => $sent,
 				'appname' => $this->appName
 			);
 		}
@@ -488,29 +610,44 @@ class ApiController extends Controller {
 	 * in subscribers list
 	 */
 	public function sendMessage($message, $subscribers, $from = '', $messagedata = NULL) {
-		if (!is_array($subscribers) && is_string($subscribers)) {
-			$subscribers = explode(',', $subscribers);
-		}
+		//if (!is_array($subscribers) && is_string($subscribers)) {
+		//	$subscribers = explode(',', $subscribers);
+		//}
 		$um = $this->connect->userMessage();
 		$users = $this->connect->users();
 		//$isgroup = $users->isGroupSelected($subscribers);
 		foreach ($subscribers as $s => $subscriber) {
+			if (is_string($s) && !empty($s)) {
+				$data = [
+					'uid' => $s,
+					'mid' => $message,
+					'status' => 0
+				];
+				$um->save($data);
+			}
+		}
+		if (!empty($messagedata)) {
+			foreach ($subscribers as $s => $subscriber) {
+				$sent = Helper::messageSend($subscriber, $from, $messagedata, $this->getProjectName(), true);
+			}
+		}
+		return $sent;
+	}
+
+	private function setUserMessageStatus($userid, $messageid) {
+		$um = $this->connect->userMessage();
+		if (is_string($userid) && !empty($userid) && !empty($messageid)) {
 			$data = [
-				'uid' => $s,
-				'mid' => $message,
+				'uid' => $userid,
+				'mid' => $messageid,
 				'status' => 0
 			];
 			$um->save($data);
 		}
-		if (!empty($messagedata)) {
-			foreach ($subscribers as $s => $subscriber) {
-				$sent = Helper::messageSend($subscriber, $from, $messagedata, $this->getProjectName());
-			}
-		}
-		return $sent; 
 	}
 
 	public function getProjectName() {
-		return $this->appName;
+		//return $this->appName;
+		return "OwnCollab";
 	}
 }

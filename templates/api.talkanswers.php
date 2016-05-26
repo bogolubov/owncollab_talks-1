@@ -8,7 +8,7 @@
 	<div class="talk-answers" id="talk-answers">
 	<?php
 	foreach ($_['answers'] as $a => $answer) { ?>
-		<div class="talk-author"><?php p($l->t('user % answered on %s', [$answer['author'], date("d.m.Y H:i", strtotime($answer['date']))]));?></div>
+		<div class="talk-author"><?php p($l->t('user %s answered on %s', [$answer['author'], date("d.m.Y H:i", strtotime($answer['date']))]));?></div>
 		<div class="talk-title"><a href="/index.php/apps/<?=$_['appname'];?>/read/<?=$answer['id'];?>"><?=$answer['title'];?></a></div>
 	<?php } ?>
 	</div>

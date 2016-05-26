@@ -1,101 +1,15 @@
 <?php
 
-namespace OCA\Owncollab_Talks;
+$msg = file_get_contents("php://stdin");
 
-use OC\User\Session;
-use OCP\AppFramework\Http\DataResponse;
-use OCP\AppFramework\Http\TemplateResponse;
-use OCA\Owncollab_Talks\Helper;
-
-class MailParser
-{
-    function __construct()
-    {
-        file_put_contents('/tmp/inb.log', "CheckMail...\n", FILE_APPEND);
-    }
-
-    public function checkMail($msg) {
-        file_put_contents('/tmp/inb.log', "\nParsing mail!\n", FILE_APPEND);
-        $message = $this->parseMessage($msg);
-        return $message;
-    }
-
-    public function parseMessage($msg) {
-        $message = array();
-
-        $sender = getenv('SENDER');
-
-        $recipient = getenv('RECIPIENT');
-
-        list($header, $body) = explode("\n\n", $msg, 2);
-
-        $subject = '';
-        $from = '';
-        $to = '';
-        $headerArr = explode("\n", $header);
-        foreach ($headerArr as $str) {
-            if (strpos($str, 'Subject:') === 0) {
-                $subject = substr($str, 8);
-            }
-            if (strpos($str, 'From:') === 0) {
-                $from = $str;
-                $author = $this->getFrom($from);
-            }
-            if (strpos($str, 'To:') === 0) {
-                $to = $str;
-                $subscribers = $this->getSubscribers($to);
-            }
-            if (strpos($str, 'Date:') === 0) {
-                $date = substr($str, 5);
-            }
-        }
-
-        $message = array(
-            //'rid' => $talkid,
-            'date' => $date,
-            'title' => trim($subject),
-            'text' => trim($msg),
-            'attachements' => NULL,
-            'author' => $author,
-            'subscribers' => implode(',', array_column($subscribers, 'userid')),
-            'hash' => $subscribers[0]['hash'],
-            'status' => 0
-        );
-
-        return $message;
-    }
-
-    private function getFrom($from) {
-        if (strpos($from, '<') && strpos($from, '>')) {
-            preg_match('/<(.*?)>/', $from, $match);
-            $address = $match[1];
-        }
-        return $address;
-    }
-
-    private function getSubscribers($address) {
-        if (strpos($address, '<') && strpos($address, '>')) {
-            preg_match('/<(.*?)>/', $address, $match);
-            $address = $match[1];
-        }
-        $subscribers = array();
-        $subscribers[] = $this->getUserIdFromAddress($address);
-        return $subscribers;
-    }
-
-    private function getUserIdFromAddress($address) {
-        if (strpos($address, '<') && strpos($address, '>')) {
-            preg_match('/<(.*?)>/', $address, $match);
-            $address = $match[1];
-        }
-        $to = substr($address, 0, strpos($address, '@'));
-        if ($delimiter = strpos($to, '+')) {
-            $userid = substr($to, 0, $delimiter);
-            $hash = substr($to, $delimiter+1);
-            return ['userid' => $userid, 'hash' => $hash];
-        }
-        else {
-            return $to;
-        }
-    }
-}
+$url = 'http://13-59.skconsulting.cc.colocall.com/index.php/apps/owncollab_talks/parsemail';
+$ch = curl_init();
+curl_setopt($ch, CURLOPT_URL, $url);
+curl_setopt($ch, CURLOPT_POST, true);
+curl_setopt($ch, CURLOPT_POSTFIELDS, ["message" => $msg] );
+curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+$resultCurl = curl_exec($ch);
+$errorCurl = curl_error($ch);
+curl_close($ch);

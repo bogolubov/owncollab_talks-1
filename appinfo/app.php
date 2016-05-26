@@ -59,5 +59,9 @@ if(Helper::isAppPage($appName)){
 $currentUri = Helper::getCurrentUri($appName);
 if($currentUri == '/') {
 
-
 }
+
+/**
+ * Checking and saving the files send by email
+ */
+$checkFiles = new TempFiles();
