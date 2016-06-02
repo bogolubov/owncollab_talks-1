@@ -59,9 +59,16 @@ if(Helper::isAppPage($appName)){
 $currentUri = Helper::getCurrentUri($appName);
 if($currentUri == '/') {
 
-}
+
+} 
+
+/**
+* Set timezone to 'Berlin' 
+* It must be set in the ownCloud config 
+*/ 
+date_default_timezone_set('Europe/Berlin'); 
 
 /**
  * Checking and saving the files send by email
  */
-$checkFiles = new TempFiles();
+//$checkFiles = new TempFiles();

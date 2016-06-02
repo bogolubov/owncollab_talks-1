@@ -22,6 +22,7 @@ class Answers {
 	public $answerId;
 	public $talkId;
 	private $talkAuthor = '';
+	public $date;
 	public $title;
 	public $text;
 	public $author;
@@ -32,6 +33,7 @@ class Answers {
 	public $subscriberToSend;
 	public $hash;
 	public $status;
+	public $forSave;
 	public $forSend;
 	public $projectName;
 
@@ -54,6 +56,10 @@ class Answers {
 
 	public function getById($id) {
 		$this->Messages->getById();
+	}
+
+	public function getIdByHash($hash) {
+		return $this->Messages->getTalkByHash($hash);
 	}
 
 	/**
@@ -141,13 +147,13 @@ class Answers {
 		else {
 			$this->subscriberToSave = array_merge($this->subscriberGroups, $this->subscriberPersons);
 		}
-		/* if ($this->isreply) {
+		if ($this->isreply) {
 			$this->subscriberToSave = $this->swapSubscribers($this->subscriberToSave, $this->talkAuthor, $this->author);
-		} */
-		//$this->subscriberToSave = $this->removeFromList($this->subscriberToSave, $this->author);
+		}
+		$this->subscriberToSave = $this->removeFromList($this->subscriberToSave, $this->author);
 		$messagedata = array(
 			'rid' => $this->talkId,
-			'date' => date("Y-m-d h:i:s"),
+			'date' => $this->date,
 			'title' => $this->title,
 			'text' => $this->text,
 			'attachements' => '',
@@ -155,8 +161,9 @@ class Answers {
 			'subscribers' => is_array($this->subscriberToSave) ? implode(',', $this->subscriberToSave) : $this->subscriberToSave,
 			'hash' => $this->hash,
 			'status' => 0
-		);
-
+		); 
+		
+		$this->forSave = $messagedata; 
 		return $messagedata;
 	}
 
@@ -164,7 +171,10 @@ class Answers {
 	 * Prepare lists of subscribers
 	 */
 	public function prepareSubscribers() {
-		$this->subscriberPersons = $this->removeFromList($this->subscriberPersons, $this->author);
+		//file_put_contents('/tmp/inb.log', "prepareSubscribers > author : ".$this->author."\n", FILE_APPEND);
+		if (in_array($this->author, $this->subscriberPersons)) { 
+		  $this->subscriberPersons = $this->removeFromList($this->subscriberPersons, $this->author); 
+		} 
 		foreach ($this->subscriberGroups as $sg => $group) {
 			if (!empty($group)) {
 				$groupusers = array();
@@ -175,7 +185,7 @@ class Answers {
 					if (in_array($groupuser, $this->subscriberPersons)) {
 						$this->subscriberPersons = $this->removeFromList($this->subscriberPersons, $groupuser);
 					}
-					$user = $this->Users->getUserDetails($groupuser['uid']);
+					$user = $this->users->getUserDetails($groupuser['uid']);
 					if (!($user == $this->author)) {
 						$groupusers[$groupuser['uid']] = $user;
 					}
@@ -187,7 +197,7 @@ class Answers {
 		foreach ($this->subscriberPersons as $sp => $subscriber) {
 			$this->subscriberToSend['ungroupped']['groupusers'][$subscriber] = $this->Users->getUserDetails($subscriber);
 		}
-
+		//file_put_contents('/tmp/inb.log', "prepareSubscribers > subscriberPersons : \n".print_r($this->subscriberPersons, true)."\n", FILE_APPEND);
 	}
 
 	/**
@@ -197,7 +207,7 @@ class Answers {
 		$emails = $this->prepareEmailAddresses();
 		$messagedata = [
 			'rid' => $this->talkId,
-			'date' => date("Y-m-d h:i:s"),
+			'date' => $this->date,
 			'title' => $this->title,
 			'text' => $this->text,
 			'attachements' => '',
@@ -246,8 +256,10 @@ class Answers {
 	 * Save the message to db
 	 */
 	public function save() {
-		$data = $this->prepareForSave();
-		$answerId = $this->Messages->save($data);
+		if (!$this->forSave) { 
+			$this->forSave = $this->prepareForSave(); 
+		} 
+		$answerId = $this->Messages->save($this->forSave);
 		$this->answerId = $answerId;
 		return $answerId;
 	}
@@ -265,21 +277,20 @@ class Answers {
 	public function saveFiles($files) {
 		foreach ($files as $file) {
 			if (!empty($file['contents'])) {
-				if ($file['contentType'] == 'image/png' && $file['encoding'] == 'base64') {
+				if (!empty($file['contentType']) && $file['encoding'] == 'base64') {
 					$fileToUpload = $this->saveTmpFile($file['contents'], $file['filename']);
 				}
-			}
+			} 
 		}
 	}
 
 	private function saveTmpFile($contents, $filename) {
 		$path = realpath(dirname(__DIR__));
 		$dir = $path.'/tmp';
-		$fn = $dir.'/'.$filename.'+'.$this->answerId;
-		$ifp = fopen($fn, "wb");
+		$ifp = fopen($dir.'/'.$filename.'+'.$this->answerId, "wb");
 		fwrite($ifp, $contents);
 		fclose($ifp);
-		return $fn;
+		return $dir.'/'.$filename;
 	}
 
 	/**
@@ -294,7 +305,13 @@ class Answers {
 			$sharetype = $file['mimetype'] == 2 ? 'folder' : 'file';
 			$sharedWith = \OCP\Share::getUsersItemShared($sharetype, $file['fileid'], $fileOwner, false, true);
 			foreach ($this->subscriberToShare as $userid) {
-				if (isset($file['fileid']) && is_array($file) && isset($file['fileid']) && !in_array($userid, $sharedWith) && !($userid == $this->author)) {
+				if (
+					isset($file['fileid']) && 
+					is_array($file) && 
+					!in_array($userid, $sharedWith) && 
+					!($userid == $this->author) && 
+					($fileOwner == $this->author || $file['permissions'] >= 16)
+				) {
 					\OCP\Share::shareItem($sharetype, $file['fileid'], \OCP\Share::SHARE_TYPE_USER, $userid, 1);
 				}
 			}
@@ -350,6 +367,12 @@ class Answers {
 
 	public function setTalkId($id) {
 		$this->talkId = $id;
+	}
+
+	public function setDate($date = NULL) {
+		//$date = date_create(date("Y-m-d H:i:s"), timezone_open('UTC')); 
+		//$this->date = isset($date) ? $date : date_format($date, 'Y-m-d H:i:s');
+		$this->date = isset($date) ? $date : date('Y-m-d H:i:s');
 	}
 
 	public function setReply($reply) {

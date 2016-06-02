@@ -416,6 +416,7 @@ class ApiController extends Controller {
 		$answers->setTalkId($args['talkid']);
 		$answers->setReply(true);
 		$answers->setTitle(Helper::checkTxt($args['text']));
+		$answers->setDate();
 		//$answers->setText(Helper::checkTxt($args['text']));
 		$answers->setAuthor($this->userId, $talk['author']);
 		$answers->setSubscribers($talk['subscribers']);

@@ -25,6 +25,9 @@ $files = $_['files'];
     $countfiles = 0;
     $totalsize = 0;
     foreach ($files as $f => $file) {
+        if ($file['permissions'] < 16) {
+            break; 
+        }
         if ($filetypes2[$file['mimetype']] == 'folder') { // If folder
             $link = "#";
             $countfolders++;

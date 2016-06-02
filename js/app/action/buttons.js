@@ -111,6 +111,7 @@
                 var text = $(this).find("input[name=answertext]").val();
                 var talkid = $(this).find("input[name=messageid]").val();
 
+                //app.api('answerTalk', function (response) {
                 app.api('saveDirectAnswer', function (response) {
                     if (response.requesttoken) {
                         app.requesttoken = response.requesttoken;
@@ -143,7 +144,6 @@
                     filesresult = 0;
                 }
             }
-
         );
 
         var folderresult = 0;
@@ -169,12 +169,12 @@
             }
         })
 
-        $("#HistoryBack").click(
+	$("#HistoryBack").click(
             function() {
                 window.history.back();
             }
-        );
-     }
+        ); 
+    }
 
     function checkboxInit() {
         $(function(){
