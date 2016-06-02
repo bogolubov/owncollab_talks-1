@@ -381,7 +381,7 @@ class Helper
         }
     }
 
-    static function messageSend($address, $messagedata) {
+    static function messageSend($address, $messagedata, $projectname = "ownCloud", $alladdresses = array()) {
         $to = $address['email'];
         $from = $address['fromaddress'];
         $replyto = $address['replyto'];
@@ -389,11 +389,27 @@ class Helper
         $body = isset($messagedata['text']) ? $messagedata['text'] : 'OwnCollab message';
 
         $mail = new PHPMailer();
-        $mail->setFrom($from, $address['fromname']);
+	$mail->CharSet = "UTF-8"; 
+	$mail->setFrom($from, $address['fromname']);
         $mail->AddReplyTo($replyto, $address['fromname']);
         $mail->addAddress($to, $address['name']);
         $mail->Subject = $subject;
-        $mail->Body = $body;
+        //$mail->Body = $body;
+        $emailparams = [
+            'mode' => 'email',
+            'projectname' => $projectname,
+            'domain' => \OC::$server->getRequest()->getServerHost(),
+            'talktitle' => $subject,
+            'message-text' => $body,
+            //'sender' => isset($address['fromname']) && !empty($address['fromname']) ? $address['fromname'] : $address['fromaddress'],
+            'sender' => $messagedata['author'],
+            'subscriber' => $address['name'],
+            'subscribers' => self::getOtherSubscribers($address['name'], $alladdresses)
+        ];
+        if (!empty($messagedata['attachements'])) {
+            $emailparams['attachlinks'] = unserialize($messagedata['attachements']);
+        }
+        $mail->Body = self::renderPartial($projectname, 'part.email', $emailparams);
         $mail->isHTML();
 
         if (!empty($to) && !empty($from)) {
@@ -434,11 +450,34 @@ class Helper
         $host = \OC::$server->getRequest()->getServerHost();
         $links = '';
         foreach ($filesid as $f => $id) {
+            $link = array();
             $file = $files->getById($id)[0];
-            $dir = explode('/', $file['path'])[1];
-            $link = $file['mimetype'] == 'httpd/unix-directory' ? "/index.php/apps/files?dir=//".$file['name'] : "/index.php/apps/files/ajax/download.php?dir=".$dir."&files=".$file['name'];
-            $links = '<a href="'.$host.$link.'">'.$file['name'].'</a><br>';
+            $link['name'] = $file['name'];
+            $link['icon'] = "http://".$host."/core/img/filetypes/".$files->getIcon($file['mimetype']).".svg"; //Отримати повну адресу
+            $path = str_replace('files/Talks', '', $file['path']);
+            $path = str_replace('/'.$file['name'], '', $path);
+            $link['link'] = $file['mimetype'] == 'httpd/unix-directory' ? "http://".$host."/index.php/apps/files?dir=//".$file['name'] : "http://".$host."/index.php/apps/files/ajax/download.php?dir=%2F".$path."&files=".$file['name'];
+            $link['size'] = self::sizeRoundedString($file['size']);
+            $link['href'] = '<a href="'.$link['link'].'">'.$file['name'].'</a><br>';
+            $links[] = $link;
         }
         return $links;
+    }
+
+    static private function getOtherSubscribers($name, $addresses) {
+        $subscribers = array();
+        foreach ($addresses as $gu => $group) {
+            if ($gu == 'ungroupped') {
+                foreach ($group['groupusers'] as $u => $user) {
+                    if (!($u == $name) && !in_array($u, $subscribers)) {
+                        $subscribers[] = $u;
+                    }
+                }
+            }
+            else {
+                $subscribers[] = $gu;
+            }
+        }
+        return implode(', ', $subscribers);
     }
 }

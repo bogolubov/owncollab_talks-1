@@ -35,6 +35,9 @@ script('owncollab_talks', 'trumbowyg/trumbowyg');
 				case 'files':
 					print_unescaped($this->inc('part.userfiles'));
 					break;
+				case 'email':
+					print_unescaped($this->inc('part.email'));
+					break;
 				default:
 					print_unescaped($this->inc('part.message-list'));
 					break;

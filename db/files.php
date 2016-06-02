@@ -128,33 +128,54 @@ class Files
      * Inserts uploaded file into database
      * @param array $file
      */
-    public function newFile($file) {
+    public function newFile($file, $path) {
         $sql = "SELECT id FROM *PREFIX*mimetypes WHERE mimetype = '".$file['mimetype']."'";
         $res = $this->connect->query($sql);
         $mimetype = $res['id'];
 
         $sql = "SELECT numeric_id FROM *PREFIX*storages WHERE id = 'home::".$file['owner']."'";
         $res = $this->connect->query($sql);
-        $storage = $res['numeric_id'];
+        $storageid = $res['numeric_id'];
 
         $sql = "SELECT fileid FROM *PREFIX*filecache WHERE path = '".$file['path']."'";
         $res = $this->connect->query($sql);
         $parent = $res['fileid'];
 
-        $data = array(
-            'storage' => $storage,
+	//$path = '/var/www/owncloud.loc/data/admin/files/Photos/San Francisco.jpg';
+	list($storage, $internalPath) = \OC\Files\Filesystem::resolvePath($path.'/'.$file['filename']);
+	$etag = $storage->getETag($internalPath);
+	
+	$data = array(
+            'storage' => $storageid,
             'path' => $file['path'].'/'.$file['filename'],
             'path_hash' => md5($file['path'].'/'.$file['filename']),
             'parent' => $parent,
             'name' => $file['filename'],
             'mimetype' => $mimetype,
+            'mimepart' => 5,
             'size' => $file['size'],
             'mtime' => $file['mtime'],
             'storage_mtime' => $file['storage_mtime'],
-            'permissions' => 31
+            'etag' => $etag,
+            'permissions' => \OCP\Constants::PERMISSION_ALL
             );
         $filecache = $this->save($data);
 
+        /* file_put_contents('/tmp/inb.log', "\nPath : /\n", FILE_APPEND);
+        try { 
+		$fileInfo = \OC\Files\Filesystem::getFileInfo('/', false); 
+        } 
+        catch (\Exception $e) {
+		file_put_contents('/tmp/inb.log', "\nGet File Info error : " . $e->getMessage() . "\n", FILE_APPEND);
+	}
+        file_put_contents('/tmp/inb.log', "\nFile info : " . print_r($fileInfo, true) . "\n", FILE_APPEND);
+        try { 
+		$icon = \OCA\Files\Helper::determineIcon($fileInfo); 
+        } 
+        catch (\Exception $e) {
+		file_put_contents('/tmp/inb.log', "\nDetermine Icon error : " . $e->getMessage() . "\n", FILE_APPEND);
+	} */ 
+	
         $activity = array(
                     'activity_id' => NULL,
                     'timestamp' => $file['mtime'],
@@ -164,11 +185,11 @@ class Files
                     'affecteduser' => $file['owner'],
                     'app' => 'files',
                     'subject' => 'created_self',
-                    'subjectparams' => '["\/Talks\/'.$file['filename'].'"]',
+                    'subjectparams' => '["\/'.$file['filename'].'"]',
                     'message' => '',
                     'messageparams' => '[]',
-                    'file' => '/Talks/'.$file['filename'],
-                    'link' => $file['domain'].'/index.php/apps/files?dir=%2FTalks',
+                    'file' => '/'.$file['filename'],
+                    'link' => $file['domain'].'/index.php/apps/files?dir=%2F',
                     'object_type' => 'files',
                     'object_id' => $filecache
                     );

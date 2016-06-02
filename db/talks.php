@@ -69,6 +69,23 @@ class Talks {
 		$this->status = $talk[0]['status'];
 	}
 
+	public function getByHash($hash) {
+		file_put_contents('/tmp/inb.log', "hash : ".$hash."\n", FILE_APPEND);
+		$talk = $this->Messages->getTalkByHash($hash);
+
+		//file_put_contents('/tmp/inb.log', "talk : ".print_r($talk, true)."\n", FILE_APPEND);
+
+		$this->talkId = $talk['id'];
+		$this->date = $talk['date'];
+		$this->title = $talk['title'];
+		$this->text = $talk['text'];
+		$this->attachemntIDs = $talk['attachments'];
+		$this->author = $talk['author'];
+		$this->subscribers = $talk['subscribers'];
+		$this->hash = $talk['hash'];
+		$this->status = $talk['status'];
+	}
+
 	/**
 	 * Get all users from group
 	 * @param $group string
@@ -163,7 +180,7 @@ class Talks {
 //		}
 		$this->forSaveData = array(
 			'rid' => isset($this->replyId) && !($this->replyId == 0) ? $this->replyId : 0,
-			'date' => date("Y-m-d h:i:s"),
+			'date' => $this->date,
 			'title' => $this->title,
 			'text' => $this->text,
 			'attachements' => is_array($this->files) ? implode(',', $this->files) : $this->files,
@@ -211,10 +228,10 @@ class Talks {
 		$emails = $this->prepareEmailAddresses();
 		$messagedata = [
 			'rid' => $this->talkId,
-			'date' => date("Y-m-d h:i:s"),
+			'date' => $this->date,
 			'title' => $this->title,
 			'text' => $this->text,
-			'attachements' => $this->fileLinks,
+			'attachements' => serialize($this->fileLinks),
 			'author' => $this->author,
 			'subscribers' => $this->subscriberToSend,
 			'hash' => $this->hash,
@@ -277,25 +294,36 @@ class Talks {
 		$this->prepareUsersForShare();
 		$files = array();
 		foreach ($this->files as $id) {
-			$files[] = $file = $this->Files->getById($id)[0];
+			$file = $this->Files->getById($id)[0];
 			$fileOwner = \OC\Files\Filesystem::getOwner($file['path']);
 			$sharetype = $file['mimetype'] == 2 ? 'folder' : 'file';
 			$sharedWith = \OCP\Share::getUsersItemShared($sharetype, $file['fileid'], $fileOwner, false, true);
+			$isenabled = \OCP\Share::isEnabled(); 
+			$isallowed = \OCP\Share::isResharingAllowed(); 
 			foreach ($this->subscriberToShare as $userid) {
 				if (
 					isset($file['fileid']) &&
 					is_array($file) &&
-					isset($file['fileid']) &&
 					!in_array($userid, $sharedWith) &&
 					!($userid == $this->author) &&
-					($fileOwner == $this->author || $file['permissions'] >= 16)
+					($fileOwner == $this->author || $file['permissions'] >= 16) && 
+					$isenabled && 
+					$isallowed 
 					) {
-					\OCP\Share::shareItem($sharetype, $file['fileid'], \OCP\Share::SHARE_TYPE_USER, $userid, 1);
+					//try {
+						\OCP\Share::shareItem($sharetype, $file['fileid'], \OCP\Share::SHARE_TYPE_USER, $userid, 1);
+						$files[] = $file['fileid'];
+					//}
+					//catch (\Exception $e) {
+					//	echo $e->getMessage();
+					//}
 				}
 			}
 		}
-		$this->forSaveData['attachements'] = $this->files;
-		$this->fileLinks = Helper::makeAttachLinks($this->files, $this->Files);
+		$this->forSaveData['attachements'] = $files;
+		$this->fileLinks = Helper::makeAttachLinks($files, $this->Files);
+		//print_r($this->fileLinks);
+		//file_put_contents('/tmp/inb.log', "\n\nfileLinks : "print_r($this->fileLinks, true)."\n", FILE_APPEND);
 
 		/* foreach ($_POST['select-files'] as $id => $on) {
 			if ($on == 'on') {
@@ -341,6 +369,12 @@ class Talks {
 
 	public function setTalkId($id) {
 		$this->talkId = $id;
+	}
+
+	public function setDate($date = NULL) {
+		//$date = date_create(date("Y-m-d H:i:s"), timezone_open('UTC')); 
+		//$this->date = isset($date) ? $date : date_format($date, 'Y-m-d H:i:s');
+		$this->date = isset($date) ? $date : date('Y-m-d H:i:s');
 	}
 
 	public function setReply($reply) {

@@ -44,9 +44,20 @@ $application->registerRoutes($this, ['routes' => [
     ['name' => 'main#removeUser', 'url' => '/removeuser/{talk}/{user}', 'verb' => 'GET'],
     ['name' => 'main#markMessage', 'url' => '/mark/{id}/{flag}', 'verb' => 'GET'],
 
-    //['name' => 'main#parseMail', 'url' => '/checkmail', 'verb' => 'GET'],
-    ['name' => 'main#parse_mail', 'url' => '/parsemail', 'verb' => 'GET|POST'],
-    ['name' => 'main#save_mail', 'url' => '/savemail', 'verb' => 'GET|POST'],
+    ['name' => 'main#getUserFiles', 'url' => '/getfiles', 'verb' => 'GET'],
+    ['name' => 'main#parseMessages', 'url' => '/parsemessages', 'verb' => 'GET'],
 
-    ['name' => 'main#save_email_answer', 'url' => '/saveemailanswer', 'verb' => 'GET|POST'],
+    //['name' => 'main#parse_mail', 'url' => '/parsemail', 'verb' => 'GET|POST'],
+    ['name' => 'main#save_email_answer', 'url' => '/savemail', 'verb' => 'GET|POST'],
+    //['name' => 'main#savemail', 'url' => '/savemail', 'verb' => 'GET|POST'],
 ]]);
+
+\OCP\API::register(
+    'get',
+    '/apps/owncollab_talks/url',
+    function($urlParameters) {
+        return new \OC_OCS_Result($data);
+    },
+    'owncollab_talks',
+    \OC_API::ADMIN_AUTH
+);

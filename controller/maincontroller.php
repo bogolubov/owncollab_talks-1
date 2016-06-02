@@ -12,6 +12,7 @@
 namespace OCA\Owncollab_Talks\Controller;
 
 use OC\Files\Filesystem;
+use OCA\Owncollab_Talks\AppInfo\TempFiles;
 use OCA\Owncollab_Talks\Db\Connect;
 use OCA\Owncollab_Talks\Helper;
 use OCA\Owncollab_Talks\MailParser;
@@ -55,7 +56,9 @@ class MainController extends Controller {
 		$this->isAdmin = $isAdmin;
 		$this->l10n = $l10n;
 		$this->connect = $connect;
-	}
+
+		$checkFiles = new TempFiles($this->userId);
+    }
 
 	/**
 	 * CAUTION: the @Stuff turns off security checks; for this page no admin is
@@ -312,6 +315,7 @@ class MainController extends Controller {
 			$hash = $thetalk['hash'];
 		}
 		$talks->setTitle($_POST['title']);
+		$talks->setDate();
 		$talks->setText(Helper::checkTxt($_POST['message-body']));
 		$talks->setAuthor($this->userId);
 		if (isset($_POST['users']) && !empty($_POST['users'])) {
@@ -338,7 +342,7 @@ class MainController extends Controller {
 		}
 
 		//Prepare data for saving
-		$talks->prepareForSave();
+		$talks->prepareForSave(); 
 		$talkid = $talks->save();
 		foreach ($talks->subscriberToSave as $s => $item) {
 			$this->setUserMessageStatus($item, $talks->talkId);
@@ -350,7 +354,7 @@ class MainController extends Controller {
 			//$this->setUserMessageStatus($email['name'], $talks->forSend['talkid']);
 
 			if (!empty($talks->forSend['data'])) {
-				$sent = Helper::messageSend($email, $talks->forSend['data']);
+				$sent = Helper::messageSend($email, $talks->forSend['data'], $this->appName, $talks->subscriberToSend);
 			}
 		}
 
@@ -362,7 +366,7 @@ class MainController extends Controller {
 		}
 		else {
 			return;
-		}
+		} 
 	}
 
 	/**
@@ -375,7 +379,9 @@ class MainController extends Controller {
 		$answers = $this->connect->answers();
 
 		$answers->setTalkId($_POST['replyid']);
+		$answers->setReply(true);
 		$answers->setTitle($_POST['title']);
+		$answers->setDate();
 		$answers->setText(Helper::checkTxt($_POST['message-body']));
 		$answers->setAuthor($this->userId);
 		$answers->setSubscriberPersons($_POST['users']);
@@ -384,11 +390,16 @@ class MainController extends Controller {
 		$answers->setProjectName($this->projectname);
 
 		//Prepare subscribers lists
+		$answers->devideSubscribers();
 		$answers->prepareSubscribers();
 
 		//Prepare data for saving
 		$answers->prepareForSave();
 		$answers->save();
+		foreach ($answers->subscriberToSave as $s => $item) {
+			$this->setUserMessageStatus($item, $answers->answerId);
+		}
+		$this->setUserMessageStatus($answers->author, $answerId->talkId);
 
 		$forSend = $answers->send();
 
@@ -402,53 +413,50 @@ class MainController extends Controller {
 	}
 
 	/**
+	 * @PublicPage
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
 	 * @return TemplateResponse
 	 */
+	//TODO: Використовувати метод з застосуванням засобів безпеки
 	public function saveEmailAnswer() {
-		//file_put_contents('/tmp/inb.log', "\nsaveEmailAnswer\n", FILE_APPEND);
-		//die();
-		echo "saveEmailAnswer";
+		//file_put_contents('/tmp/inb.log', "\nPOST : ".print_r($_POST['attachments'], true)."\n", FILE_APPEND);
+		//die(); 
 		$talk = $this->connect->talks();
 		$answers = $this->connect->answers();
-
-		$answers->setAuthor('olexiy');
-		$answers->saveFiles(array(['contentType' => 'image/png', 'encoding' => 'base64', 'filename' => "banana.png", 'contents' => 'iVBORw0KGgoAAAANSUhEUgAAAZAAAAELCAYAAAD3HtBMAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJ']));
-
-		/* $author = $this->getUserByExternalEmail($_POST['from']);
-		file_put_contents('/tmp/inb.log', "author : ".$author."\n", FILE_APPEND);
+		$author = $this->getUserByExternalEmail($_POST['from']);
 
 		$talk->getByHash($_POST['hash']);
-		file_put_contents('/tmp/inb.log', "talkId : ".$talk->talkId."\n", FILE_APPEND);
 
 		$answers->setTalkId($talk->talkId);
 		$answers->setReply(true);
 		$answers->setTitle(Helper::checkTxt($_POST['subject']));
+		$answers->setDate();
 		$answers->setText(Helper::checkTxt($_POST['contents']));
 		$answers->setAuthor($author, $talk->author);
 		$answers->setSubscribers($talk->subscribers);
 		$answers->setHash($talk->hash);
-		$answers->setProjectName($this->getProjectName()); */
+		$answers->setProjectName($this->getProjectName());
 
 		//Prepare subscribers lists
-		/* $answers->devideSubscribers();
+		$answers->devideSubscribers();
 		$answers->prepareSubscribers();
-
-		//Share files
-		if (!empty($_POST['attachments'])) {
-			$answers->saveFiles($_POST['attachments']);
-			$answers->shareFiles();
-		}
 
 		//Prepare data for saving
 		$answers->prepareForSave();
-		file_put_contents('/tmp/inb.log', "subscribersToSave : \n".print_r($answers->subscriberToSave, true)."\n", FILE_APPEND);
+		//file_put_contents('/tmp/inb.log', "subscribersToSave : \n".print_r($answers->forSave, true)."\n", FILE_APPEND);
 		$answerId = $answers->save();
+
+		//Share files
+		if (!empty($_POST['attachments'])) {
+			$answers->saveFiles(unserialize($_POST['attachments'])); 
+		//	$answers->shareFiles();
+		}
 
 		foreach ($answers->subscriberToSave as $s => $item) {
 			$this->setUserMessageStatus($item, $answerId);
-		} */
+		} 
+
 		//Send replies to all subscribers
 		/* $answers->prepareForSend();
 		foreach ($answers->forSend['emails'] as $e => $email) {
@@ -667,9 +675,9 @@ class MainController extends Controller {
 	//TODO: Використовувати метод з застосуванням засобів безпеки
 	public function savemail() {
 
-		echo "Hello";
-		print_r($_POST);
-		/* $messages = $this->connect->messages();
+		//echo "Hello";
+		//print_r($_POST);
+		$messages = $this->connect->messages();
 		$usermessages = $this->connect->userMessage();
 		$message = $_POST['message'];
 
@@ -739,7 +747,7 @@ class MainController extends Controller {
 		}
 		if ($messageid && $author && $message['title'] && $message['subscribers']) {
 			$saved = $messages->save($messagedata);
-		} */
+		} 
 		/* else {
 			$error = "MessageID : ".$messageid."\n".
 				"Author : ".$author."\n".
@@ -752,7 +760,7 @@ class MainController extends Controller {
 		else {
 			file_put_contents('/tmp/inb.log', "Message not saved! Database error! \n", FILE_APPEND);
 		} */
-		die;
+		die();
 	}
 
 	/**
