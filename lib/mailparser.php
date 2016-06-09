@@ -2,8 +2,8 @@
 //$msg = file_get_contents("php://stdin");
 $handle=fopen("php://stdin", "r"); 
 
-	//$head = "\n\n\n================================================================\n".date("Y.m.d H:i:s")." MSG: \n";
-	//file_put_contents('/tmp/inb.log', $head, FILE_APPEND);
+	$head = "\n\n\n================================================================\n".date("Y.m.d H:i:s")." MSG: \n";
+	file_put_contents('/tmp/inb.log', $head, FILE_APPEND);
 	//file_put_contents('/tmp/inb.log', "\n DIR : ".__DIR__, FILE_APPEND);
 
 include __DIR__."/ZBateson/MailMimeParser/MailMimeParser.php"; 
@@ -47,6 +47,12 @@ $mailParser = new ZBateson\MailMimeParser\MailMimeParser();
 	
 	$res = $message->getTextStream();                               // or getHtmlStream
 	$content = stream_get_contents($res);
+
+	$pluspos = strpos($to, '+'); 
+	if ($pluspos > 0) { 
+		$hash = substr($to, strpos($to, '+') + 1, 16); 
+	} 
+
 	//file_put_contents('/tmp/inb.log', "\nTry successful!", FILE_APPEND);
     } 
     catch (Exaption $e) {
@@ -79,8 +85,9 @@ $mailParser = new ZBateson\MailMimeParser\MailMimeParser();
 	//file_put_contents('/tmp/inb.log', "\npath : " . $path . "\n", FILE_APPEND);
 
     include $path . '/config/config.php';
-
-    $url = $CONFIG['overwrite.cli.url'] . '/index.php/apps/owncollab_talks/savemail';
+    $projectname = 'owncollab';
+    //$projectmail = 'team@'.$projectname.'.'.$CONFIG['trusted_domains'][0];
+    $projectmail = 'team@'.$CONFIG['trusted_domains'][0];
 	//file_put_contents('/tmp/inb.log', "\nurl : " . $url . "\n", FILE_APPEND);
 	//file_put_contents('/tmp/inb.log', "\ncurl!\n", FILE_APPEND);
 
@@ -91,12 +98,20 @@ $mailParser = new ZBateson\MailMimeParser\MailMimeParser();
 	'fromName' => $fromName,
 	'subject' => $subject,
 	'contents' => $content, 
-	'hash' => substr($to, strpos($to, '+')+1, 16) 
+	'hash' => $hash 
     ];
 
     if (!empty($attachedFiles)) { 
 	$messageParams['attachments'] = serialize($attachedFiles); 
     } 
+ 
+    if (!$hash || $to == $projectmail) {
+        $url = $CONFIG['overwrite.cli.url'] . '/index.php/apps/owncollab_talks/savemailtalk';
+    }
+    else {
+        $url = $CONFIG['overwrite.cli.url'] . '/index.php/apps/owncollab_talks/savemail';
+    }
+   
 	//file_put_contents('/tmp/inb.log', "\nMessage parsed!".print_r($messageParams, true), FILE_APPEND);
 
     $ch = curl_init();

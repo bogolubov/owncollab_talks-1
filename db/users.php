@@ -248,4 +248,18 @@ class Users
             return array_unique($users);
         }
     }
+
+    /**
+     * Get all group names
+     * @return array
+     */
+    public function getAllGroups() {
+        $sql = "SELECT gid FROM *PREFIX*group_user";
+
+        $res = $this->connect->queryAll($sql);
+        foreach ($res as $r => $row) {
+            $groups[] = $row['gid'].'-group';
+        }
+        return $groups;
+    }
 }

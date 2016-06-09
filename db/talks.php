@@ -238,7 +238,7 @@ class Talks {
 			'status' => 0
 		];
 
-		$this->forSend = ['talkid' => $this->talkIdId, 'emails' => $emails, 'data'=> $messagedata];
+		$this->forSend = ['talkid' => $this->talkId, 'emails' => $emails, 'data'=> $messagedata];
 	}
 
 	private function prepareEmailAddresses() {
@@ -277,7 +277,7 @@ class Talks {
 	 * Save the message to db
 	 */
 	public function save() {
-		$this->talkId = $this->Messages->save($this->forSaveData);
+		$this->talkId = $this->Messages->save($this->forSaveData); 
 	}
 
 	/**

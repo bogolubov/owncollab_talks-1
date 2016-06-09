@@ -12,7 +12,7 @@
 namespace OCA\Owncollab_Talks\Controller;
 
 use OC\Files\Filesystem;
-use OCA\Owncollab_Talks\AppInfo\TempFiles;
+use OCA\Owncollab_Talks\AppInfo\TempFile;
 use OCA\Owncollab_Talks\Db\Connect;
 use OCA\Owncollab_Talks\Helper;
 use OCA\Owncollab_Talks\MailParser;
@@ -56,8 +56,6 @@ class MainController extends Controller {
 		$this->isAdmin = $isAdmin;
 		$this->l10n = $l10n;
 		$this->connect = $connect;
-
-		$checkFiles = new TempFiles($this->userId);
     }
 
 	/**
@@ -369,6 +367,78 @@ class MainController extends Controller {
 		} 
 	}
 
+		/**
+	 * @PublicPage
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 */
+	public function saveEmailTalk() {
+		date_default_timezone_set('Europe/Berlin'); 
+
+		$talks = $this->connect->talks();
+		$users = $this->connect->users();
+
+		$talks->setDate();
+		$talks->setTitle(Helper::checkTxt($_POST['subject']));
+		$talks->setText(Helper::checkTxt($_POST['contents']));
+
+		$author = $this->getUserByExternalEmail($_POST['from']);
+		if (empty($author)) {
+			exit;
+		}
+
+		$talks->setAuthor($author);
+		$group = substr($_POST['to'], 0, strpos($_POST['to'], '@'));
+		if ($group == 'team') {
+			$groups = array_unique($users->getAllGroups());
+			$groupusers = $users->getAll();
+			if (!in_array($author, array_column($groupusers, 'uid'))) {
+				exit; 
+			} 
+			if (count($groups) > 0) { 
+				$talks->setSubscriberGroups($groups);
+			}
+		}
+		else {
+			$groupusers = $users->getUsersFromGroup($group); 
+			if (!in_array($author, array_column($groupusers, 'uid'))) {
+				exit; 
+			} 
+			if (count($groupusers) > 0) {
+				$talks->setSubscriberGroups([$group]);
+			}
+		}
+		$talks->setHash(md5(date("Y-m-d h:i:s").''.$talks->title));
+		$talks->setProjectName($this->getProjectName());
+
+		//Prepare subscribers lists
+		$talks->prepareSubscribers();
+
+		//Prepare data for saving
+		$talks->prepareForSave();
+		$talks->save();
+		$talkid = $talks->talkId;
+
+		//Share files
+		//if (!empty($_POST['attachments'])) { //TODO make saveFiles method
+		//	$talks->saveFiles(unserialize($_POST['attachments']), $author); 
+		//}
+
+		foreach ($talks->subscriberToSave as $s => $item) {
+			$this->setUserMessageStatus($item, $talkid);
+		}
+		$this->setUserMessageStatus($talks->author, $talkid);
+
+		$talks->prepareForSend();
+		foreach ($talks->forSend['emails'] as $e => $email) {
+			$this->setUserMessageStatus($email['name'], $talks->forSend['talkid']);
+
+			if (!empty($talks->forSend['data'])) {
+				$sent = Helper::messageSend($email, $talks->forSend['data'], $this->appName, $talks->subscriberToSend);
+			}
+		}
+	}
+
 	/**
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
@@ -407,7 +477,7 @@ class MainController extends Controller {
 			$this->setUserMessageStatus($email['name'], $forSend['answerid']);
 
 			if (!empty($messagedata)) {
-				$sent = Helper::messageSend($email, $forSend['data']);
+				$sent = Helper::messageSend($email, $forSend['data'], $this->appName, $answers->subscriberToSend);
 			}
 		}
 	}
@@ -449,7 +519,8 @@ class MainController extends Controller {
 
 		//Share files
 		if (!empty($_POST['attachments'])) {
-			$answers->saveFiles(unserialize($_POST['attachments'])); 
+			//$checkFiles = new TempFile($this->userId);
+			$answers->saveFiles(unserialize($_POST['attachments']), $author); 
 		//	$answers->shareFiles();
 		}
 
@@ -458,14 +529,14 @@ class MainController extends Controller {
 		} 
 
 		//Send replies to all subscribers
-		/* $answers->prepareForSend();
+		$answers->prepareForSend();
 		foreach ($answers->forSend['emails'] as $e => $email) {
 			$this->setUserMessageStatus($email['name'], $answers->forSend['talkid']);
 
 			if (!empty($answers->forSend['data'])) {
-				$sent = Helper::messageSend($email, $answers->forSend['data']);
+				$sent = Helper::messageSend($email, $answers->forSend['data'], $this->appName, $answers->subscriberToSend);
 			}
-		} */
+		} 
 	}
 
 	/**

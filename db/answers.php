@@ -69,9 +69,9 @@ class Answers {
 		if (!is_array($this->subscribers)) {
 			$this->subscribers = $this->subscribersToArray();
 		}
-		if ($this->isreply) {
-			$this->subscribers = $this->swapSubscribers($this->subscribers, $this->talkAuthor, $this->author);
-		}
+		//if ($this->isreply) {
+		//	$this->subscribers = $this->swapSubscribers($this->subscribers, $this->talkAuthor, $this->author);
+		//}
 		foreach ($this->subscribers as $s => $subscriber) {
 			if (strpos($subscriber, '-group')) { // If group conversation
 				$groupname = substr($subscriber, 0, strpos($subscriber, '-'));
@@ -185,7 +185,7 @@ class Answers {
 					if (in_array($groupuser, $this->subscriberPersons)) {
 						$this->subscriberPersons = $this->removeFromList($this->subscriberPersons, $groupuser);
 					}
-					$user = $this->users->getUserDetails($groupuser['uid']);
+					$user = $this->Users->getUserDetails($groupuser['uid']);
 					if (!($user == $this->author)) {
 						$groupusers[$groupuser['uid']] = $user;
 					}
@@ -274,11 +274,15 @@ class Answers {
 	/**
 	 * Save files attached to email massage
 	 */
-	public function saveFiles($files) {
+	public function saveFiles($files, $author) {
+		$datadir = $_SERVER['DOCUMENT_ROOT']."/data";
+		$localpath = "files";
 		foreach ($files as $file) {
 			if (!empty($file['contents'])) {
 				if (!empty($file['contentType']) && $file['encoding'] == 'base64') {
-					$fileToUpload = $this->saveTmpFile($file['contents'], $file['filename']);
+					//$fileToUpload = $this->saveTmpFile($file['contents'], $file['filename']);
+					$fileUpload = $this->saveFile($file['contents'], $datadir, $author, $localpath, $file['filename']); 
+					$fileid = $this->chownFile($fileUpload); 
 				}
 			} 
 		}
@@ -291,6 +295,51 @@ class Answers {
 		fwrite($ifp, $contents);
 		fclose($ifp);
 		return $dir.'/'.$filename;
+	}
+
+	private function saveFile($contents, $datadir, $author, $localpath, $filename) {
+		$fullPath = $datadir."/".$author."/".$localpath;
+		$jpgBase64 = base64_encode($contents);
+		$storage = new \OC\Files\Storage\Local(["datadir" => $fullPath]);
+		$result = $storage->file_put_contents($filename, base64_decode($jpgBase64));
+		return [
+			'storage' => $result,
+			'uploadpath' => $fullPath,
+			'path' => $localpath,
+			'filename' => $filename,
+			'uid' => $author
+			];
+	}
+
+	private function chownFile($file) {
+	    chown($file['uploadpath'].'/'.$file['filename'], $file['uid']);
+	    $mimetype = mime_content_type($file['uploadpath'].'/'.$file['filename']);
+	    $fp = fopen($file['uploadpath'].'/'.$file['filename'], "r");
+	    $fstat = fstat($fp);
+	    fclose($fp);
+	    $stat = array_slice($fstat, 13);
+	    $path = realpath(dirname(dirname(dirname(__DIR__)))); 
+	    $uploadedpath = $file['uploadpath']; 
+	    include $path . '/config/config.php';
+	    $domain = $CONFIG['overwrite.cli.url'];
+	    $file = [
+		    'storage' => $file['storage'],
+		    'path' => $file['path'],
+		    'filename' => $file['filename'],
+		    'mimetype' => $mimetype,
+		    'size' => $stat['size'],
+		    'mtime' => $stat['mtime'],
+		    'storage_mtime' => $stat['atime'],
+		    'owner' => $file['uid'],
+		    'domain' => $domain
+		    ];
+	    $fileid = $this->Files->newFile($file, $uploadedpath);
+	    if ($fileid) {
+		return $fileid;
+	    }
+	    else {
+		return false;
+	    }
 	}
 
 	/**
@@ -342,8 +391,10 @@ class Answers {
 	}
 
 	private function removeFromList($list, $item) {
-		$index = array_search($item, $list);
-		unset($list[$index]);
+		if (in_array($item, $list)) { 
+			$index = array_search($item, $list);
+			unset($list[$index]); 
+		} 
 		return $list;
 	}
 
