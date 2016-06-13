@@ -21,7 +21,7 @@ $cancheckusers = ($_['user'] == $_['talk']['author'] || in_array($_['user'], arr
     </h2></div>
     <div class="right claer"><input type="submit" value="Submit"></div>
     <div class="talk-title">
-        <input type="text" name="title" value="<?=$title;?>"<?php if (!$title) { ?> placeholder="<?php p($l->t('Title of the Talk'));?>"<?php } ?>>
+        <input type="text" name="title" autocomplete="off" value="<?=$title;?>"<?php if (!$title) { ?> placeholder="<?php p($l->t('Title of the Talk'));?>"<?php } ?>>
     </div>
     <div class="clear"></div>
     <div class="talk-body">

@@ -24,7 +24,7 @@ $attachlinks = $_['attachlinks'];
             <table width="615">
                 <tr>
                     <td><strong>Betreff: </strong></td>
-                    <td style="text-align: center"> <?=$projectname;?> // <?=$talktitle;?></td>
+                    <td style="text-align: center"> Owncollab Message // <?=$talktitle;?></td>
                 </tr>
             </table>
         </td>
@@ -35,7 +35,7 @@ $attachlinks = $_['attachlinks'];
                 Dear <?=$subscriber;?>,
             </p>
             <p>The user <?=$sender;?> dropped following email to you<?php if (!empty($subscribers)) { ?> and <?=$subscribers;?><?php } ?>.
-                Please answer directly using your preferred email client or login to your <a href="<?=$projectLink;?>" target="_blank"><?=$projectname;?></a> instance.</p>
+                Please answer directly using your preferred email client or login to your <a href="<?=$projectLink;?>" target="_blank">Owncollab Talk</a> instance.</p>
             <?php if (!empty($attachlinks)) { ?>
             <p>Following files have been attached to the email:</p>
             <table border="0" cellspacing="0" cellpadding="2" width="615" class="file_attached_table">
@@ -64,7 +64,7 @@ $attachlinks = $_['attachlinks'];
             <p>
                 This email was created by the <a href="http://www.owncloud.com/">ownCloud</a> system on <?=$domain;?>.
             </p>
-            <p><a href="https://www.ownCollab.com">https://www.ownCollab.com</a> is powered by <a href="http://www.owncloud.com/">ownCloud</a></p>
+            <p><a href="https://www.owncollab.com">https://www.owncollab.com</a> is powered by <a href="http://www.owncloud.com/">ownCloud</a></p>
 
         </td>
     </tr>

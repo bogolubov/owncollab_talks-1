@@ -92,17 +92,17 @@ $mailParser = new ZBateson\MailMimeParser\MailMimeParser();
 	//file_put_contents('/tmp/inb.log', "\ncurl!\n", FILE_APPEND);
 
     $messageParams = [
-	'to' => $to,
-	'toName' => $toName,
-	'from' => $from,
-	'fromName' => $fromName,
-	'subject' => $subject,
-	'contents' => $content, 
-	'hash' => $hash 
+        'to' => $to,
+        'toName' => $toName,
+        'from' => $from,
+        'fromName' => $fromName,
+        'subject' => $subject,
+        'contents' => $content,
+        'hash' => $hash
     ];
 
     if (!empty($attachedFiles)) { 
-	$messageParams['attachments'] = serialize($attachedFiles); 
+	    $messageParams['attachments'] = serialize($attachedFiles);
     } 
  
     if (!$hash || $to == $projectmail) {

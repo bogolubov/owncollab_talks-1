@@ -526,7 +526,7 @@ class MainController extends Controller {
 
 		foreach ($answers->subscriberToSave as $s => $item) {
 			$this->setUserMessageStatus($item, $answerId);
-		} 
+		}
 
 		//Send replies to all subscribers
 		$answers->prepareForSend();
@@ -536,7 +536,7 @@ class MainController extends Controller {
 			if (!empty($answers->forSend['data'])) {
 				$sent = Helper::messageSend($email, $answers->forSend['data'], $this->appName, $answers->subscriberToSend);
 			}
-		} 
+		}
 	}
 
 	/**
