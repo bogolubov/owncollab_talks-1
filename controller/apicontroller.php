@@ -403,7 +403,8 @@ class ApiController extends Controller {
 	 */
 	//TODO: Використовувати метод з застосуванням засобів безпеки
 	public function saveDirectAnswer($args) {
-		//echo "Hello";
+		date_default_timezone_set('Europe/Berlin'); 
+
 		$talkid = $args['talkid'];
 		$users = $this->connect->users();
 		$messages = $this->connect->messages();
@@ -417,7 +418,7 @@ class ApiController extends Controller {
 		$answers->setReply(true);
 		$answers->setTitle(Helper::checkTxt($args['text']));
 		$answers->setDate();
-		//$answers->setText(Helper::checkTxt($args['text']));
+		$answers->setText(Helper::checkTxt($args['text']));
 		$answers->setAuthor($this->userId, $talk['author']);
 		$answers->setSubscribers($talk['subscribers']);
 		$answers->setHash($talk['hash']);
@@ -440,8 +441,8 @@ class ApiController extends Controller {
 		foreach ($answers->forSend['emails'] as $e => $email) {
 			$this->setUserMessageStatus($email['name'], $forSend['answerid']);
 
-			if (!empty($messagedata)) {
-				$sent = Helper::messageSend($email, $forSend['data']);
+			if (!empty($answers->forSend['data'])) {
+				$sent = Helper::messageSend($email, $forSend['data'], $this->appName, $answers->subscriberToSend);
 			}
 		}
 

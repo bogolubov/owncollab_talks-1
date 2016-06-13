@@ -48,8 +48,9 @@ $application->registerRoutes($this, ['routes' => [
     ['name' => 'main#parseMessages', 'url' => '/parsemessages', 'verb' => 'GET'],
 
     //['name' => 'main#parse_mail', 'url' => '/parsemail', 'verb' => 'GET|POST'],
-    ['name' => 'main#save_email_answer', 'url' => '/savemail', 'verb' => 'GET|POST'],
+    ['name' => 'main#saveemailanswer', 'url' => '/savemail', 'verb' => 'GET|POST'],
     //['name' => 'main#savemail', 'url' => '/savemail', 'verb' => 'GET|POST'],
+    ['name' => 'main#saveemailtalk', 'url' => '/savemailtalk', 'verb' => 'GET|POST'],
 ]]);
 
 \OCP\API::register(
