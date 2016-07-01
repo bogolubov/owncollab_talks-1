@@ -24,7 +24,7 @@ $attachlinks = $_['attachlinks'];
             <table width="615">
                 <tr>
                     <td><strong>Betreff: </strong></td>
-                    <td style="text-align: center"> Owncollab Message // <?=$talktitle;?></td>
+                    <td style="text-align: center"> Owncollab Talk // <?=$talktitle;?></td>
                 </tr>
             </table>
         </td>
