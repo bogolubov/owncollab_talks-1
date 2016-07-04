@@ -30,12 +30,13 @@ class Connect
         $this->db = $db;
 
         // Register tables models
-        $this->messages = new Messages($this, 'collab_messages');
-        $this->user_message = new UserMessages($this, 'collab_user_message');
         $this->users = new Users($this, 'users');
-        $this->files = new Files($this, 'filecache');
-        $this->talks = new Talks($this, $this->messages);
-        $this->answers = new Answers($this, $this->messages);
+        $this->messages = new Messages($this, 'collab_messages');
+
+        //$this->user_message = new UserMessages($this, 'collab_user_message');
+        //$this->files = new Files($this, 'filecache');
+        //$this->talks = new Talks($this, $this->messages);
+        //$this->answers = new Answers($this, $this->messages);
     }
 
     /**

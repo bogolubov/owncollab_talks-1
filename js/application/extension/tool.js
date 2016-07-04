@@ -24,11 +24,16 @@ App.namespace('Tool', function(App, mod){
             return App.store('node.' + key, value);
     };
 
-
+    /**
+     *
+     * @returns {string}
+     */
     App.getAppPath = function(){
         var _app_name_pos = location.pathname.lastIndexOf(App.name);
-        return location.pathname.substr(_app_name_pos + App.name.length);
+        var path = location.pathname.substr(_app_name_pos + App.name.length);
+        return (path.slice(0,1) == '/') ? path : '/' + path;
     };
+
 
     return _;
 });

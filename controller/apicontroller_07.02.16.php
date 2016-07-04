@@ -5,8 +5,6 @@ namespace OCA\Owncollab_Talks\Controller;
 use OC\Files\Filesystem;
 use OCA\Owncollab_Talks\Helper;
 use OCA\Owncollab_Talks\Db\Connect;
-use OCA\Owncollab_Talks\PHPMailer\PHPMailer;
-use OCA\Owncollab_Talks\TalkMail;
 use OCP\Files;
 use OCP\IRequest;
 use OCP\AppFramework\Http\TemplateResponse;
@@ -21,7 +19,6 @@ class ApiController extends Controller {
 	private $isAdmin;
 	private $connect;
 	private $projectname = "Base project";
-
 
 	/**
 	 * ApiController constructor.
@@ -72,142 +69,6 @@ class ApiController extends Controller {
 	public function getproject($data) {
         return new DataResponse($data);
 	}
-
-    /**
-     * @NoAdminRequired
-     * @NoCSRFRequired
-     * @return DataResponse
-     */
-	public function saveTalk() {
-
-		$params = [
-			'error' => null,
-			'errorinfo' => null,
-		];
-
-		if(Helper::post('title') && Helper::post('message')) {
-
-			$groupsusers = [];
-			$all_users = $users = Helper::post('users', false);
-			$groups = Helper::post('groups', false);
-			if(!empty($groups)) {
-				$groupsusers = $this->connect->users()->getGroupsUsersList();
-				foreach($groups as $group) {
-					if(isset($groupsusers[$group]) && $rm_arr = $groupsusers[$group]) {
-						$rm_list = array_map(function($item){ return $item['uid']; }, $rm_arr);
-						$users = array_diff($users, $rm_list);
-					}
-				}
-			}
-
-			$data['date'] = time();
-			$data['title'] = strip_tags(Helper::post('title'));
-			$data['text'] = Helper::post('message');
-			$data['attachements'] = '';
-			$data['author'] = $this->userId;
-			$data['subscribers'] = json_encode(['groups'=>$groups, 'users'=>$users]);
-			$data['hash'] = TalkMail::createHash($data['title']);
-			$data['status'] = TalkMail::SEND_STATUS_CREATED;
-
-			if($result = $this->connect->messages()->insertTask($data)){
-				$params['resultInsertTask'] = $result;
-
-				$result = $this->mailsendSwitcher($data, $all_users, $groups, $groupsusers);
-				$params['result_mailsend'] = $result;
-			}
-			$params['data'] = $data;
-		}
-
-        return new DataResponse($params);
-	}
-
-
-	public function mailsendSwitcher($talk, $users, $groups, $groupsusers)
-	{
-		$to = [];
-
-		foreach ($users as $user) {
-			$_userData = $this->connect->users()->getUserData($user);
-			if(!empty($_userData['email']))
-				$to[] = [$_userData['email'], $_userData['displayname']];
-		}
-
-		$result =  TalkMail::createMail(
-			[TalkMail::createAddress($this->userId), $this->userId],
-			[TalkMail::createAddress($this->userId . $talk['hash']), $this->userId],
-			$to,
-			$talk['title'],
-			$talk['text']
-		);
-
-		if($result === true) {
-			return count($to);
-		}
-
-		return $result;
-	}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	/*			if($result = $this->connect->messages()->updateTask($data)){
-				$params['resultInsertTask'] = $result;
-			}*/
-/*
- * id	int(11) AI PK
-rid	int(11)
-date	datetime
-title	varchar(255)
-text	text
-attachements	tinytext
-author	varchar(64)
-subscribers	tinytext
-hash	varchar(32)
-status	tinyint(4)
-*/
-
-
-
-
 
 	/**
 	 * @NoAdminRequired

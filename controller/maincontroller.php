@@ -69,26 +69,8 @@ class MainController extends Controller {
 	 * @NoCSRFRequired
 	 */
 	public function index() {
-
-
         return $this->begin();
 	}
-
-
-    /**
-     * @NoAdminRequired
-     * @NoCSRFRequired
-     * @return TemplateResponse
-     */
-    public function my() {
-
-        $data = [
-            'menu' => 'my',
-            'content' => 'my'
-        ];
-
-        return new TemplateResponse($this->appName, 'main', $data);
-    }
 
 
     /**
@@ -100,23 +82,8 @@ class MainController extends Controller {
 
         $data = [
             'menu' => 'begin',
-            'content' => 'begin'
-        ];
-
-        return new TemplateResponse($this->appName, 'main', $data);
-    }
-
-
-    /**
-     * @NoAdminRequired
-     * @NoCSRFRequired
-     * @return TemplateResponse
-     */
-    public function all() {
-
-        $data = [
-            'menu' => 'all',
-            'content' => 'all'
+            'content' => 'begin',
+            'groupsusers' => $this->connect->users()->getGroupsUsersList(),
         ];
 
         return new TemplateResponse($this->appName, 'main', $data);
@@ -132,7 +99,42 @@ class MainController extends Controller {
 
         $data = [
             'menu' => 'started',
-            'content' => 'started'
+            'content' => 'started',
+            'messages' => $this->connect->messages()->getStarted($this->userId),
+        ];
+
+        return new TemplateResponse($this->appName, 'main', $data);
+    }
+
+
+    /**
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * @return TemplateResponse
+     */
+    public function my() {
+
+        $data = [
+            'menu' => 'my',
+            'content' => 'my',
+            'messages' => $this->connect->messages()->getMy($this->userId),
+        ];
+
+        return new TemplateResponse($this->appName, 'main', $data);
+    }
+
+
+    /**
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * @return TemplateResponse
+     */
+    public function all() {
+
+        $data = [
+            'menu' => 'all',
+            'content' => 'all',
+            'messages' => $this->connect->messages()->getAll($this->userId),
         ];
 
         return new TemplateResponse($this->appName, 'main', $data);

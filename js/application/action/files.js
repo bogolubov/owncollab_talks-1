@@ -2,10 +2,11 @@ if(App.namespace){App.namespace('Action.Sidebar', function(App){
     /**
      * @namespace App.Action.Sidebar
      */
-    var o = {};
+    var _ = {};
 
-    o.date = function(){};
-    o.day = function(){};
+    _.date = function(){};
 
-    return o;
+    _.day = function(){};
+
+    return _;
 })}

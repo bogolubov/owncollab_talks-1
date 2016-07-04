@@ -9,18 +9,22 @@ if(App.namespace){App.namespace('Controller.Page', function(App){
             
     _.construct = function(){
         App.domLoaded(afterDOMLoaded);
+
+
     };
 
     function afterDOMLoaded () {
 
         // routing settings
         $appPath = App.getAppPath();
-
-        if($appPath === '/begin') {
+        if($appPath === '/' || $appPath === '/begin') {
 
             // init visual editor
-            $("#message-body").trumbowyg();
+            $("textarea[name=message]").trumbowyg();
+
+            App.Action.Edit.init();
         }
+
 
 
     }

@@ -16,34 +16,69 @@ class Messages
 
     protected $tableName;
 
-    public function __construct($connect, $tableName) {
+    public function __construct($connect, $tableName)
+    {
         $this->connect = $connect;
         $this->tableName = '*PREFIX*' . $tableName;
     }
 
-    public function getById($id) {
-        $message = $this->connect->select("*", $this->tableName, "id = :id",[':id' => $id]);
+    public function insertTask(array $data)
+    {
+        return $this->connect->insert($this->tableName, $data);
+    }
+
+    public function updateTask($id, $data)
+    {
+        return $this->connect->update($this->tableName, $data, 'id = ?', [(int)$id]);
+    }
+
+
+    public function getById($id)
+    {
+        $message = $this->connect->select("*", $this->tableName, "id = :id", [':id' => $id]);
         return $message;
     }
 
 
-    public function getMy($id) {
-        $message = $this->connect->select("*", $this->tableName, "id = :id",[':id' => $id]);
+    /**
+     * Current user is participating of Talks
+     * @param $id
+     * @return array
+     */
+    public function getMy($id)
+    {
+        $all = $this->getAll();
+        $message = array_filter($all, function ($item) use ($id) {
+            try {
+                $subscribers = json_decode($item['subscribers'], true);
+                return isset($subscribers['users']) && in_array($id, $subscribers['users']);
+            } catch (\Exception $error) {
+                return false;
+            }
+        });
         return $message;
     }
 
-    public function getAll($id) {
-        $message = $this->connect->select("*", $this->tableName, "id = :id",[':id' => $id]);
+    /**
+     * All Talks
+     * @return mixed
+     */
+    public function getAll()
+    {
+        $message = $this->connect->select("*", $this->tableName, "status < 2");
         return $message;
     }
 
-    public function getStarted($id) {
-        $message = $this->connect->select("*", $this->tableName, "id = :id",[':id' => $id]);
+    /**
+     * Current user is started of Talks
+     * @param $id
+     * @return mixed
+     */
+    public function getStarted($id)
+    {
+        $message = $this->connect->select("*", $this->tableName, "author = :author AND status < 2", [':author' => $id]);
         return $message;
     }
-
-
-
 
 
 
