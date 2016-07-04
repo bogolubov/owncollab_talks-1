@@ -339,7 +339,7 @@ ul.messagelist li.title .id {
 	width: 100px;
 	padding: 10px 0 0 5px;
 	margin-right: 5px;
-	float: left;
+	/*float: left;*/
 }
 .talk-title input {
 	width: 100%;
@@ -378,7 +378,7 @@ ul.messagelist li.title .id {
 .uploadedfiles .thumbnail {
 	width: 16px;
 	height: 16px;
-	float: left;
+	/*float: left;*/
 }
 .uploadedfiles .name, .uploadedfiles .size {
 	margin-left: 10px;

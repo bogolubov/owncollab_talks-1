@@ -65,7 +65,7 @@ class Messages
      */
     public function getAll()
     {
-        $message = $this->connect->select("*", $this->tableName, "status < 2");
+        $message = $this->connect->select("*", $this->tableName, "status < 2 AND rid = 0 ");
         return $message;
     }
 
@@ -76,7 +76,7 @@ class Messages
      */
     public function getStarted($id)
     {
-        $message = $this->connect->select("*", $this->tableName, "author = :author AND status < 2", [':author' => $id]);
+        $message = $this->connect->select("*", $this->tableName, "author = :author AND status < 2 AND rid = 0 ", [':author' => $id]);
         return $message;
     }
 

@@ -100,6 +100,7 @@ class ApiController extends Controller {
 				}
 			}
 
+			$data['rid'] = 0;
 			$data['date'] = time();
 			$data['title'] = strip_tags(Helper::post('title'));
 			$data['text'] = Helper::post('message');

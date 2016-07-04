@@ -1,3 +1,4 @@
+
 <?php if (isset($_['groupsusers']) && is_array($_['groupsusers']) ) :  ?>
 
     <?php foreach ($_['groupsusers'] as $g_name => $users) : ?>
