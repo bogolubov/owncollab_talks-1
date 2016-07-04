@@ -23,8 +23,16 @@ $application = new \OCA\Owncollab_Talks\AppInfo\Application();
 $application->registerRoutes($this, ['routes' => [
 
     ['name' => 'main#index', 'url' => '/', 'verb' => 'GET'],
+    ['name' => 'main#my', 'url' => '/my', 'verb' => 'GET'],
+    ['name' => 'main#all', 'url' => '/all', 'verb' => 'GET'],
+    ['name' => 'main#started', 'url' => '/started', 'verb' => 'GET'],
+    ['name' => 'main#begin', 'url' => '/begin', 'verb' => 'GET'],
+
     ['name' => 'api#index', 'url' => '/api', 'verb' => 'POST'],
 
+
+
+    /*
     ['name' => 'main#page', 'url' => '/page', 'verb' => 'GET'],
     ['name' => 'main#do_echo', 'url' => '/echo', 'verb' => 'POST'],
 
@@ -50,10 +58,11 @@ $application->registerRoutes($this, ['routes' => [
     //['name' => 'main#parse_mail', 'url' => '/parsemail', 'verb' => 'GET|POST'],
     ['name' => 'main#saveemailanswer', 'url' => '/savemail', 'verb' => 'GET|POST'],
     //['name' => 'main#savemail', 'url' => '/savemail', 'verb' => 'GET|POST'],
-    ['name' => 'main#saveemailtalk', 'url' => '/savemailtalk', 'verb' => 'GET|POST'],
+    ['name' => 'main#saveemailtalk', 'url' => '/savemailtalk', 'verb' => 'GET|POST'],*/
 ]]);
 
-\OCP\API::register(
+
+/*\OCP\API::register(
     'get',
     '/apps/owncollab_talks/url',
     function($urlParameters) {
@@ -61,4 +70,4 @@ $application->registerRoutes($this, ['routes' => [
     },
     'owncollab_talks',
     \OC_API::ADMIN_AUTH
-);
+);*/

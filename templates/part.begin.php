@@ -26,7 +26,6 @@ $cancheckusers = ($_['user'] == $_['talk']['author'] || in_array($_['user'], arr
     <div class="clear"></div>
     <div class="talk-body">
         <textarea name="message-body" id="message-body" required placeholder="<?php p($l->t('Enter your text here'));?>"><?php if ($text) { echo "\n\n\n".$text; } ?></textarea>
-
     </div>
 
     <div class="choose-file">

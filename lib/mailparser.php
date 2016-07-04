@@ -10,9 +10,10 @@ include __DIR__."/ZBateson/MailMimeParser/MailMimeParser.php";
 
 function __autoload($classname) {
     if (strpos($classname, "ZBateson") !== false) { 
-      $filename = __DIR__."/". str_replace("\\", "/", $classname) .".php"; 
-    } 
-    include_once($filename);
+        $filename = __DIR__."/". str_replace("\\", "/", $classname) .".php";
+        if(is_file($filename))
+            include_once($filename);
+    }
 }
 
 $path = realpath(dirname(dirname(dirname(__DIR__))));

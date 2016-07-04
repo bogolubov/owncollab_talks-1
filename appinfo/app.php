@@ -48,8 +48,8 @@ Util::addTranslations($appName);
  */
 if(Helper::isAppPage($appName)){
 	Util::addStyle($appName, 'common');
-	Util::addScript($appName, 'inc');
-	Util::addScript($appName, 'application');
+	Util::addScript($appName, 'libs/ns.application');
+	Util::addScript($appName, 'application/init');
 }
 
 
@@ -59,8 +59,7 @@ if(Helper::isAppPage($appName)){
 $currentUri = Helper::getCurrentUri($appName);
 if($currentUri == '/') {
 
-
-} 
+}
 
 /**
 * Set timezone to 'Berlin' 

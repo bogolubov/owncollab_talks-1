@@ -26,6 +26,31 @@ class Messages
         return $message;
     }
 
+
+    public function getMy($id) {
+        $message = $this->connect->select("*", $this->tableName, "id = :id",[':id' => $id]);
+        return $message;
+    }
+
+    public function getAll($id) {
+        $message = $this->connect->select("*", $this->tableName, "id = :id",[':id' => $id]);
+        return $message;
+    }
+
+    public function getStarted($id) {
+        $message = $this->connect->select("*", $this->tableName, "id = :id",[':id' => $id]);
+        return $message;
+    }
+
+
+
+
+
+
+
+
+
+    /*
     public function getTalkByHash($hash) {
         $talk = $this->connect->query("SELECT * FROM ".$this->tableName." WHERE hash LIKE '".$hash."%' AND rid = 0");
         return $talk;
@@ -116,5 +141,5 @@ class Messages
 
     public function update($data) {
         $this->connect->update($this->tableName, $data, 'id = '.$data['id']);
-    }
+    }*/
 }
