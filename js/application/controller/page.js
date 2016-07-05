@@ -23,14 +23,13 @@ if(App.namespace){App.namespace('Controller.Page', function(App){
             App.Action.Edit.init();
         }
 
-
         if(['/my','/all','/started'].indexOf(App.uriPath)!==-1) {
             // init menu
             App.Action.Listmenu.init();
         }
 
         if(App.uriPath.search(/\/read\/\d+/i)!==-1) {
-            // init menu
+            // init
             _.readEvents();
         }
 

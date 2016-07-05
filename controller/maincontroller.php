@@ -84,6 +84,7 @@ class MainController extends Controller {
             'menu' => 'begin',
             'content' => 'begin',
             'groupsusers' => $this->connect->users()->getGroupsUsersList(),
+            'nogroup' => $this->connect->users()->getUngroupUsers(),
         ];
 
         return new TemplateResponse($this->appName, 'main', $data);

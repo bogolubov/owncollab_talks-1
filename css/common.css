@@ -607,7 +607,9 @@ input[type="text"], input[type="password"], input[type="search"], input[type="nu
 
 }
 
-
+.gu_line_group{
+    padding-top: 10px;
+}
 
 
 
