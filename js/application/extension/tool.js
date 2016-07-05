@@ -28,10 +28,21 @@ App.namespace('Tool', function(App, mod){
      *
      * @returns {string}
      */
-    App.getAppPath = function(){
+    App.uriPath = function(){
         var _app_name_pos = location.pathname.lastIndexOf(App.name);
         var path = location.pathname.substr(_app_name_pos + App.name.length);
         return (path.slice(0,1) == '/') ? path : '/' + path;
+    };
+
+    /**
+     *
+     * @returns {string}
+     */
+    App.template = function(urlView, data, callback){
+        callback = typeof callback === 'function' ? callback : function(data) {
+
+        };
+        jQuery.get( urlView, callback);
     };
 
 

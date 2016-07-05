@@ -25,7 +25,7 @@ if(App.namespace){App.namespace('Action.Edit', function(App){
      */
     _.checkSubscribersEvent = function(){
 
-        $('.talk-subscribers input[type=checkbox]').click(function(event){
+        jQuery('.talk-subscribers input[type=checkbox]').click(function(event){
 
             var target = event.target;
             var name = target.name;
@@ -33,11 +33,8 @@ if(App.namespace){App.namespace('Action.Edit', function(App){
             var isChecked = event.target.checked;
             var isUser = !!target.getAttribute('data-group');
 
-
-
-
             if(!isUser) {
-                $('.talk-subscribers input[type=checkbox][data-group='+value+']').each(function(index, item){
+                jQuery('.talk-subscribers input[type=checkbox][data-group='+value+']').each(function(index, item){
                     item.checked = isChecked;
                 });
             }

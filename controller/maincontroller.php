@@ -99,7 +99,7 @@ class MainController extends Controller {
 
         $data = [
             'menu' => 'started',
-            'content' => 'started',
+            'content' => 'list',
             'messages' => $this->connect->messages()->getStarted($this->userId),
         ];
 
@@ -116,7 +116,7 @@ class MainController extends Controller {
 
         $data = [
             'menu' => 'my',
-            'content' => 'my',
+            'content' => 'list',
             'messages' => $this->connect->messages()->getMy($this->userId),
         ];
 
@@ -133,13 +133,28 @@ class MainController extends Controller {
 
         $data = [
             'menu' => 'all',
-            'content' => 'all',
-            'messages' => $this->connect->messages()->getAll($this->userId),
+            'content' => 'list',
+            'messages' => $this->connect->messages()->getAll(),
         ];
 
         return new TemplateResponse($this->appName, 'main', $data);
     }
 
+	/**
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 * @return TemplateResponse
+	 */
+	public function read($id) {
+
+		$data = [
+			'menu' => 'all',
+			'content' => 'read',
+			'message' => $this->connect->messages()->getById((int)$id)
+		];
+
+		return new TemplateResponse($this->appName, 'main', $data);
+	}
 
 
 

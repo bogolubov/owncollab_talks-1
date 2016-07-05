@@ -27,6 +27,7 @@ $application->registerRoutes($this, ['routes' => [
     ['name' => 'main#all', 'url' => '/all', 'verb' => 'GET'],
     ['name' => 'main#started', 'url' => '/started', 'verb' => 'GET'],
     ['name' => 'main#begin', 'url' => '/begin', 'verb' => 'GET'],
+    ['name' => 'main#read', 'url' => '/read/{id}', 'verb' => 'GET'],
 
     ['name' => 'api#save_talk', 'url' => '/save_talk', 'verb' => 'POST'],
     ['name' => 'api#index', 'url' => '/api', 'verb' => 'POST'],

@@ -18,8 +18,7 @@ var App = new NamespaceApplication({
     isAdmin: null,
     corpotoken: null,
     requesttoken: oc_requesttoken ? encodeURIComponent(oc_requesttoken) : null,
-    uid: oc_current_user ? encodeURIComponent(oc_current_user) : null,
-
+    uid: oc_current_user ? encodeURIComponent(oc_current_user) : null
 });
 
 
@@ -34,8 +33,9 @@ App.require('libs', [
 App.require('dependence', [
     App.urlScript + 'application/extension/tool.js',
     App.urlScript + 'application/action/api.js',
-    App.urlScript + 'application/action/files.js',
     App.urlScript + 'application/action/edit.js',
+    App.urlScript + 'application/action/files.js',
+    App.urlScript + 'application/action/listmenu.js',
     App.urlScript + 'application/controller/page.js'
 
 ], initDependence, initError);

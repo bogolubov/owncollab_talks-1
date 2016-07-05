@@ -63,6 +63,7 @@ class Messages
      * All Talks
      * @return mixed
      */
+
     public function getAll()
     {
         $message = $this->connect->select("*", $this->tableName, "status < 2 AND rid = 0 ");
@@ -80,7 +81,15 @@ class Messages
         return $message;
     }
 
-
+    /**
+     * @param $id
+     * @return mixed
+     */
+    public function getChildren($id)
+    {
+        $message = $this->connect->select("*", $this->tableName, "status < 2 AND rid = :rid ", [':rid' => $id]);
+        return $message;
+    }
 
 
 

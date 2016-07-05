@@ -59,7 +59,8 @@ class ApiController extends Controller {
 
         if(method_exists($this, $key))
             return $this->$key($data);
-        else return new DataResponse();
+        else
+			return new DataResponse();
 	}
 
 
@@ -122,7 +123,13 @@ class ApiController extends Controller {
         return new DataResponse($params);
 	}
 
-
+	/**
+	 * @param $talk
+	 * @param $users
+	 * @param $groups
+	 * @param $groupsusers
+	 * @return bool|int|string
+	 */
 	public function mailsendSwitcher($talk, $users, $groups, $groupsusers)
 	{
 		$to = [];
@@ -148,6 +155,31 @@ class ApiController extends Controller {
 		return $result;
 	}
 
+
+	/**
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 * @param $data
+	 * @return DataResponse
+	 */
+	public function message_children($data)
+	{
+		$params = [
+			'data'     => $data,
+			'error'     => null,
+			'errorinfo'     => '',
+			'requesttoken'  => (!\OC_Util::isCallRegistered()) ? '' : \OC_Util::callRegister(),
+			'lastlinkid'    => null
+		];
+
+		if(isset($data['parent_id'])) {
+			$id = (int) $data['parent_id'];
+			$params['parent'] = $this->connect->messages()->getById($id);
+			$params['children'] = $this->connect->messages()->getChildren($id);
+		}
+
+		return new DataResponse($params);
+	}
 
 
 

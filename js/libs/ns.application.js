@@ -247,7 +247,9 @@
      * @returns {*}
      */
     app.inject = function (selector, data) {
-        if (typeof selector === 'string') selector = this.query(selector);
+        if (typeof selector === 'string')
+            selector = this.query(selector);
+
         if (typeof selector === 'object' && selector.nodeType === Node.ELEMENT_NODE) {
             selector.textContent = '';
             if (typeof data === 'object')
@@ -319,7 +321,7 @@
         var i = 0;
         if (list instanceof Array)
             for (i = 0; i < list.length; i++) callback.call({}, list[i], i, tmp);
-        else
+        else if(typeof list === 'object')
             for (i in list) callback.call({}, list[i], i, tmp);
     };
 
