@@ -198,7 +198,7 @@ class ApiController extends Controller {
             switch($idhash[0]) {
                 case 'team':
 
-                    $
+                    
 
 
                     break;
