@@ -102,7 +102,7 @@ class ApiController extends Controller {
 			}
 
 			$data['rid'] = 0;
-			$data['date'] = time();
+			$data['date'] = date("Y-m-d H:i:s", time());
 			$data['title'] = strip_tags(Helper::post('title'));
 			$data['text'] = Helper::post('message');
 			$data['attachements'] = '';
@@ -182,6 +182,66 @@ class ApiController extends Controller {
 	}
 
 
+    /**
+     * @PublicPage
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * @return DataResponse
+     */
+	public function parseManager()
+	{
+        $params = Helper::post();
+        $to = explode('@', $params['to']);
+        $idhash = explode('+',$to[0]);
+
+        if(count($idhash) == 1) {
+            switch($idhash[0]) {
+                case 'team':
+
+                    $
+
+
+                    break;
+                case 'support':
+
+                    break;
+            }
+        }else{
+            $uid = $idhash[0];
+            $hash = $idhash[1];
+
+            // checked message by hash key
+            if( $message = $this->connect->messages()->getByHash(trim($hash)) ){
+
+                $userSender = $this->connect->users()->getByEmail($params['from']);
+
+                if($userSender) {
+
+                    $data['rid'] = $message['id'];
+                    $data['date'] = date("Y-m-d H:i:s", time());
+                    $data['title'] = 'RE: '.$message['title'];
+                    $data['text'] = $params['content'];
+                    $data['attachements'] = '';
+                    $data['author'] = $userSender['userid'];
+                    $data['subscribers'] = json_encode(['groups'=>[], 'users'=>[]]);
+                    $data['hash'] = TalkMail::createHash($data['date']);
+                    $data['status'] = TalkMail::SEND_STATUS_REPLY;
+
+                    $insertResult = $this->connect->messages()->insertTask($data);
+
+                    if($insertResult) print_r('ok');
+                    else
+                        print_r('error_insert');
+
+                    exit;
+                }
+
+            }
+
+        }
+
+        exit;
+	}
 
 
 

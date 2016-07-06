@@ -55,6 +55,14 @@ class Users
         return $user;
     }
 
+    public function getByEmail($email)
+    {
+        $sql = "SELECT *
+                FROM owncloud.oc_preferences
+                WHERE appid = 'settings' AND configkey = 'email' AND configvalue = :email";
+
+        return $this->connect->query($sql, [':email'=>$email]);
+    }
 
     /**
      * Retrieve all records from Users

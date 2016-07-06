@@ -40,6 +40,13 @@ class Messages
     }
 
 
+    public function getByHash($hash)
+    {
+        $message = $this->connect->select("*", $this->tableName, "hash = :hash", [':hash' => $hash]);
+        return $message ? $message[0] : false ;
+    }
+
+
     /**
      * Current user is participating of Talks
      * @param $id

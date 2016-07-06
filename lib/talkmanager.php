@@ -10,4 +10,8 @@ use OCA\Owncollab_Talks\PHPMailer\PHPMailer;
 class TalkManager
 {
 
+
+
+
+
 }

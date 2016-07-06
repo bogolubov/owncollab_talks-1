@@ -1,21 +1,16 @@
 <?php
 
-include __DIR__."/ZBateson/MailMimeParser/MailMimeParser.php";
-
-/**
- * get stdin stream
- */
-$resource = fopen("php://stdin", "r");
-$path = realpath(dirname(dirname(dirname(__DIR__))));
+include __DIR__ . "/ZBateson/MailMimeParser/MailMimeParser.php";
 
 /**
  * Autoloader for ZBateson PHP libruary
  * @param $classname
  */
-function __autoload($classname) {
+function __autoload($classname)
+{
     if (strpos($classname, "ZBateson") !== false) {
-        $filename = __DIR__."/". str_replace("\\", "/", $classname) .".php";
-        if(is_file($filename))
+        $filename = __DIR__ . "/" . str_replace("\\", "/", $classname) . ".php";
+        if (is_file($filename))
             include_once($filename);
     }
 }
@@ -24,40 +19,66 @@ function __autoload($classname) {
  * Mail log writer
  * @param $data_string
  */
-function loger ($data_string) {
-    $path = dirname(__DIR__)."/mailparser.log";
-    $data = "\n".date("Y.m.d H:i:s").": $data_string";
+function loger($data_string)
+{
+    $path = dirname(__DIR__) . "/mailparser.log";
+    $data = "\n" . date("Y.m.d H:i:s") . ": " .trim($data_string);
     file_put_contents($path, $data, FILE_APPEND);
 }
 
-function parse_source_mail_data ($resource) {
+/**
+ * @param $data_string
+ */
+function loger_error($data_string)
+{
+    $path = dirname(__DIR__) . "/mailparser_error.log";
+    $data = "\n" . date("Y.m.d H:i:s") . ": " .trim($data_string);
+    file_put_contents($path, $data, FILE_APPEND);
+}
 
+
+/**
+ * @return mixed
+ */
+function parse_source_mail_data()
+{
+    $data = [];
+    $resource   = fopen("php://stdin", "r");
     $mailParser = new ZBateson\MailMimeParser\MailMimeParser();
-    $message = $mailParser->parse($resource);
+    $message    = $mailParser->parse($resource);
 
     fclose($resource);
 
-    $data['to']         = $message->getHeaderValue('to');
-    $data['to_name']    = $message->getHeader('to')->getPersonName();
-    $data['from']       = $message->getHeaderValue('from');
-    $data['from_name']  = $message->getHeader('from')->getPersonName();
-    $data['subject']    = $message->getHeaderValue('subject');
-    $data['conten']     = stream_get_contents($message->getTextStream());
-    $data['attachs']    = $message->getAttachmentCount();
+    try{
+        $data['to']         = $message->getHeaderValue('to');
+        $data['to_name']    = is_object($message->getHeader('to')) ? $message->getHeader('to')->getPersonName() : '';
+        $data['from']       = $message->getHeaderValue('from');
+        $data['from_name']  = is_object($message->getHeader('from')) ? $message->getHeader('from')->getPersonName() : '';
+        $data['subject']    = $message->getHeaderValue('subject');
+        $data['content']    = stream_get_contents($message->getTextStream());
+        $data['files']      = $message->getAttachmentCount();
+    } catch (Exception $error) {
+        loger_error("Line: ".__LINE__."; Error parse source stdin resource. Message error: ".$error->getMessage());
+    }
 
-//    $to = $message->getHeaderValue('to');
-//    $toName = $message->getHeader('to')->getPersonName();
-//    $from = $message->getHeaderValue('from');                       // user@example.com
-//    $fromName = $message->getHeader('from')->getPersonName();       // Person Name
-//    $subject = $message->getHeaderValue('subject');                 // The email's subject
-//    $res = $message->getTextStream();                               // or getHtmlStream
-//    $content = stream_get_contents($res);
-//    $attachescount = $message->getAttachmentCount();
-
-    var_dump($data);
+    return $data;
 }
 
-function send_to_app ($url, array $arr_data) {
+
+/**
+ * @param array $arr_data
+ */
+function send_to_app(array $arr_data)
+{
+    if(!is_file('../../../config/config.php')) {
+        loger_error("Line: ".__LINE__."; Not found file config.php");
+        exit;
+    }
+
+    include '../../../config/config.php';
+
+    /** @var array $CONFIG */
+    $url = $CONFIG['overwrite.cli.url'] . '/index.php/apps/owncollab_talks/parse_manager';
 
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url);
@@ -67,18 +88,22 @@ function send_to_app ($url, array $arr_data) {
     curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
-    $resultCurl = curl_exec($ch);
-    $errorCurl = curl_error($ch);
+    $result = curl_exec($ch);
+    $error = curl_error($ch);
 
+    print($result . "\n");
+
+    /*
+    if($error)
+        loger_error("Line: ".__LINE__."; Curl error: " . $error);
+    elseif($result == 'ok')
+        loger("Parse and send mail data is success! From: " .$arr_data['from']. " To: " . $arr_data['to']);
+    else
+        loger_error("Line: ".__LINE__."; Curl success, but result is not response confirmation. Response: " .substr($result,0,20). "..." );
+    */
     curl_close($ch);
 }
 
+
 // Realization
-
-if(!empty($resource) && strlen($resource) > 10) {
-
-    parse_source_mail_data ($resource);
-
-}
-
-
+send_to_app(parse_source_mail_data());
