@@ -142,7 +142,7 @@ class ApiController extends Controller {
 
 		$result =  TalkMail::createMail(
 			[TalkMail::createAddress($this->userId), $this->userId],
-			[TalkMail::createAddress($this->userId . $talk['hash']), $this->userId],
+			[TalkMail::createAddress($this->userId .'+'. $talk['hash']), $this->userId],
 			$to,
 			$talk['title'],
 			$talk['text']
@@ -198,7 +198,7 @@ class ApiController extends Controller {
             switch($idhash[0]) {
                 case 'team':
 
-                    
+
 
 
                     break;
