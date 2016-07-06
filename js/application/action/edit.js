@@ -12,10 +12,10 @@ if(App.namespace){App.namespace('Action.Edit', function(App){
         jQuery("textarea[name=message]").trumbowyg();
 
         _.checkSubscribersEvent();
-
+        _.submitFormEvent();
     };
 
-    _.submitForm = function(formName){
+    _.submitFormEvent = function(){
 
 
 
@@ -36,7 +36,7 @@ if(App.namespace){App.namespace('Action.Edit', function(App){
             var isUser = !!target.getAttribute('data-group');
 
             if(isUser && email.length < 5 && isChecked){
-                App.Controller.Page.errorLine("Этому пользователю письо не будет доставленно. В параметрах пользователя "+value+" не указан email адрес, или указан не верный email");
+                App.Controller.Page.errorLine("Этому пользователю письо не будет доставленно. В параметрах пользователя '"+value+"' не указан email адрес, или указан не верный email");
             }
 
             if(!isUser) {
