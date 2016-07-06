@@ -611,9 +611,30 @@ input[type="text"], input[type="password"], input[type="search"], input[type="nu
     padding-top: 10px;
 }
 
+#app-content-inline-error{
+	position: fixed;
+	width: calc(100% - 250px);
+	padding: 2px 10px 3px;
+	z-index: 10;
+	color: #fff;
+	background-color: #ff0200;
+}
+.inline_error_content {
+	font-weight: bold;
+}
+.inline_error_close {
+	width: 15px;
+	text-align: right;
+	line-height: 0px;
+}
+.inline_error_close .icon-close {
+	width: 12px;
+	display: inline-block;
+
+}
 
 
-
-
+/*	background-color: #e40000;
+	color: white;	padding: 0 10px;*/
 
 

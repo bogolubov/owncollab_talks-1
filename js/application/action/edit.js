@@ -9,8 +9,9 @@ if(App.namespace){App.namespace('Action.Edit', function(App){
      */
     _.init = function(){
 
-        _.checkSubscribersEvent();
+        jQuery("textarea[name=message]").trumbowyg();
 
+        _.checkSubscribersEvent();
 
     };
 
@@ -30,8 +31,13 @@ if(App.namespace){App.namespace('Action.Edit', function(App){
             var target = event.target;
             var name = target.name;
             var value = target.value;
+            var email = target.getAttribute('data-email');
             var isChecked = event.target.checked;
             var isUser = !!target.getAttribute('data-group');
+
+            if(isUser && email.length < 5 && isChecked){
+                App.Controller.Page.errorLine("Этому пользователю письо не будет доставленно. В параметрах пользователя "+value+" не указан email адрес, или указан не верный email");
+            }
 
             if(!isUser) {
                 jQuery('.talk-subscribers input[type=checkbox][data-group='+value+']').each(function(index, item){
