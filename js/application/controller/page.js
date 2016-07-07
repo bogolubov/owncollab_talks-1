@@ -32,6 +32,7 @@ if(App.namespace){App.namespace('Controller.Page', function(App){
         if(App.uriPath.search(/\/read\/\d+/i)!==-1) {
             // init read messages events
             _.readEvents();
+            App.Action.Edit.submitFormReplyEvent();
         }
 
     }
@@ -41,7 +42,14 @@ if(App.namespace){App.namespace('Controller.Page', function(App){
      */
     _.readEvents = function(){
         Linker.search();
-        Linker.click('msg_back', function(event){event.preventDefault();window.history.back()});
+
+        Linker.click('msg_back', function(event){
+            event.preventDefault();
+
+            //Util.Cookie('goto_message',
+            window.history.back();
+        });
+
         Linker.click('msg_reply', function(event){
             event.preventDefault();
             if(event.target.getAttribute('data-ready')==='yes'){
@@ -55,26 +63,48 @@ if(App.namespace){App.namespace('Controller.Page', function(App){
         });
     };
 
+
     /**
+     * Show red error line with message
      * @namespace App.Controller.Page.errorLine
      * @param text
      */
     _.errorLine = function (text) {
-        _.node['contentInlineError'].style.display = 'block';
-        jQuery('.inline_error_content').text(text);
+        if(!text)
+            _.errorLineClose();
+        else {
+            _.node['contentInlineError'].style.display = 'block';
+            jQuery('.inline_error_content').text(text);
+        }
     };
 
+    /**
+     * @namespace App.Controller.Page.errorLineClose
+     * Hide red error line
+     */
+    _.errorLineClose = function () {
+        _.node['contentInlineError'].style.display = 'none';
+    };
+
+    /**
+     * @namespace App.Controller.Page.errorLineCloseButtonInit
+     * Init button close red error line
+     */
     _.errorLineCloseButtonInit = function () {
         jQuery('.icon-close', _.node['contentInlineError']).click(function(event){
-            _.node['contentInlineError'].style.display = 'none';
+            _.errorLineClose();
         });
     };
 
     /**
-     *
+     * Blocked page and show error message
      * @namespace App.Controller.Page.errorPage
+     * @param title
+     * @param text
      */
-    _.errorPage = function () {};
+    _.errorPage = function (title, text) {
+
+    };
 
     return _;
 

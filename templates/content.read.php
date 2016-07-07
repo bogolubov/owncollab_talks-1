@@ -22,8 +22,12 @@ if($message):
     </div>
 
     <div class="read_reply" style="display: none">
-        <form action="">
-            <textarea name="reply" class="width100"></textarea>
+        <form id="quick-reply">
+            <input type="text" hidden="hidden" name="hash" value="<?=$message['hash']?>">
+            <div class="tbl">
+                <div class="tbl_cell valign_top width70"><textarea name="message" class="width100" placeholder="Answer directly"></textarea></div>
+                <div class="tbl_cell valign_top">&nbsp;&nbsp;<input type="submit" value="Reply now"></div>
+            </div>
         </form>
     </div>
 

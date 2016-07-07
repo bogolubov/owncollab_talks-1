@@ -536,6 +536,8 @@ input[type="text"], input[type="password"], input[type="search"], input[type="nu
 .content_info>div{
     padding: 5px;
 }
+
+
 .talk_title{
     font-size: 110%;
     font-weight: bold;
@@ -578,7 +580,7 @@ input[type="text"], input[type="password"], input[type="search"], input[type="nu
 .msg_title:hover {
     opacity: .95;
 }
-#messages_children{
+#messages_children, .as_children{
     margin-top: 10px;
     margin-left: 25px;
 }

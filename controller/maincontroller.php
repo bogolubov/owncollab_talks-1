@@ -83,6 +83,7 @@ class MainController extends Controller {
         $data = [
             'menu' => 'begin',
             'content' => 'begin',
+            'user_id' => $this->userId,
             'groupsusers' => $this->connect->users()->getGroupsUsersList(),
             'nogroup' => $this->connect->users()->getUngroupUsers(),
         ];

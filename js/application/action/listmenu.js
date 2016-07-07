@@ -11,8 +11,9 @@ if(App.namespace){App.namespace('Action.Listmenu', function(App) {
     _.init = function(){
         var listmenu = jQuery('.listmenu li');
         var r_messages = jQuery('#r_messages');
-        var goto = Util.Cookie('goto_started');
-        Util.Cookie('goto_started', false);
+        var goto = Util.Cookie('goto_message');
+
+        Util.Cookie('goto_message', false);
 
         listmenu.click(function(event){
             var id, menu = event.target;
@@ -50,6 +51,7 @@ if(App.namespace){App.namespace('Action.Listmenu', function(App) {
 
                 if(response['messageslist']) {
                     App.inject('#r_messages', response['messageslist']);
+                    App.Action.Edit.submitFormReplyEvent();
                 }
             }
 

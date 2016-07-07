@@ -1,5 +1,6 @@
 <?php
 
+
 $messages = (!empty($_['messages']) && is_array($_['messages'])) ? $_['messages'] : false;
 
 if($messages):
@@ -11,9 +12,7 @@ if($messages):
             <?php print_unescaped($this->inc("part.listmenu")); ?>
         </div>
 
-        <div id="r_messages" class="tbl_cell valign_top" style="display: none">
-
-        </div>
+        <div id="r_messages" class="tbl_cell valign_top" style="display: none"></div>
 
     </div>
 

@@ -80,6 +80,49 @@ class ApiController extends Controller {
         return new DataResponse($data);
 	}
 
+
+    /**
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * @param $data
+     * @return DataResponse
+     */
+    public function save_reply($data) {
+
+        $params = [
+            //'data'          => $data,
+            'error'         => null,
+            'errorinfo'     => '',
+            'requesttoken'  => (!\OC_Util::isCallRegistered()) ? '' : \OC_Util::callRegister(),
+            'mail_is_send'  => false,
+            'insert_id'     => null,
+            'parent_id'     => null,
+        ];
+
+        if( $data['hash'] && $data['message'] && $message = $this->connect->messages()->getByHash(trim($data['hash'])) ){
+
+            $saveData['rid'] = $message['id'];
+            $saveData['date'] = date("Y-m-d H:i:s", time());
+            $saveData['title'] = 'RE: '.$message['title'];
+            $saveData['text'] = trim($data['message']);
+            $saveData['attachements'] = '';
+            $saveData['author'] = $this->userId;
+            $saveData['subscribers'] = '';
+            $saveData['hash'] = '';
+            $saveData['status'] = TalkMail::SEND_STATUS_REPLY;
+
+            if($params['insert_id'] = $this->connect->messages()->insertTask($saveData)) {
+                $params['parent_id'] = $message['id'];
+                //$params['mail_is_send'] = $this->mailsendSwitcher($data, $all_users, $groups, $groupsusers);
+            }
+
+            $params['data'] = $saveData;
+        }
+
+        return new DataResponse($params);
+    }
+
+
     /**
      * @NoAdminRequired
      * @NoCSRFRequired
@@ -87,11 +130,11 @@ class ApiController extends Controller {
      */
 	public function saveTalk() {
 
-        $mailsendResult = false;
 		$params = [
-			'error' => null,
-			'errorinfo' => null,
-			'insert_id' => null,
+			'error'         => null,
+			'errorinfo'     => null,
+			'insert_id'     => null,
+            'mail_is_send'  => false,
 		];
 
 		if(Helper::post('title') && Helper::post('message')) {
@@ -122,19 +165,22 @@ class ApiController extends Controller {
 
 			if($params['insert_id'] = $this->connect->messages()->insertTask($data)) {
 				$params['resultInsertTask'] = $params['insert_id'];
-                $mailsendResult = $this->mailsendSwitcher($data, $all_users, $groups, $groupsusers);
-				$params['result_mailsend'] = $mailsendResult;
+                $params['mail_is_send'] = $this->mailsendSwitcher($data, $all_users, $groups, $groupsusers);
+
 			}
+
 			$params['data'] = $data;
 		}
 
-        if($mailsendResult) {
-            Helper::cookies('goto_started', $params['insert_id']);
+        if($params['mail_is_send']) {
+            Helper::cookies('goto_message', $params['insert_id']);
             header("Location: /index.php/apps/owncollab_talks/started");
             exit;
         }
         return new DataResponse($params);
 	}
+
+
 
 
 	/**
@@ -245,16 +291,10 @@ class ApiController extends Controller {
                     $insertResult = $this->connect->messages()->insertTask($data);
 
                     if($insertResult) print_r('ok');
-                    else
-                        print_r('error_insert');
-
-                    exit;
+                    else print_r('error_insert');
                 }
-
             }
-
         }
-
         exit;
 	}
 

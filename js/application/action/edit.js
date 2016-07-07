@@ -30,6 +30,40 @@ if(App.namespace){App.namespace('Action.Edit', function(App){
     };
 
     /**
+     *
+     */
+    _.submitFormReplyEvent = function(){
+        jQuery('form#quick-reply').submit(function(event){
+            var vals = Util.formData(this, true);
+
+            App.Controller.Page.errorLineClose();
+            event.preventDefault();
+
+            jQuery('input[type=submit]', this).prop( "disabled", true );
+            jQuery('textarea[name=message]', this).prop( "disabled", true );
+
+            if(!Util.isEmpty(vals['hash']) && !Util.isEmpty(vals['message'])) {
+
+                App.Action.Api.request('save_reply', function(response) {
+                    if(!Util.isObj(response) || response['error'] ) {
+                        App.Controller.Page.errorLine(response['errorinfo']?response['errorinfo']:"Server internal error");
+                    }
+                    else if(response['insert_id'] && response['parent_id']) {
+                        jQuery("ul.listmenu>li[data-id="+response['parent_id']+"]").click();
+                    }
+                }, vals);
+            }
+            else {
+                jQuery('input[type=submit]', this).prop( "disabled", false );
+                jQuery('textarea[name=message]', this).prop( "disabled", false );
+                App.Controller.Page.errorLine('Пустое сообщение не может быть отправленно, введите текст.');
+            }
+        });
+    };
+
+
+
+    /**
      * @namespace App.Action.Edit.checkSubscribersEvent
      */
     _.checkSubscribersEvent = function(){
