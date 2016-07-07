@@ -11,6 +11,8 @@ if(App.namespace){App.namespace('Action.Listmenu', function(App) {
     _.init = function(){
         var listmenu = jQuery('.listmenu li');
         var r_messages = jQuery('#r_messages');
+        var goto = Util.Cookie('goto_started');
+        Util.Cookie('goto_started', false);
 
         listmenu.click(function(event){
             var id, menu = event.target;
@@ -23,7 +25,10 @@ if(App.namespace){App.namespace('Action.Listmenu', function(App) {
                 _.postChildrenMessage(id);
         });
 
-        jQuery(listmenu[0]).click();
+        if(Util.isNum(goto))
+            jQuery("ul.listmenu>li[data-id="+goto+"]").click();
+        else
+            jQuery(listmenu[0]).click();
     };
 
     /**

@@ -69,6 +69,7 @@
 .valign_top{vertical-align:top}
 .select_off{-webkit-user-select: none; -moz-user-select: none; user-select: none}
 
+strong{font-weight: bold;}
 #hello {
 	color: red;
 }

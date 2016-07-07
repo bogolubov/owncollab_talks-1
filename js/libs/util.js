@@ -19,7 +19,7 @@
      * @param  {Object} source      The custom options to extend destination by
      * @return {Object}             The desination object
      */
-    util.extend = function(destination, source) {
+    util.extend = function (destination, source) {
         var property;
         for (property in source) {
             if (source[property] && source[property].constructor && source[property].constructor === Object) {
@@ -111,7 +111,7 @@
      * @returns {*}
      */
     util.arrMerge = function (arrBase, src) {
-        if( !Array.isArray(arrBase) || !Array.isArray(src) )
+        if (!Array.isArray(arrBase) || !Array.isArray(src))
             return false;
 
         for (var i = 0; i < src.length; i++)
@@ -143,14 +143,16 @@
 
     util.realObjToArr = function (obj) {
         var arr = [];
-        for(var key in obj)
+        for (var key in obj)
             arr.push(obj[key])
         return arr;
     };
 
-    util.cloneFunction = function(func) {
-        var temp = function temporary() { return func.apply(this, arguments); };
-        for(var key in this) {
+    util.cloneFunction = function (func) {
+        var temp = function temporary() {
+            return func.apply(this, arguments);
+        };
+        for (var key in this) {
             if (this.hasOwnProperty(key)) {
                 temp[key] = this[key];
             }
@@ -200,18 +202,18 @@
     };
 
     util.isHtml = function (param) {
-        if(util.isNode(param)) return true;
+        if (util.isNode(param)) return true;
         return util.isNode(util.html2node(param));
     };
-    
+
     util.isNode = function (param) {
         var types = [1, 9, 11];
-        if(typeof param === 'object' && types.indexOf(param.nodeType) !== -1) return true;
+        if (typeof param === 'object' && types.indexOf(param.nodeType) !== -1) return true;
         else return false;
     };
-    
+
     /**
-     * 
+     *
      * Node.ELEMENT_NODE - 1 - ELEMENT
      * Node.TEXT_NODE - 3 - TEXT
      * Node.PROCESSING_INSTRUCTION_NODE - 7 - PROCESSING
@@ -222,9 +224,9 @@
      * Uses: Util.isNodeType(elem, 'element')
      */
     util.isNodeType = function (param, type) {
-        type = String((type?type:1)).toUpperCase();
-        if(typeof param === 'object') {
-            switch(type){
+        type = String((type ? type : 1)).toUpperCase();
+        if (typeof param === 'object') {
+            switch (type) {
                 case '1':
                 case 'ELEMENT':
                     return param.nodeType === Node.ELEMENT_NODE;
@@ -253,12 +255,13 @@
                 case 'FRAGMENT':
                     return param.nodeType === Node.DOCUMENT_FRAGMENT_NODE;
                     break;
-                default: return false;
+                default:
+                    return false;
             }
         }
         else return false;
     };
-    
+
     /**
      * Determine param to undefined type
      * @param param
@@ -417,12 +420,12 @@
     util.getMousePosition = function (event, element) {
         var positions = {x: 0, y: 0};
         element = element || document.body;
-        if(element instanceof HTMLElement && event instanceof MouseEvent) {
-            if(element.getBoundingClientRect) {
+        if (element instanceof HTMLElement && event instanceof MouseEvent) {
+            if (element.getBoundingClientRect) {
                 var rect = element.getBoundingClientRect();
                 positions.x = event.clientX - rect.left;
                 positions.y = event.clientY - rect.top;
-            }else {
+            } else {
                 positions.x = event.pageX - element.offsetLeft;
                 positions.y = event.pageY - element.offsetTop;
             }
@@ -553,12 +556,12 @@
      * @param data      Object key=value
      * @returns {*}     query string
      */
-    util.encodeData = function(data){
-        if(typeof data === 'string') return data;
-        if(typeof data !== 'object') return '';
+    util.encodeData = function (data) {
+        if (typeof data === 'string') return data;
+        if (typeof data !== 'object') return '';
         var convertData = [];
-        Object.keys(data).forEach(function(key){
-            convertData.push(key+'='+encodeURIComponent(data[key]));
+        Object.keys(data).forEach(function (key) {
+            convertData.push(key + '=' + encodeURIComponent(data[key]));
         });
         return convertData.join('&');
     };
@@ -568,13 +571,13 @@
      * @param url
      * @returns {{}}
      */
-    util.parseGet = function(url){
+    util.parseGet = function (url) {
         url = url || document.location;
         var params = {};
         var parser = document.createElement('a');
         parser.href = url;
-        if(parser.search.length > 1){
-            parser.search.substr(1).split('&').forEach(function(part){
+        if (parser.search.length > 1) {
+            parser.search.substr(1).split('&').forEach(function (part) {
                 var item = part.split('=');
                 params[item[0]] = decodeURIComponent(item[1]);
             });
@@ -587,7 +590,7 @@
      * @param url
      * @returns {{}}
      */
-    util.parseUrl = function(url){
+    util.parseUrl = function (url) {
         url = url || document.location;
         var params = {};
         var parser = document.createElement('a');
@@ -604,43 +607,43 @@
     };
 
     util.each = function (data, callback) {
-        if(util.isArr(data)){
-            for(var i = 0; i < data.length; i ++) callback.call(null, data[i]);
-        }else if(util.isObj(data)){
-            for(var k in data) callback.call(null, k, data[k]);
-        }else return false;
+        if (util.isArr(data)) {
+            for (var i = 0; i < data.length; i++) callback.call(null, data[i]);
+        } else if (util.isObj(data)) {
+            for (var k in data) callback.call(null, k, data[k]);
+        } else return false;
     };
 
-    util.ucfirst = function (string){
+    util.ucfirst = function (string) {
         return string && string[0].toUpperCase() + string.slice(1);
     };
 
-    util.node2html = function (element){
+    util.node2html = function (element) {
         var container = document.createElement("div");
         container.appendChild(element.cloneNode(true));
         return container.innerHTML;
     };
 
-    util.html2node = function (string){
+    util.html2node = function (string) {
         var i, fragment = document.createDocumentFragment(), container = document.createElement("div");
         container.innerHTML = string;
-        while( i = container.firstChild ) fragment.appendChild(i);
+        while (i = container.firstChild) fragment.appendChild(i);
         return fragment.childNodes.length === 1 ? fragment.firstChild : fragment;
     };
-    
-    util.base64encode = function (str){
+
+    util.base64encode = function (str) {
         var b64chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
         var b64encoded = '';
         var chr1, chr2, chr3;
         var enc1, enc2, enc3, enc4;
-        for (var i=0; i<str.length;) {
+        for (var i = 0; i < str.length;) {
             chr1 = str.charCodeAt(i++);
             chr2 = str.charCodeAt(i++);
             chr3 = str.charCodeAt(i++);
             enc1 = chr1 >> 2;
             enc2 = ((chr1 & 3) << 4) | (chr2 >> 4);
-            enc3 = isNaN(chr2) ? 64:(((chr2 & 15) << 2) | (chr3 >> 6));
-            enc4 = isNaN(chr3) ? 64:(chr3 & 63);
+            enc3 = isNaN(chr2) ? 64 : (((chr2 & 15) << 2) | (chr3 >> 6));
+            enc4 = isNaN(chr3) ? 64 : (chr3 & 63);
             b64encoded += b64chars.charAt(enc1) + b64chars.charAt(enc2) +
                 b64chars.charAt(enc3) + b64chars.charAt(enc4);
         }
@@ -654,7 +657,7 @@
         var chr1, chr2, chr3;
         var enc1, enc2, enc3, enc4;
         str = str.replace(/[^a-z0-9\+\/\=]/gi, '');
-        for (var i=0; i<str.length;) {
+        for (var i = 0; i < str.length;) {
             enc1 = b64chars.indexOf(str.charAt(i++));
             enc2 = b64chars.indexOf(str.charAt(i++));
             enc3 = b64chars.indexOf(str.charAt(i++));
@@ -691,9 +694,10 @@
         return null;
     };
 
-    util.Date = function(){};
-    
-    util.Date.time = function(date){
+    util.Date = function () {
+    };
+
+    util.Date.time = function (date) {
         "use strict";
         return date instanceof Date ? date.getTime() : (new Date).getTime();
 
@@ -702,9 +706,9 @@
      * Add days to some date
      * @param day           number of days. 0.04 - 1 hour, 0.5 - 12 hour, 1 - 1 day
      * @param startDate     type Date, start date
-     * @returns {*}  type Date 
+     * @returns {*}  type Date
      */
-    util.Date.addDays = function (day, startDate){
+    util.Date.addDays = function (day, startDate) {
         var date = startDate ? new Date(startDate) : new Date();
         date.setTime(date.getTime() + (day * 86400000));
         return date;
@@ -714,28 +718,34 @@
         var ONE_DAY = 86400000,
             date1_ms = date1.getTime(),
             date2_ms = date2.getTime();
-        return Math.round((Math.abs(date1_ms - date2_ms))/ONE_DAY)
+        return Math.round((Math.abs(date1_ms - date2_ms)) / ONE_DAY)
     };
 
-    util.Storage = function(name, value){
-        if(!name){
+    util.Storage = function (name, value) {
+        if (!name) {
             return false;
-        }else if(value === undefined){
+        } else if (value === undefined) {
             return util.Storage.get(name);
-        }else if(!value){
+        } else if (!value) {
             return util.Storage.remove(name);
-        }else{
+        } else {
             return util.Storage.set(name, value);
         }
     };
     util.Storage.set = function (name, value) {
-        try{value = JSON.stringify(value)}catch(error){}
+        try {
+            value = JSON.stringify(value)
+        } catch (error) {
+        }
         return window.localStorage.setItem(name, value);
     };
     util.Storage.get = function (name) {
         var value = window.localStorage.getItem(name);
-        if(value)
-            try{value = JSON.parse(value)}catch(error){}
+        if (value)
+            try {
+                value = JSON.parse(value)
+            } catch (error) {
+            }
         return value;
     };
     util.Storage.remove = function (name) {
@@ -754,9 +764,6 @@
     };
 
 
-
-
-
     /**
      * возвращает cookie с именем name, если есть, если нет, то undefined
      * @param name
@@ -764,12 +771,12 @@
      */
     util.Cookie = function (name, value) {
         "use strict";
-        if(value === undefined){
+        if (value === undefined) {
             return util.Cookie.get(name);
         }
-        else if (value === false || value === null){
+        else if (value === false || value === null) {
             util.Cookie.delete(name);
-        }else {
+        } else {
             util.Cookie.set(name, value);
         }
 
@@ -810,18 +817,18 @@
         document.cookie = updatedCookie;
     };
 
-    util.Cookie.delete = util.Cookie.remove = function (name, option){
+    util.Cookie.delete = util.Cookie.remove = function (name, option) {
         "use strict";
         option = typeof option === 'object' ? option : {};
         option.expires = -1;
         util.Cookie.set(name, "", option);
     };
-    
-    util.getURLParameter = function(name) {
-       var reg = (RegExp(name + '=' + '(.+?)(&|$)').exec(location.search) || [, null])[1];
-       return reg === null ? undefined : decodeURI(reg);
+
+    util.getURLParameter = function (name) {
+        var reg = (RegExp(name + '=' + '(.+?)(&|$)').exec(location.search) || [, null])[1];
+        return reg === null ? undefined : decodeURI(reg);
     };
-    
+
     /**
      * An asynchronous for-each loop
      *
@@ -845,22 +852,22 @@
                 done();
             else if (i < array.length) {
                 var item = array[i++];
-                setTimeout(function() {
+                setTimeout(function () {
                     iterator(item, i - 1, next);
                 }, 0);
             }
         }
     };
-    
+
 
     /**
      * Calls the callback in a given interval until it returns true
      * @param {function} callback
      * @param {number} interval in milliseconds
      */
-    util.waitFor = function(callback, interval) {
-        var internalCallback = function() {
-            if(callback() !== true) {
+    util.waitFor = function (callback, interval) {
+        var internalCallback = function () {
+            if (callback() !== true) {
                 setTimeout(internalCallback, interval);
             }
         };
@@ -873,10 +880,10 @@
      * @param stack
      * @returns {Array}
      */
-    util.rmInArray = function(item, stack) {
+    util.rmInArray = function (item, stack) {
         var newStack = [];
-        for(var i = 0; i < stack.length; i ++) {
-            if(stack[i] && stack[i] != item)
+        for (var i = 0; i < stack.length; i++) {
+            if (stack[i] && stack[i] != item)
                 newStack.push(stack[i]);
         }
         return newStack;
@@ -893,7 +900,7 @@
                     return space ? '-' : '';
                 var code = ch.charCodeAt(0),
                     index = code == 1025 || code == 1105 ? 0 : code > 1071 ? code - 1071 : code - 1039,
-                    t = ['yo','a','b','v','g','d','e','zh','z','i','y','k','l','m','n','o','p', 'r','s','t','u','f','h','c','ch','sh','shch','','y','','e','yu','ya'];
+                    t = ['yo', 'a', 'b', 'v', 'g', 'd', 'e', 'zh', 'z', 'i', 'y', 'k', 'l', 'm', 'n', 'o', 'p', 'r', 's', 't', 'u', 'f', 'h', 'c', 'ch', 'sh', 'shch', '', 'y', '', 'e', 'yu', 'ya'];
                 return t[index];
             });
     };

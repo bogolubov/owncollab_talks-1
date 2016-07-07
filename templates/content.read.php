@@ -3,12 +3,17 @@
 $message = (!empty($_['message'][0]) && is_array($_['message'][0])) ? $_['message'][0] : false;
 
 if($message):
+
+    $subscribers = json_decode($message['subscribers'],true);
+    $htmlGroups = (is_array($subscribers['groups'])) ? join(', ',$subscribers['groups']) : false;
+    $htmlUsers = (is_array($subscribers['users'])) ? join(', ',$subscribers['users']) : '';
+
 ?>
 
     <ul class="read_head">
-        <li><strong>Date:</strong> <?=$message['date'];?></li>
-        <li><strong>From:</strong> <?=$message['author'];?></li>
-        <li><strong>To:</strong> <?=$message['subscribers'];?></li>
+        <li><strong>Date:</strong> <?=$message['date']?></li>
+        <li><strong>From:</strong> <?=$message['author']?></li>
+        <li><strong>To:</strong><?=( $htmlGroups ? '<strong>' . $htmlGroups. '</strong>, ' : '') . $htmlUsers ?></li>
         <li><strong>Subject:</strong> <strong><?=$message['title'];?></strong></li>
     </ul>
 

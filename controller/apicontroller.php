@@ -7,6 +7,7 @@ use OCA\Owncollab_Talks\Helper;
 use OCA\Owncollab_Talks\Db\Connect;
 use OCA\Owncollab_Talks\PHPMailer\PHPMailer;
 use OCA\Owncollab_Talks\TalkMail;
+use OCP\AppFramework\Http\RedirectResponse;
 use OCP\Files;
 use OCP\IRequest;
 use OCP\AppFramework\Http\TemplateResponse;
@@ -21,6 +22,10 @@ class ApiController extends Controller {
 	private $isAdmin;
 	private $connect;
 	private $projectname = "Base project";
+    /**
+     * @var \OCP\IURLGenerator
+     */
+	private $urlGenerator;
 
 
 	/**
@@ -45,6 +50,7 @@ class ApiController extends Controller {
 		$this->isAdmin = $isAdmin;
 		$this->l10n = $l10n;
 		$this->connect = $connect;
+        $this->urlGenerator = \OC::$server->getURLGenerator();
 	}
 
 	/**
@@ -81,9 +87,11 @@ class ApiController extends Controller {
      */
 	public function saveTalk() {
 
+        $mailsendResult = false;
 		$params = [
 			'error' => null,
 			'errorinfo' => null,
+			'insert_id' => null,
 		];
 
 		if(Helper::post('title') && Helper::post('message')) {
@@ -111,17 +119,22 @@ class ApiController extends Controller {
 			$data['hash'] = TalkMail::createHash($data['title']);
 			$data['status'] = TalkMail::SEND_STATUS_CREATED;
 
-			if($result = $this->connect->messages()->insertTask($data)){
-				$params['resultInsertTask'] = $result;
-
-				$result = $this->mailsendSwitcher($data, $all_users, $groups, $groupsusers);
-				$params['result_mailsend'] = $result;
+			if($params['insert_id'] = $this->connect->messages()->insertTask($data)) {
+				$params['resultInsertTask'] = $params['insert_id'];
+                $mailsendResult = $this->mailsendSwitcher($data, $all_users, $groups, $groupsusers);
+				$params['result_mailsend'] = $mailsendResult;
 			}
 			$params['data'] = $data;
 		}
 
+        if($mailsendResult) {
+            Helper::cookies('goto_started', $params['insert_id']);
+            header("Location: /index.php/apps/owncollab_talks/started");
+            exit;
+        }
         return new DataResponse($params);
 	}
+
 
 	/**
 	 * @param $talk

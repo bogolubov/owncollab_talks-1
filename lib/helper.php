@@ -3,6 +3,7 @@
 namespace OCA\Owncollab_Talks;
 
 use OC\User\Session;
+use OCA\Owncollab_Chart\Sessioner;
 use OCP\AppFramework\Http\DataResponse;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCA\Owncollab_Talks\PHPMailer\PHPMailer;
@@ -69,25 +70,6 @@ class Helper
         return $response->render();
     }
 
-
-    /**
-     * Session worker
-     * @param null $key
-     * @param null $value
-     * @return mixed|Sessioner
-     */
-    static public function session($key=null, $value=null)
-    {
-        static $ses = null;
-        if($ses === null) $ses = new Sessioner();
-        if(func_num_args() == 0)
-            return $ses;
-        if(func_num_args() == 1)
-            return $ses->get($key);
-        else
-            $ses->set($key,$value);
-    }
-
     /**
      * @param null $key
      * @param bool|true $clear
@@ -105,6 +87,65 @@ class Helper
             }
         }
         return false;
+    }
+
+
+    /**
+     * Accessor for $_COOKIE when fetching values, or maps directly
+     * to setcookie() when setting values.
+     * @param $name
+     * @param null $value
+     * @return mixed|null
+     */
+    static public function cookies($name, $value = null)
+    {
+        $argsNum = func_num_args();
+        $argsValues = func_get_args();
+
+        if ($argsNum == 1)
+            return isset($_COOKIE[$name]) ? $_COOKIE[$name] : null;
+
+        return call_user_func_array('setcookie', $argsValues);
+    }
+
+
+    /**
+     * Accessor for $_SESSION
+     * @param $name
+     * @param null $value
+     * @return null
+     */
+    static public function simpleSession($name, $value = null)
+    {
+        if(!isset($_SESSION))
+            session_start();
+
+        # session var set
+        if (func_num_args() == 2)
+            return ($_SESSION[$name] = $value);
+
+        # session var get
+        return isset($_SESSION[$name]) ? $_SESSION[$name] : null;
+    }
+
+
+    /**
+     * Session worker
+     * @param null $key
+     * @param null $value
+     * @return mixed|null|Sessioner
+     */
+    static public function session($key = null, $value = null)
+    {
+        static $sessioner = null;
+        if($sessioner === null)
+            $sessioner = new Sessioner();
+        if(func_num_args() == 0)
+            return $sessioner;
+        if(func_num_args() == 1)
+            return $sessioner->get($key);
+        else
+            $sessioner->set($key, $value);
     }
 
     /**
@@ -480,4 +521,7 @@ class Helper
         }
         return implode(', ', $subscribers);
     }
+
+
+
 }
