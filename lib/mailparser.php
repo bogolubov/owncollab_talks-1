@@ -1,6 +1,6 @@
 <?php
 
-set_include_path(__DIR__);
+set_include_path(dirname(__DIR__));
 
 include __DIR__ . "/ZBateson/MailMimeParser/MailMimeParser.php";
 
@@ -72,12 +72,12 @@ function parse_source_mail_data()
  */
 function send_to_app(array $arr_data)
 {
-    if(!is_file('../../../config/config.php')) {
+    if(!is_file('../../config/config.php')) {
         loger_error("Line: ".__LINE__."; Not found file config.php");
         exit;
     }
 
-    include '../../../config/config.php';
+    include '../../config/config.php';
 
     /** @var array $CONFIG */
     $url = $CONFIG['overwrite.cli.url'] . '/index.php/apps/owncollab_talks/parse_manager';
