@@ -99,6 +99,7 @@ class ApiController extends Controller {
 			$groupsusers = [];
 			$all_users = $users = Helper::post('users', false);
 			$groups = Helper::post('groups', false);
+
 			if(!empty($groups)) {
 				$groupsusers = $this->connect->users()->getGroupsUsersList();
 				foreach($groups as $group) {
@@ -189,6 +190,10 @@ class ApiController extends Controller {
 			$id = (int) $data['parent_id'];
 			$params['parent'] = $this->connect->messages()->getById($id);
 			$params['children'] = $this->connect->messages()->getChildren($id);
+			$params['messageslist'] = Helper::renderPartial($this->appName,'part.messageslist',[
+                'parent'    =>  $params['parent'][0],
+                'children'  =>  $params['children'],
+            ]);
 		}
 
 		return new DataResponse($params);
@@ -210,9 +215,6 @@ class ApiController extends Controller {
         if(count($idhash) == 1) {
             switch($idhash[0]) {
                 case 'team':
-
-
-
 
                     break;
                 case 'support':

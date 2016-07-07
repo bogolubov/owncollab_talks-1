@@ -547,6 +547,11 @@ input[type="text"], input[type="password"], input[type="search"], input[type="nu
     font-size: 110%;
     font-weight: bold;
 }
+
+#messagemenu{
+    width: 200px;
+}
+
 .listmenu>li{
 	display: block;
 	padding: 5px 10px;
@@ -565,12 +570,12 @@ input[type="text"], input[type="password"], input[type="search"], input[type="nu
 #r_messages{
     padding: 5px 10px;
 }
-.msg_tit {
+.msg_title {
     opacity: .57;
     font-weight: bold;
     font-size: 110%;
 }
-.msg_tit:hover {
+.msg_title:hover {
     opacity: .95;
 }
 #messages_children{
@@ -584,7 +589,10 @@ input[type="text"], input[type="password"], input[type="search"], input[type="nu
     font-style: italic;
     font-size: 90%;
 }
-
+.msg_text{
+    font-style: italic;
+    font-size: 90%;
+}
 
 .read_body,
 .read_reply,

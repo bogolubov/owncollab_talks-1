@@ -18,8 +18,10 @@ if(App.namespace){App.namespace('Action.Edit', function(App){
     _.submitFormEvent = function(){
         jQuery('form#begin-talk').submit(function(event){
             event.preventDefault();
+
             var vals = Util.formData(this, true);
-            if(Util.isObj(vals) && vals['title'].length > 2 && vals['message'].length > 2 && ( vals['groups[]'] || vals['users[]'])) {
+            if(Util.isObj(vals) && vals['title'].length > 2 && vals['message'].length > 2 &&
+                ( vals['nogroup[]'] || vals['nogroup_users[]'] || vals['groups[]'] || vals['users[]'] )) {
                 this.submit();
             }else{
                 App.Controller.Page.errorLine("Не все поля заполненны!");

@@ -12,12 +12,7 @@ if($messages):
         </div>
 
         <div id="r_messages" class="tbl_cell valign_top" style="display: none">
-            <div id="message_parent"></div>
-            <div id="messages_children"></div>
-            <form action="">
-                <textarea name="reply" class="width100"></textarea>
-                <p><input type="submit" value="Reply now"></p>
-            </form>
+
         </div>
 
     </div>

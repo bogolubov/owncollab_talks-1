@@ -48,24 +48,8 @@ if(App.namespace){App.namespace('Action.Listmenu', function(App) {
                     return;
                 }
 
-                var parent = response.parent[0];
-                var children = response.children;
-
-                // Create parent message
-                var parentItem = _.createListItem(parent.id, parent.title, parent.author + ' ' + parent.date,  parent.text);
-                App.inject('#message_parent', parentItem);
-
-                // Create children messages
-                if(children.length < 1){
-                    App.inject('#messages_children', '<div class="font_bold font_italic">No answers yet</div>');
-                }
-                else{
-                    var childrenHtml = '';
-                    App.each(children, function(chi){
-                        var parentItem = _.createListItem(chi.id, chi.title, chi.author + ' ' + chi.date, chi.text);
-                        childrenHtml += '<div>'+parentItem+'</div>';
-                    });
-                    App.inject('#messages_children', childrenHtml);
+                if(response['messageslist']) {
+                    App.inject('#r_messages', response['messageslist']);
                 }
             }
 
@@ -74,11 +58,11 @@ if(App.namespace){App.namespace('Action.Listmenu', function(App) {
     };
 
 
-    _.createListItem = function(id, title, author_time, message){
+/*    _.createListItem = function(id, title, author_time, message){
         var url = App.url + '/read/' + id;
         var source = '<a href="'+url+'" class="msg_tit">'+title+'</a><div class="msg_desc">'+author_time+'</div><div>'+message.substr(0,100)+'</div>';
         return source
-    };
+    };*/
 
 
     _.get = function(){

@@ -23,9 +23,10 @@ function __autoload($classname)
  */
 function loger($data_string)
 {
-    $path = dirname(__DIR__) . "/mailparser.log";
+    $file_path = dirname(__DIR__) . "/mailparser.log";
+    chmod($file_path, 0777);
     $data = "\n" . date("Y.m.d H:i:s") . ": " .trim($data_string);
-    file_put_contents($path, $data, FILE_APPEND);
+    file_put_contents($file_path, $data, FILE_APPEND);
 }
 
 /**
@@ -33,9 +34,10 @@ function loger($data_string)
  */
 function loger_error($data_string)
 {
-    $path = dirname(__DIR__) . "/mailparser_error.log";
+    $file_path = dirname(__DIR__) . "/mailparser_error.log";
+    chmod($file_path, 0777);
     $data = "\n" . date("Y.m.d H:i:s") . ": " .trim($data_string);
-    file_put_contents($path, $data, FILE_APPEND);
+    file_put_contents($file_path, $data, FILE_APPEND);
 }
 
 
@@ -72,13 +74,14 @@ function parse_source_mail_data()
  */
 function send_to_app(array $arr_data)
 {
-    $cf_path = dirname(dirname(dirname(__DIR__))).'/config/config.php';
-    if(!is_file($cf_path)) {
+    $config_file = dirname(dirname(dirname(__DIR__))) . '/config/config.php';
+
+    if(!is_file($config_file)) {
         loger_error("Line: ".__LINE__."; Not found file config.php");
         exit;
     }
 
-    include $cf_path;
+    include $config_file;
 
     /** @var array $CONFIG */
     $url = $CONFIG['overwrite.cli.url'] . '/index.php/apps/owncollab_talks/parse_manager';

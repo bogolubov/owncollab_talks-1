@@ -149,6 +149,28 @@ class Helper
     }
 
     /**
+     * @param $routeName
+     * @param array $arguments
+     * @return string
+     */
+    static public function linkToRoute($routeName, $arguments = [])
+    {
+        return \OC::$server->getURLGenerator()->linkToRoute($routeName, $arguments);
+    }
+
+
+    /**
+     * @param $appName
+     * @param $file
+     * @param array $arguments
+     * @return string
+     */
+    static public function linkTo($appName, $file, $arguments = [])
+    {
+        return \OC::$server->getURLGenerator()->linkTo($appName, $file, $arguments);
+    }
+
+    /**
      * Encode string with salt
      * @param $unencoded
      * @param $salt
