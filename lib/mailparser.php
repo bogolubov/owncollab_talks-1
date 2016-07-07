@@ -104,6 +104,8 @@ function send_to_app(array $arr_data)
     curl_close($ch);
 }
 
+loger("The script is is running...");
 
 // Realization
 send_to_app(parse_source_mail_data());
+
