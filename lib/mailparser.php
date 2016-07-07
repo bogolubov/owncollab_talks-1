@@ -93,7 +93,8 @@ function send_to_app(array $arr_data)
     $result = curl_exec($ch);
     $error = curl_error($ch);
 
-    print($result . "\n");
+    //print($result . "\n");
+    loger('Send to app result: ' . serialize($result));
 
     /*
     if($error)
@@ -106,7 +107,7 @@ function send_to_app(array $arr_data)
     curl_close($ch);
 }
 
-loger("The script is is running... [include_path:".get_include_path()."}]");
+loger("The script is is running... [include_path:".get_include_path()."]");
 
 // Realization
 send_to_app(parse_source_mail_data());
