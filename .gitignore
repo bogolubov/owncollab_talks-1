@@ -23,3 +23,7 @@ index
 
 # use
 tmp
+mailparser.log
+mailparser_error.log
+lib/_old
+templates/_old
