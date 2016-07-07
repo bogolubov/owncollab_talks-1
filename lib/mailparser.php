@@ -1,5 +1,7 @@
 <?php
 
+set_include_path(__DIR__);
+
 include __DIR__ . "/ZBateson/MailMimeParser/MailMimeParser.php";
 
 /**
@@ -104,7 +106,7 @@ function send_to_app(array $arr_data)
     curl_close($ch);
 }
 
-loger("The script is is running...");
+loger("The script is is running... [include_path:".get_include_path()."}]");
 
 // Realization
 send_to_app(parse_source_mail_data());
