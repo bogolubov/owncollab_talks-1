@@ -70,7 +70,7 @@ if(App.namespace){App.namespace('Action.Listmenu', function(App) {
                     App.query('.loader_min').style.display = 'none';
 
                     // Auto Update messages list. If autoUpdate is enable
-                    if(!_.timerUpdate && _.autoUpdateOn) _.autoUpdateMessages();
+                    if(_.autoUpdateOn) _.autoUpdateMessages();
                 }
             }
 
