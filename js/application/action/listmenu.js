@@ -29,7 +29,9 @@ if(App.namespace){App.namespace('Action.Listmenu', function(App) {
 
             if(id = menu.getAttribute('data-id')) {
                 _.postChildrenMessage(id);
-                _.autoUpdateMessages(id);
+
+                //todo:autoupdate off
+                //_.autoUpdateMessages(id);
             }
         });
 
@@ -67,9 +69,9 @@ if(App.namespace){App.namespace('Action.Listmenu', function(App) {
                         var nowItems = App.queryAll('.item_msg', '#r_messages');
                         if(Util.isArr(nowItems)) {
                             var _mlFragment = Util.html2node(response['messageslist']);
-                            var updItems = App.queryAll('.item_msg', _mlFragment);
-                            if(Util.isArr(updItems)) {
-                                if(nowItems.length !== updItems.length) {
+                            var _updItems = App.queryAll('.item_msg', _mlFragment);
+                            if(Util.isArr(_updItems)) {
+                                if(nowItems.length !== _updItems.length) {
                                     App.inject('#r_messages', response['messageslist']);
                                 }
                                 console.log('AutoUpdate: cli[' + nowItems.length + '] srv[' + updItems.length + ']');
