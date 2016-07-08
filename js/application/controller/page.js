@@ -46,20 +46,15 @@ if(App.namespace){App.namespace('Controller.Page', function(App){
         Linker.click('msg_back', function(event){
             event.preventDefault();
 
-            //Util.Cookie('goto_message',
+            var rid = App.query('input[name=rid]').value;
+            Util.Cookie.set('goto_message', rid, {path:'/'});
             window.history.back();
         });
 
         Linker.click('msg_reply', function(event){
             event.preventDefault();
-            if(event.target.getAttribute('data-ready')==='yes'){
-                console.log('send');
-            }
-            else{
-                event.target.textContent = 'Send answer';
-                event.target.setAttribute('data-ready','yes');
-                jQuery('.read_reply').show();
-            }
+            jQuery('.read_reply').show();
+            jQuery(event.target).hide();
         });
     };
 

@@ -3,13 +3,13 @@
 $message = (!empty($_['message'][0]) && is_array($_['message'][0])) ? $_['message'][0] : false;
 
 if($message):
-
+    $parent = (!empty($_['parent'][0]) && is_array($_['parent'][0])) ? $_['parent'][0] : false;
     $subscribers = json_decode($message['subscribers'],true);
     $htmlGroups = (is_array($subscribers['groups'])) ? join(', ',$subscribers['groups']) : false;
     $htmlUsers = (is_array($subscribers['users'])) ? join(', ',$subscribers['users']) : '';
-
 ?>
 
+    <input type="text" hidden="hidden" name="rid" value="<?=$parent['id']?>">
     <ul class="read_head">
         <li><strong>Date:</strong> <?=$message['date']?></li>
         <li><strong>From:</strong> <?=$message['author']?></li>
@@ -22,8 +22,8 @@ if($message):
     </div>
 
     <div class="read_reply" style="display: none">
-        <form id="quick-reply">
-            <input type="text" hidden="hidden" name="hash" value="<?=$message['hash']?>">
+        <form id="quick-reply" method="post">
+            <input type="text" hidden="hidden" name="hash" value="<?=$parent['hash']?>">
             <div class="tbl">
                 <div class="tbl_cell valign_top width70"><textarea name="message" class="width100" placeholder="Answer directly"></textarea></div>
                 <div class="tbl_cell valign_top">&nbsp;&nbsp;<input type="submit" value="Reply now"></div>

@@ -35,7 +35,6 @@ if(App.namespace){App.namespace('Action.Edit', function(App){
     _.submitFormReplyEvent = function(){
         jQuery('form#quick-reply').submit(function(event){
             var vals = Util.formData(this, true);
-
             App.Controller.Page.errorLineClose();
             event.preventDefault();
 
@@ -49,7 +48,14 @@ if(App.namespace){App.namespace('Action.Edit', function(App){
                         App.Controller.Page.errorLine(response['errorinfo']?response['errorinfo']:"Server internal error");
                     }
                     else if(response['insert_id'] && response['parent_id']) {
-                        jQuery("ul.listmenu>li[data-id="+response['parent_id']+"]").click();
+                        // from read page
+                        if(App.uriPath.search(/\/read\/\d+/i)!==-1) {
+                            var rid = App.query('input[name=rid]').value;
+                            Util.Cookie.set('goto_message', rid, {path:'/'});
+                            window.history.back();
+                            // from listmenu
+                        }else
+                            jQuery("ul.listmenu>li[data-id="+response['parent_id']+"]").click();
                     }
                 }, vals);
             }

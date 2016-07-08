@@ -148,11 +148,14 @@ class MainController extends Controller {
 	 * @return TemplateResponse
 	 */
 	public function read($id) {
+		$message = $this->connect->messages()->getById((int)$id);
+		$parent = $this->connect->messages()->getById((int)$message[0]['rid']);
 
 		$data = [
 			'menu' => 'all',
 			'content' => 'read',
-			'message' => $this->connect->messages()->getById((int)$id)
+			'message' => $message,
+			'parent' => $parent,
 		];
 
 		return new TemplateResponse($this->appName, 'main', $data);
