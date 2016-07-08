@@ -28,10 +28,13 @@ if(App.namespace){App.namespace('Action.Listmenu', function(App) {
             menu.style.fontWeight='bold';
 
             if(id = menu.getAttribute('data-id')) {
+
+                // Get messages from server side
                 _.postChildrenMessage(id);
 
-                //todo:autoupdate off
-                //_.autoUpdateMessages(id);
+                // Auto Update messages
+                if(!_.timerUpdate)
+                    _.autoUpdateMessages(id);
             }
         });
 
@@ -44,12 +47,8 @@ if(App.namespace){App.namespace('Action.Listmenu', function(App) {
     /**
      * @namespace App.Action.Listmenu.getChildrenMessage
      * @param parent_id
-     * @param autoUpdate
      */
-    _.postChildrenMessage = function(parent_id, autoUpdate){
-
-        autoUpdate = (autoUpdate === undefined) ? false : !!autoUpdate;
-
+    _.postChildrenMessage = function(parent_id) {
         var sendData = {
             parent_id: parent_id
         };
@@ -59,28 +58,16 @@ if(App.namespace){App.namespace('Action.Listmenu', function(App) {
 
         App.Action.Api.request('message_children',function(response) {
             if(Util.isObj(response) && response.requesttoken) {
+
                 App.requesttoken = response.requesttoken;
                 if(response.error){
                     return;
                 }
 
                 if(response['messageslist']) {
-                    if(autoUpdate) {
-                        var nowItems = App.queryAll('.item_msg', '#r_messages');
-                        if(Util.isArr(nowItems)) {
-                            var _mlFragment = Util.html2node(response['messageslist']);
-                            var _updItems = App.queryAll('.item_msg', _mlFragment);
-                            if(Util.isArr(_updItems)) {
-                                if(nowItems.length !== _updItems.length) {
-                                    App.inject('#r_messages', response['messageslist']);
-                                }
-                                console.log('AutoUpdate: cli[' + nowItems.length + '] srv[' + updItems.length + ']');
-                            }
-                        }
-                    }else{
-                        App.inject('#r_messages', response['messageslist']);
-                        App.Action.Edit.submitFormReplyEvent();
-                    }
+
+                    App.inject('#r_messages', response['messageslist']);
+                    App.Action.Edit.submitFormReplyEvent();
 
                     // hide loader ico
                     App.query('.loader_min').style.display = 'none';
@@ -92,16 +79,18 @@ if(App.namespace){App.namespace('Action.Listmenu', function(App) {
     };
 
 
-    _.autoUpdateMessages = function(id){
-        if(_.timerUpdate)
+    _.autoUpdateMessages = function (id) {
+        if (_.timerUpdate)
             _.timerUpdate.abort();
+
         _.timerUpdate = new Timer(parseInt(_.timerPeriod), 0);
-        _.timerUpdate.addEventListener(Timer.PROGRESS, function(progress){
-            _.postChildrenMessage(id, true);
+
+        _.timerUpdate.addEventListener(Timer.PROGRESS, function (progress) {
+            jQuery("ul.listmenu>li[data-id=" + id + "]").click();
         });
-        if(id) {
+
+        if (id)
             _.timerUpdate.start();
-        }
     };
 
 
