@@ -26,6 +26,7 @@ var App = new NamespaceApplication({
 
 App.require('libs', [
     App.urlScript + 'libs/util.js',
+    App.urlScript + 'libs/timer.js',
     App.urlScript + 'libs/linker.js'
 ], initLibrary, initError);
 

@@ -643,9 +643,10 @@ input[type="text"], input[type="password"], input[type="search"], input[type="nu
 	display: inline-block;
 
 }
-
-
-/*	background-color: #e40000;
-	color: white;	padding: 0 10px;*/
-
-
+.loader_min {
+    display: inline-block;
+    background: url('/apps/owncollab_chart/img/loading-small.gif') no-repeat center center;
+    width: 30px;
+    height: 30px;
+    float: right;
+}
