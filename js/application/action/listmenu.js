@@ -4,10 +4,25 @@ if(App.namespace){App.namespace('Action.Listmenu', function(App) {
      * @namespace App.Action.Listmenu
      */
     var _ = {
-        autoUpdateOn: true,
+
+        /**
+         * Enable imitation of Auto Update messages
+         * @var boolean autoUpdateOn
+         */
+        autoUpdateOn: location.hostname != "owncloud.loc",
+
+        /**
+         * Auto Update delay microseconds
+         * @var number timerPeriod
+         */
         timerPeriod: 5000,
-        timerUpdate: null
+
+        /**
+         * @var Timer|null timerUpdateInstance
+         */
+        timerUpdateInstance: null
     };
+
 
     /**
      * @namespace App.Action.Listmenu.init
@@ -69,7 +84,7 @@ if(App.namespace){App.namespace('Action.Listmenu', function(App) {
                     // hide loader ico
                     App.query('.loader_min').style.display = 'none';
 
-                    // Auto Update messages list. If autoUpdate is enable
+                    // Init Auto Update imitation. If autoUpdate is enable
                     if(_.autoUpdateOn) _.autoUpdateMessages();
                 }
             }
@@ -83,19 +98,19 @@ if(App.namespace){App.namespace('Action.Listmenu', function(App) {
 
         var parent_id = jQuery('#message_parent>.item_msg').attr('data-link');
 
-        if (_.timerUpdate)
-            _.timerUpdate.abort();
+        if (_.timerUpdateInstance)
+            _.timerUpdateInstance.abort();
 
-        _.timerUpdate = new Timer(parseInt(_.timerPeriod), 0);
+        _.timerUpdateInstance = new Timer(parseInt(_.timerPeriod), 0);
 
-        _.timerUpdate.addEventListener(Timer.PROGRESS, function (progress) {
+        _.timerUpdateInstance.addEventListener(Timer.PROGRESS, function (progress) {
             console.log(parent_id);
             if(parent_id)
                 jQuery("ul.listmenu>li[data-id=" + parent_id + "]").click();
         });
 
         if (parent_id)
-            _.timerUpdate.start();
+            _.timerUpdateInstance.start();
     };
 
 
