@@ -8,6 +8,7 @@ $content = isset($_['content']) ? $_['content'] : false;
 
 	<div id="app-navigation">
 		<?php print_unescaped($this->inc('part.navigation')); ?>
+		<?php print_unescaped($this->inc('part.settings')); ?>
 	</div>
 
 	<div id="app-content">

@@ -545,5 +545,13 @@ class Helper
     }
 
 
+    /**
+     * @param $key
+     * @param string $default
+     * @return mixed
+     */
+    static public function getSysConfig($key, $default = '') {
+        return \OC::$server->getSystemConfig()->getValue($key, $default);
+    }
 
 }

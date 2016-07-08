@@ -15,16 +15,23 @@ class TalkMail
     const SEND_STATUS_CLOSE = 2;
     const SEND_STATUS_DELETED = 3;
 
+    static private $mailDomain = null;
+
     static public function createHash($salt) {
         return substr(md5(date("Y-m-d h:i:s").$salt),0,10);
     }
 
     static public function createAddress($uid) {
-        return $uid.'@'.\OC::$server->getRequest()->getServerHost();
+        $address = $uid.'@';
+        if(self::$mailDomain)
+            $address .= self::$mailDomain;
+        else
+            $address .= \OC::$server->getRequest()->getServerHost();
+        return $address;
     }
 
-    static public function groupsEmailSend() {
-
+    static public function registerEmailDomain($domain) {
+        self::$mailDomain = $domain;
         return true;
     }
 

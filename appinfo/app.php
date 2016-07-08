@@ -15,9 +15,21 @@ use OCA\Owncollab_Talks\Helper;
 use OCP\AppFramework\App;
 use OCP\Util;
 
+
+$aliaser = new Aliaser();
+
+$connectMTA = Aliaser::getConnectToMTA();
+var_dump($aliaser);
+var_dump($connectMTA);
+die;
+
+
+
+
 $appName = 'owncollab_talks';
 $app = new App($appName);
 $container = $app->getContainer();
+
 
 /**
  * Navigation menu settings

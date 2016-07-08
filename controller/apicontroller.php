@@ -181,7 +181,7 @@ class ApiController extends Controller {
 	}
 
 
-
+    public $mailUser = false;
 
 	/**
 	 * @param $talk
@@ -193,6 +193,10 @@ class ApiController extends Controller {
 	public function mailsendSwitcher($talk = [], $users = [], $groups = [], $groupsusers = [])
 	{
 		$to = [];
+        $fromUser = $this->mailUser ? $this->mailUser : $this->userId; //$this->userId ? $this->userId : $this->fakeUser;
+
+        if(!$fromUser)
+            return false;
 
 		foreach ($users as $user) {
 			$_userData = $this->connect->users()->getUserData($user);
@@ -201,8 +205,8 @@ class ApiController extends Controller {
 		}
 
 		$result =  TalkMail::createMail(
-			[TalkMail::createAddress($this->userId), $this->userId],
-			[TalkMail::createAddress($this->userId .'+'. $talk['hash']), $this->userId],
+			[TalkMail::createAddress($fromUser), $fromUser],
+			[TalkMail::createAddress($fromUser .'+'. $talk['hash']), $fromUser],
 			$to,
 			$talk['title'],
 			$talk['text']
@@ -246,6 +250,9 @@ class ApiController extends Controller {
 	}
 
 
+
+
+
     /**
      * @PublicPage
      * @NoAdminRequired
@@ -254,6 +261,8 @@ class ApiController extends Controller {
      */
 	public function parseManager()
 	{
+        $mail_domain = Helper::getSysConfig('mail_domain', false);
+
 		$returned = [
 			'to' => null,
 			'from' => null,
@@ -263,6 +272,9 @@ class ApiController extends Controller {
         $params = Helper::post();
         $to = explode('@', $params['to']);
         $idhash = explode('+',$to[0]);
+
+
+        //TalkMail::registerEmailDomain($params['config']['']);
 
         if (count($idhash) == 1) {
 
@@ -334,7 +346,7 @@ class ApiController extends Controller {
             return false;
         }
 
-        $author = 'undefined';
+        $author = 'root';
         $groupsusers = $this->connect->users()->getGroupsUsers();
 
         $users = array_map(function ($item) use (&$author, $from) {
@@ -342,7 +354,7 @@ class ApiController extends Controller {
             return $item['uid'];
         }, $groupsusers);
 
-        $users = array_values(array_unique($users));
+        $users = array_values(array_unique(array_diff($users,[$author])));
 
         $data['rid'] = 0;
         $data['date'] = date("Y-m-d H:i:s", time());
@@ -355,6 +367,7 @@ class ApiController extends Controller {
         $data['status'] = TalkMail::SEND_STATUS_CREATED;
 
         if($insert_id = $this->connect->messages()->insertTask($data)) {
+            $this->fakeUser = $author;
             $count_mails = $this->mailsendSwitcher($data, $users);
             return $count_mails;
         }

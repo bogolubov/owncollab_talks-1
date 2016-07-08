@@ -54,7 +54,7 @@ function parse_source_mail_data()
     $mailParser = new ZBateson\MailMimeParser\MailMimeParser();
     $message    = $mailParser->parse($resource);
 
-    try{
+    try {
         $data['to']         = $message->getHeaderValue('to');
         $data['to_name']    = is_object($message->getHeader('to')) ? $message->getHeader('to')->getPersonName() : '';
         $data['from']       = $message->getHeaderValue('from');
@@ -87,6 +87,7 @@ function send_to_app(array $arr_data)
 
     /** @var array $CONFIG */
     $url = $CONFIG['overwrite.cli.url'] . '/index.php/apps/owncollab_talks/parse_manager';
+    $arr_data['config'] = $CONFIG;
 
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url);
@@ -110,7 +111,7 @@ function send_to_app(array $arr_data)
         if ($resultData['type'] != 'ok')
             loger_error("Line: " . __LINE__ . "; Result from server is bad! QueryData:" . $result);
         else {
-            loger("Parse and send mail data is success! From: " .$arr_data['from']. " To: " . $arr_data['to'] . " Result data: " . $resultData);
+            loger("Parse and send mail data is success! From: " .$arr_data['from']. " To: " . $arr_data['to'] . " Result data: " . $result);
             exit();
         }
 

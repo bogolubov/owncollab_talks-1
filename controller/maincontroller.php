@@ -12,6 +12,7 @@
 namespace OCA\Owncollab_Talks\Controller;
 
 use OC\Files\Filesystem;
+use OCA\Owncollab_Talks\AppInfo\Aliaser;
 use OCA\Owncollab_Talks\AppInfo\TempFile;
 use OCA\Owncollab_Talks\Db\Connect;
 use OCA\Owncollab_Talks\Helper;
