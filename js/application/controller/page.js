@@ -46,8 +46,8 @@ if(App.namespace){App.namespace('Controller.Page', function(App){
         Linker.click('msg_back', function(event){
             event.preventDefault();
 
-            var rid = App.query('input[name=rid]').value;
-            Util.Cookie.set('goto_message', rid, {path:'/'});
+            //var rid = App.query('input[name=rid]').value;
+            //Util.Cookie.set('goto_message', rid, {path:'/'});
             window.history.back();
         });
 

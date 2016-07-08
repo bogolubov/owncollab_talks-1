@@ -190,7 +190,7 @@ class ApiController extends Controller {
 	 * @param $groupsusers
 	 * @return bool|int|string
 	 */
-	public function mailsendSwitcher($talk, $users, $groups, $groupsusers)
+	public function mailsendSwitcher($talk = [], $users = [], $groups = [], $groupsusers = [])
 	{
 		$to = [];
 
@@ -254,51 +254,112 @@ class ApiController extends Controller {
      */
 	public function parseManager()
 	{
+		$returned = [
+			'to' => null,
+			'from' => null,
+			'type' => 'fail',
+		];
+
         $params = Helper::post();
         $to = explode('@', $params['to']);
         $idhash = explode('+',$to[0]);
 
-        if(count($idhash) == 1) {
-            switch($idhash[0]) {
-                case 'team':
+        if (count($idhash) == 1) {
 
+            // Groups emails
+            // for the future realization
+
+            // Static emails
+            switch ($idhash[0]) {
+                case 'team':
+                    $count_mails = $this->saveTaskTeam($params);
+                    if(is_numeric($count_mails)) {
+                        $returned['type'] = 'ok';
+                        $returned['count_mails'] = $count_mails;
+                    } else
+                        $returned['type'] = 'error_team';
                     break;
                 case 'support':
-
+                    // for the future realization
                     break;
             }
-        }else{
+
+        } else {
+
+            // Users emails
             $uid = $idhash[0];
             $hash = $idhash[1];
 
             // checked message by hash key
-            if( $message = $this->connect->messages()->getByHash(trim($hash)) ){
+            if ($message = $this->connect->messages()->getByHash(trim($hash))) {
 
                 $userSender = $this->connect->users()->getByEmail($params['from']);
 
-                if($userSender) {
+                if ($userSender) {
 
                     $data['rid'] = $message['id'];
                     $data['date'] = date("Y-m-d H:i:s", time());
-                    $data['title'] = 'RE: '.$message['title'];
+                    $data['title'] = 'RE: ' . $message['title'];
                     $data['text'] = $params['content'];
                     $data['attachements'] = '';
                     $data['author'] = $userSender['userid'];
-                    $data['subscribers'] = json_encode(['groups'=>[], 'users'=>[]]);
+                    $data['subscribers'] = json_encode(['groups' => [], 'users' => []]);
                     $data['hash'] = TalkMail::createHash($data['date']);
                     $data['status'] = TalkMail::SEND_STATUS_REPLY;
 
                     $insertResult = $this->connect->messages()->insertTask($data);
 
-                    if($insertResult) print_r('ok');
-                    else print_r('error_insert');
+                    if ($insertResult)
+                        $returned['type'] = 'ok';
+                    else
+                        $returned['type'] = 'error_insert';
                 }
             }
         }
-        exit;
+
+		return new DataResponse($returned);
 	}
 
+    /**
+     * @param $post
+     * @return bool|int|string
+     */
+    public function saveTaskTeam($post)
+    {
+        try{
+            $from = $post['from'];
+            $title = $post['subject'];
+            $message = $post['content'];
+        } catch(\Exception $e) {
+            return false;
+        }
 
+        $author = 'undefined';
+        $groupsusers = $this->connect->users()->getGroupsUsers();
+
+        $users = array_map(function ($item) use (&$author, $from) {
+            if($from == $item['email']) $author = $item['uid'];
+            return $item['uid'];
+        }, $groupsusers);
+
+        $users = array_values(array_unique($users));
+
+        $data['rid'] = 0;
+        $data['date'] = date("Y-m-d H:i:s", time());
+        $data['title'] = strip_tags($title);
+        $data['text'] = $message;
+        $data['attachements'] = '';
+        $data['author'] = $author;
+        $data['subscribers'] = json_encode(['groups'=>false, 'users'=>$users]);
+        $data['hash'] = TalkMail::createHash($title);
+        $data['status'] = TalkMail::SEND_STATUS_CREATED;
+
+        if($insert_id = $this->connect->messages()->insertTask($data)) {
+            $count_mails = $this->mailsendSwitcher($data, $users);
+            return $count_mails;
+        }
+        return false;
+    }
 
 
 

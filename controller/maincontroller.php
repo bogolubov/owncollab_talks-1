@@ -151,6 +151,8 @@ class MainController extends Controller {
 		$message = $this->connect->messages()->getById((int)$id);
 		$parent = $this->connect->messages()->getById((int)$message[0]['rid']);
 
+		Helper::cookies('goto_message', ($message[0]['rid']==0?$message[0]['id']:$parent[0]['id']), 0, '/' );
+
 		$data = [
 			'menu' => 'all',
 			'content' => 'read',

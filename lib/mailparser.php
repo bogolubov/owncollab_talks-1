@@ -46,12 +46,13 @@ function loger_error($data_string)
  */
 function parse_source_mail_data()
 {
-    $data = [];
+    // for xDebug
+    //$resource   = fopen("mails/team.mail", "r");
+
+    $data       = [];
     $resource   = fopen("php://stdin", "r");
     $mailParser = new ZBateson\MailMimeParser\MailMimeParser();
     $message    = $mailParser->parse($resource);
-
-    fclose($resource);
 
     try{
         $data['to']         = $message->getHeaderValue('to');
@@ -65,6 +66,7 @@ function parse_source_mail_data()
         loger_error("Line: ".__LINE__."; Error parse source stdin resource. Message error: ".$error->getMessage());
     }
 
+    fclose($resource);
     return $data;
 }
 
@@ -96,24 +98,32 @@ function send_to_app(array $arr_data)
 
     $result = curl_exec($ch);
     $error = curl_error($ch);
-
-    //print($result . "\n");
-    loger('Send to app result: ' . serialize($result));
-
-    /*
-    if($error)
-        loger_error("Line: ".__LINE__."; Curl error: " . $error);
-    elseif($result == 'ok')
-        loger("Parse and send mail data is success! From: " .$arr_data['from']. " To: " . $arr_data['to']);
-    else
-        loger_error("Line: ".__LINE__."; Curl success, but result is not response confirmation. Response: " .substr($result,0,20). "..." );
-    */
     curl_close($ch);
+
+    if ($error) {
+        loger_error("Line: " . __LINE__ . "; cURL request fail! Error: " . $error);
+        exit();
+    }
+    try {
+        $resultData = json_decode($result, true);
+
+        if ($resultData['type'] != 'ok')
+            loger_error("Line: " . __LINE__ . "; Result from server is bad! QueryData:" . $result);
+        else {
+            loger("Parse and send mail data is success! From: " .$arr_data['from']. " To: " . $arr_data['to'] . " Result data: " . $resultData);
+            exit();
+        }
+
+    } catch (Exception $e) {
+        loger_error("Line: " . __LINE__ . "; Result from server not decode! QueryData:" . $result);
+    }
+
+    print('cURL request: '. $result . "\n");
 }
 
-// [include_path:".get_include_path()."]
+
+
 loger("The script is is running...");
 
 // Realization
 send_to_app(parse_source_mail_data());
-

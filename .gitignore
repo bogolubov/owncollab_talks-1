@@ -26,4 +26,5 @@ tmp
 mailparser.log
 mailparser_error.log
 lib/_old
+lib/mails
 templates/_old
