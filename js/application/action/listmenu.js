@@ -4,7 +4,7 @@ if(App.namespace){App.namespace('Action.Listmenu', function(App) {
      * @namespace App.Action.Listmenu
      */
     var _ = {
-        currentParentId: null,
+        autoUpdateOn: true,
         timerPeriod: 5000,
         timerUpdate: null
     };
@@ -31,10 +31,6 @@ if(App.namespace){App.namespace('Action.Listmenu', function(App) {
 
                 // Get messages from server side
                 _.postChildrenMessage(id);
-
-                // Auto Update messages
-                if(!_.timerUpdate)
-                    _.autoUpdateMessages(id);
             }
         });
 
@@ -66,11 +62,15 @@ if(App.namespace){App.namespace('Action.Listmenu', function(App) {
 
                 if(response['messageslist']) {
 
+                    // added HTML messages content
                     App.inject('#r_messages', response['messageslist']);
                     App.Action.Edit.submitFormReplyEvent();
 
                     // hide loader ico
                     App.query('.loader_min').style.display = 'none';
+
+                    // Auto Update messages list. If autoUpdate is enable
+                    if(!_.timerUpdate && _.autoUpdateOn) _.autoUpdateMessages();
                 }
             }
 
@@ -79,17 +79,22 @@ if(App.namespace){App.namespace('Action.Listmenu', function(App) {
     };
 
 
-    _.autoUpdateMessages = function (id) {
+    _.autoUpdateMessages = function () {
+
+        var parent_id = jQuery('#message_parent>.item_msg').attr('data-link');
+
         if (_.timerUpdate)
             _.timerUpdate.abort();
 
         _.timerUpdate = new Timer(parseInt(_.timerPeriod), 0);
 
         _.timerUpdate.addEventListener(Timer.PROGRESS, function (progress) {
-            jQuery("ul.listmenu>li[data-id=" + id + "]").click();
+            console.log(parent_id);
+            if(parent_id)
+                jQuery("ul.listmenu>li[data-id=" + parent_id + "]").click();
         });
 
-        if (id)
+        if (parent_id)
             _.timerUpdate.start();
     };
 
