@@ -19,6 +19,7 @@ if(App.namespace) { App.namespace('Action.Api', function(App) {
             data: {key: key, uid: App.uid, data: args},
             type: 'POST',
             timeout: timeout_ms || 36000,
+            cache: false,
             headers: {requesttoken: App.requesttoken},
             success: function (response) {
                 if (typeof callback === 'function') {
