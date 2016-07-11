@@ -3,6 +3,7 @@
 namespace OCA\Owncollab_Talks\Controller;
 
 use OC\Files\Filesystem;
+use OCA\Owncollab_Talks\AppInfo\Aliaser;
 use OCA\Owncollab_Talks\Helper;
 use OCA\Owncollab_Talks\Db\Connect;
 use OCA\Owncollab_Talks\PHPMailer\PHPMailer;
@@ -26,6 +27,7 @@ class ApiController extends Controller {
      * @var \OCP\IURLGenerator
      */
 	private $urlGenerator;
+	private $mailDomain;
 
 
 	/**
@@ -51,6 +53,8 @@ class ApiController extends Controller {
 		$this->l10n = $l10n;
 		$this->connect = $connect;
         $this->urlGenerator = \OC::$server->getURLGenerator();
+		$this->mailDomain = Aliaser::getMailDomain();
+
 	}
 
 	/**
@@ -63,10 +67,13 @@ class ApiController extends Controller {
 		$pid = Helper::post('pid');
 		$uid = Helper::post('uid');
 
-        if(method_exists($this, $key))
+		if(!$this->mailDomain) return new DataResponse(['error'=>'Email domain is undefined']);
+
+        if(method_exists($this, $key)) {
+            TalkMail::registerMailDomain($this->mailDomain);
             return $this->$key($data);
-        else
-			return new DataResponse();
+        } else
+			return new DataResponse(['error'=>'Api key not exist']);
 	}
 
 
@@ -82,6 +89,7 @@ class ApiController extends Controller {
 
 
     /**
+     * Saved talk reply from inside application
      * @NoAdminRequired
      * @NoCSRFRequired
      * @param $data
@@ -193,7 +201,7 @@ class ApiController extends Controller {
 	public function mailsendSwitcher($talk = [], $users = [], $groups = [], $groupsusers = [])
 	{
 		$to = [];
-        $fromUser = $this->mailUser ? $this->mailUser : $this->userId; //$this->userId ? $this->userId : $this->fakeUser;
+        $fromUser = $this->mailUser ? $this->mailUser : $this->userId;
 
         if(!$fromUser)
             return false;
@@ -218,8 +226,7 @@ class ApiController extends Controller {
 
 		return $result;
 	}
-
-
+    
 	/**
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
@@ -272,9 +279,6 @@ class ApiController extends Controller {
         $params = Helper::post();
         $to = explode('@', $params['to']);
         $idhash = explode('+',$to[0]);
-
-
-        //TalkMail::registerEmailDomain($params['config']['']);
 
         if (count($idhash) == 1) {
 
@@ -350,7 +354,8 @@ class ApiController extends Controller {
         $groupsusers = $this->connect->users()->getGroupsUsers();
 
         $users = array_map(function ($item) use (&$author, $from) {
-            if($from == $item['email']) $author = $item['uid'];
+            if($from == $item['email'])
+                $author = $item['uid'];
             return $item['uid'];
         }, $groupsusers);
 
@@ -367,7 +372,7 @@ class ApiController extends Controller {
         $data['status'] = TalkMail::SEND_STATUS_CREATED;
 
         if($insert_id = $this->connect->messages()->insertTask($data)) {
-            $this->fakeUser = $author;
+            $this->mailUser = $author;
             $count_mails = $this->mailsendSwitcher($data, $users);
             return $count_mails;
         }

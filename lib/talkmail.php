@@ -23,14 +23,14 @@ class TalkMail
 
     static public function createAddress($uid) {
         $address = $uid.'@';
-        if(self::$mailDomain)
+        if(self::$mailDomain) {
             $address .= self::$mailDomain;
-        else
-            $address .= \OC::$server->getRequest()->getServerHost();
-        return $address;
+            return $address;
+        }
+        return false;
     }
 
-    static public function registerEmailDomain($domain) {
+    static public function registerMailDomain($domain) {
         self::$mailDomain = $domain;
         return true;
     }

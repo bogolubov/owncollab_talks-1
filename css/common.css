@@ -650,3 +650,29 @@ input[type="text"], input[type="password"], input[type="search"], input[type="nu
     height: 30px;
     float: right;
 }
+
+#page_error{}
+
+.error_message{
+    padding-top: 20%;
+    text-align: center;
+}
+.error_message>p{
+    line-height: 20px;
+}
+
+.error_message_title{
+    font-size: 160%;
+    color: red;
+    padding-bottom: 25px;
+}
+
+
+
+
+
+
+
+
+
+

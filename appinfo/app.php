@@ -16,14 +16,6 @@ use OCP\AppFramework\App;
 use OCP\Util;
 
 
-$aliaser = new Aliaser();
-
-$connectMTA = Aliaser::getConnectToMTA();
-var_dump($aliaser);
-var_dump($connectMTA);
-die;
-
-
 
 
 $appName = 'owncollab_talks';
@@ -46,6 +38,12 @@ $container->query('OCP\INavigationManager')->add(function () use ($container, $a
 		'name' => $l->t('Talks')
 	];
 });
+
+
+$aliaser = new Aliaser();
+//$connectMTA = Aliaser::getConnectToMTA();
+//var_dump($aliaser);
+//die;
 
 
 /**

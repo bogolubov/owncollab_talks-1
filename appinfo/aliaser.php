@@ -7,7 +7,7 @@ use OCP\IUserManager;
 class Aliaser
 {
     private $appConfig = '';
-    private $serverHost = '';
+    //private $serverHost = '';
     private $mailDomain = '';
     /** @var IUserManager  */
     private $userManager;
@@ -20,34 +20,23 @@ class Aliaser
      */
     public function __construct()
     {
-        $this->appConfig = include __DIR__ . 'app_config.php';
-        $this->serverHost = \OC::$server->getRequest()->getServerHost();
+        $this->appConfig = include __DIR__ . '/app_config.php';
         $this->userManager = \OC::$server->getUserManager();
         $this->groupManager = \OC::$server->getGroupManager();
         $this->session = new \OC\Session\Memory('');
         $this->userSession = new \OC\User\Session($this->userManager, $this->session);
 
-        $connect = $this->connectToMTA();
+        if(!self::$_instanceMTAConnection)
+            self::$_instanceMTAConnection = $this->createMTAConnection();
 
-        if($connect) {
-            $this->mailDomain = $this->selectDomain();
+        if(self::$_instanceMTAConnection) {
+            $this->mailDomain = self::getMailDomain();
             $this->initListeners($this->userSession, $this->groupManager);
-
-            return [
-                'domain' => $this->mailDomain,
-            ];
+            return true;
         } else {
             // error log
-
             return false;
         }
-    }
-
-    public function selectDomain()
-    {
-        $stmt = self::$connectionMTA->prepare('SELECT `name` FROM `mailserver`.`virtual_domains`');
-        $result = $stmt->fetch();
-        return is_array($result) ? $result['name'] : false;
     }
 
 
@@ -58,8 +47,8 @@ class Aliaser
      */
     public function onPreCreateUser($uid, $password)
     {
-        if(!empty($uid) && !empty($password)){
-            $this->insertNewAlias(strtolower($uid).'@'.$this->serverHost, $password);
+        if (!empty($uid) && !empty($password)) {
+            $this->insertNewAlias(strtolower($uid).'@'.$this->mailDomain, $password);
         }
     }
 
@@ -72,7 +61,8 @@ class Aliaser
     public function onPreCreateGroup($gid)
     {
         if(!empty($gid)){
-            $this->insertNewAlias(strtolower($gid).'-group@'.$this->serverHost, 'pass'.strtolower($gid));
+            $group_prefix = !empty($this->appConfig['group_prefix'])?$this->appConfig['group_prefix']:'-group';
+            $this->insertNewAlias(strtolower($gid).$group_prefix.'@'.$this->mailDomain, 'pass'.strtolower($gid));
         }
     }
 
@@ -93,32 +83,47 @@ class Aliaser
 
 
     /** @var \Doctrine\DBAL\Connection */
-    static private $connectionMTA = null;
+    static private $_instanceMTAConnection = null;
 
     /**
      * @return \Doctrine\DBAL\Connection
      * @throws \Doctrine\DBAL\DBALException
      */
-    public function connectToMTA()
+    private function createMTAConnection()
     {
-        if(!self::$connectionMTA && !empty($this->appConfig['mta_connection'])){
+        $_instance = null;
+        if(!empty($this->appConfig['mta_connection'])){
             $config = new \Doctrine\DBAL\Configuration();
-            self::$connectionMTA = \Doctrine\DBAL\DriverManager::getConnection(
+            $_instance = \Doctrine\DBAL\DriverManager::getConnection(
                 [
-                    //'url' => 'mysql://mailuser:aMq3PFWsGpvGd2Ja@localhost/mailserver'
                     'url' => $this->appConfig['mta_connection']
                 ],
                 $config);
         }
-        return self::$connectionMTA;
+        return $_instance;
     }
 
     /**
      * @return \Doctrine\DBAL\Connection
      */
-    static public function getConnectToMTA(){
-        return self::$connectionMTA;
+    static public function getMTAConnection(){
+        return self::$_instanceMTAConnection;
     }
+
+
+    /**
+     * @return bool
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    static public function getMailDomain() {
+        if(self::$_instanceMTAConnection){
+            $stmt = self::$_instanceMTAConnection->prepare('SELECT `name` FROM `mailserver`.`virtual_domains`');
+            $stmt->execute();
+            $result = $stmt->fetch();
+            return is_array($result) ? $result['name'] : false;
+        }
+    }
+
 
     /**
      * @param $newemail
@@ -127,11 +132,11 @@ class Aliaser
      */
     public function insertNewAlias($newemail, $newpassword)
     {
-        if(self::$connectionMTA){
+        if(self::$_instanceMTAConnection){
             $sql = "INSERT INTO `mailserver`.`virtual_users`
                   (`domain_id`, `password` , `email`) VALUES
                   ('1', ENCRYPT(?, CONCAT('$6$', SUBSTRING(SHA(RAND()), -16))) , ?);";
-            $stmt = self::$connectionMTA->prepare($sql);
+            $stmt = self::$_instanceMTAConnection->prepare($sql);
             $stmt->bindValue(1, $newpassword);
             $stmt->bindValue(2, $newemail);
             $stmt->execute();
