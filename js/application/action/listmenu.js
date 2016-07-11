@@ -9,7 +9,7 @@ if(App.namespace){App.namespace('Action.Listmenu', function(App) {
          * Enable imitation of Auto Update messages
          * @var boolean autoUpdateOn
          */
-        autoUpdateOn: location.hostname != "owncloud.loc",
+        autoUpdateOn: false, //location.hostname != "owncloud.loc",
 
         /**
          * Auto Update delay microseconds
