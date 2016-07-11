@@ -213,8 +213,8 @@ class ApiController extends Controller {
 		}
 
 		$result =  TalkMail::createMail(
-			[TalkMail::createAddress($fromUser), $fromUser],
-			[TalkMail::createAddress($fromUser .'+'. $talk['hash']), $fromUser],
+			[$fromUser.'@'.$this->mailDomain, $fromUser],
+			[$fromUser.'+'.$talk['hash'].'@'.$this->mailDomain, $fromUser],
 			$to,
 			$talk['title'],
 			$talk['text']
@@ -226,7 +226,7 @@ class ApiController extends Controller {
 
 		return $result;
 	}
-    
+
 	/**
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
@@ -342,7 +342,7 @@ class ApiController extends Controller {
      */
     public function saveTaskTeam($post)
     {
-        try{
+        try {
             $from = $post['from'];
             $title = $post['subject'];
             $message = $post['content'];
