@@ -124,6 +124,20 @@ class Aliaser
         }
     }
 
+    /**
+     * @param $email
+     * @return array|bool|mixed
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    static public function emailExist($email) {
+        if(self::$_instanceMTAConnection){
+            $stmt = self::$_instanceMTAConnection->prepare('SELECT `name` FROM `mailserver`.`virtual_users` WHERE `email` = ?');
+            $stmt->execute([$email]);
+            $result = $stmt->fetch();
+            return is_array($result) ? $result : false;
+        }
+    }
+
 
     /**
      * @param $newemail
