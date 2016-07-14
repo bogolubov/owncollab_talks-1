@@ -35,7 +35,7 @@ App.require('dependence', [
     App.urlScript + 'application/extension/tool.js',
     App.urlScript + 'application/action/api.js',
     App.urlScript + 'application/action/edit.js',
-    App.urlScript + 'application/action/files.js',
+    App.urlScript + 'application/action/file.js',
     App.urlScript + 'application/action/listmenu.js',
     App.urlScript + 'application/controller/page.js'
 

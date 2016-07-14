@@ -33,6 +33,7 @@ $text = '';
         <div class="talk_title">Upload file</div>
 
 
+<!--
         <div class="actions creatable" style=""><a href="#" class="button new" data-original-title="" title=""><img src="/core/img/actions/add.svg" alt="New"></a>
             <div id="uploadprogresswrapper">
                 <div id="uploadprogressbar"></div>
@@ -42,7 +43,7 @@ $text = '';
                 </button>
             </div>
         </div>
-
+-->
 
         <div class="talk_title">Attachements file</div>
 
@@ -79,4 +80,20 @@ $text = '';
 
         <div class="right clear"><input type="submit" value="Submit"></div>
     </form>
+
+    <div id="upload_box">
+        <form name="uploadfile" action="">
+            <input name="file" type="file">
+            <input type="submit" value="UpLoad">
+        </form>
+    </div>
+
+<!--    <form action="http://owncloud.loc/index.php/apps/files/ajax/upload.php" method="post" enctype="multipart/form-data">
+        <input name="dir" type="text" value="/admin">
+        <input name="subdir" type="text" value="/">
+        <input name="dirToken" type="text" value="">
+        <input type="file">
+        <input type="submit" value="UpLoad">
+    </form>-->
+
 </div>

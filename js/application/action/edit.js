@@ -13,6 +13,7 @@ if(App.namespace){App.namespace('Action.Edit', function(App){
 
         _.checkSubscribersEvent();
         _.submitFormEvent();
+        _.submitFileUploadEvent();
     };
 
     _.submitFormEvent = function(){
@@ -95,6 +96,14 @@ if(App.namespace){App.namespace('Action.Edit', function(App){
 
         });
     };
+
+    _.submitFileUploadEvent = function(){
+        jQuery('form[name=uploadfile]');
+
+
+    };
+
+
 
     return _;
 })}
