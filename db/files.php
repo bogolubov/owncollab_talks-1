@@ -11,29 +11,45 @@ namespace OCA\Owncollab_Talks\Db;
 
 class Files
 {
-    /** @var  Connect
-     * share_type - (int) ‘0’ = user; ‘1’ = group; ‘3’ = public link
-     * share_with - (string) user / group id with which the file should be shared
-     * permissions - (int) 1 = read; 2 = update; 4 = create; 8 = delete; 16 = share; 31 = all (default: 31, for public shares: 1)
-     */
+    /** @var  Connect */
     private $connect;
 
+    /** @var  string */
     private $tableName;
+
+    /** @var  \OCA\Owncollab_Talks\Db\Users */
+    private $modelUsers;
+
+    /** @var  \OCA\Owncollab_Talks\Db\Messages */
+    private $modelMessages;
 
     public function __construct($connect, $tableName) {
         $this->connect = $connect;
         $this->tableName = '*PREFIX*' . $tableName;
+        $this->modelUsers = $this->connect->users();
+        $this->modelMessages = $this->connect->messages();
+        //$this->modelFiles = $this->connect->files();
     }
 
+    /**
+     * Get a many entries
+     * @return array|null
+     */
     public function getAll() {
         $files = $this->connect->queryAll("SELECT * FROM ".$this->tableName." ORDER BY displayname, uid");
         return $files;
     }
 
+    /**
+     * Get one record
+     * @param $id
+     * @return null
+     */
     public function getById($id) {
         $file = $this->connect->select("*", $this->tableName, "fileid = :id",[':id' => $id]);
-        return $file;
+        return is_array($file) ? $file[0] : null;
     }
+
 
     public function getByUser($user) {
         $sql = "SELECT activity_id, timestamp, priority, type, user, affecteduser, app, subject, subjectparams, message, messageparams, file, link, object_type, object_id,  fileid, storage, path, path_hash, parent, name, f.mimetype as mimeid, m.mimetype as mimetype, mimepart, size, mtime, storage_mtime, encrypted, unencrypted_size, etag, permissions " .
@@ -46,6 +62,7 @@ class Files
         $filtered = $this->filterDeleted($files, $user);
         return $filtered;
     }
+
 
     public function getByFolder($folder, $user) {
         //echo $folder;
@@ -207,5 +224,98 @@ class Files
         else {
             return false;
         }
+    }
+
+
+    /**
+     * Simple Share File by file ID
+     * @param $fid
+     * @param $uid
+     */
+    public function shareFile($fid, $uid)
+    {
+        $r = [];
+
+        if($file = $this->getById($fid)) {
+
+            $fileOwner = \OC\Files\Filesystem::getOwner($file['path']);
+            $sharetype = $file['mimetype'] == 2 ? 'folder' : 'file';
+            $sharedWith = \OCP\Share::getUsersItemShared('file', $file['fileid'], $fileOwner, false, true);
+            $isenabled = \OCP\Share::isEnabled();
+            $isallowed = \OCP\Share::isResharingAllowed();
+
+            $r = [
+                '$fileOwner' => $fileOwner,
+                '$sharetype' => $sharetype,
+                '$sharedWith' => $sharedWith,
+                '$isenabled' => $isenabled,
+                '$isallowed' => $isallowed,
+            ];
+        }
+
+
+        return $r;
+
+
+
+       /*
+        *
+share_type - (int) ‘0’ = user; ‘1’ = group; ‘3’ = public link
+share_with - (string) user / group id with which the file should be shared
+permissions - (int) 1 = read; 2 = update; 4 = create; 8 = delete; 16 = share; 31 = all (default: 31, for public shares: 1)
+        *
+        *
+        *  $this->prepareUsersForShare();
+        $files = array();
+
+        foreach ($this->files as $id) {
+            $file = $this->Files->getById($id)[0];
+            $fileOwner = \OC\Files\Filesystem::getOwner($file['path']);
+            $sharetype = $file['mimetype'] == 2 ? 'folder' : 'file';
+            $sharedWith = \OCP\Share::getUsersItemShared($sharetype, $file['fileid'], $fileOwner, false, true);
+            $isenabled = \OCP\Share::isEnabled();
+            $isallowed = \OCP\Share::isResharingAllowed();
+            foreach ($this->subscriberToShare as $userid) {
+                if (
+                    isset($file['fileid']) &&
+                    is_array($file) &&
+                    !in_array($userid, $sharedWith) &&
+                    !($userid == $this->author) &&
+                    ($fileOwner == $this->author || $file['permissions'] >= 16) &&
+                    $isenabled &&
+                    $isallowed
+                ) {
+                    //try {
+                    \OCP\Share::shareItem($sharetype, $file['fileid'], \OCP\Share::SHARE_TYPE_USER, $userid, 1);
+                    $files[] = $file['fileid'];
+                    //}
+                    //catch (\Exception $e) {
+                    //	echo $e->getMessage();
+                    //}
+                }
+            }
+        }
+        $this->forSaveData['attachements'] = $files;
+        $this->fileLinks = Helper::makeAttachLinks($files, $this->Files);
+
+*/
+        //print_r($this->fileLinks);
+        //file_put_contents('/tmp/inb.log', "\n\nfileLinks : "print_r($this->fileLinks, true)."\n", FILE_APPEND);
+
+        /* foreach ($_POST['select-files'] as $id => $on) {
+            if ($on == 'on') {
+                $file = $files->getById($id)[0];
+                $fileOwner = \OC\Files\Filesystem::getOwner($file['path']);
+                $sharetype = $file['mimetype'] == 2 ? 'folder' : 'file';
+                $sharedWith = \OCP\Share::getUsersItemShared($sharetype, $file['fileid'], $fileOwner, false, true);
+                foreach ($allusers as $userid => $user) {
+                    if (isset($file['fileid']) && is_array($file) && isset($file['fileid']) && !in_array($userid, $sharedWith) && !($userid == $this->userId)) {
+                        //Helper::shareFile($file['name'], $user, $userid);
+                        \OCP\Share::shareItem($sharetype, $file['fileid'], \OCP\Share::SHARE_TYPE_USER, $userid, 1);
+                        $filesid[] = $id;
+                    }
+                }
+            }
+        } */
     }
 }

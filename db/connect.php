@@ -32,9 +32,10 @@ class Connect
         // Register tables models
         $this->users = new Users($this, 'users');
         $this->messages = new Messages($this, 'collab_messages');
+        $this->files = new Files($this, 'filecache');
 
         //$this->user_message = new UserMessages($this, 'collab_user_message');
-        //$this->files = new Files($this, 'filecache');
+
         //$this->talks = new Talks($this, $this->messages);
         //$this->answers = new Answers($this, $this->messages);
     }

@@ -34,24 +34,23 @@ if(App.namespace){App.namespace('Action.Edit', function(App){
             event.preventDefault();
 
             var form = this;
+            var formValues = Util.formData(form, true);
             var shareElements = App.query('#share_list_elements');
-            var vals = Util.formData(form, true);
 
             // clear share elements
             shareElements.textContent = '';
 
-            if(Util.isObj(vals) && vals['title'].length > 2 && vals['message'].length > 2 &&
-                ( vals['nogroup[]'] || vals['nogroup_users[]'] || vals['groups[]'] || vals['users[]'] )) {
+            if(Util.isObj(formValues) && formValues['title'].length > 2 && formValues['message'].length > 2 &&
+                ( formValues['nogroup[]'] || formValues['nogroup_users[]'] || formValues['groups[]'] || formValues['users[]'] )) {
 
-                for (var key in App.Action.File.selectShareFilesData) {
-
+                // added files for sharing in server side
+                for (var key in App.Action.File.selectFilesData) {
                     var hideInput = Util.createElement('input', {
                         type:'text',
                         name:'share['+key+']',
-                        value: JSON.stringify(App.Action.File.selectShareFilesData[key]),
+                        value: JSON.stringify(App.Action.File.selectFilesData[key]),
                         hidden:'hidden'
                     });
-
                     shareElements.appendChild(hideInput);
                 }
 
@@ -68,14 +67,14 @@ if(App.namespace){App.namespace('Action.Edit', function(App){
      */
     _.submitFormReplyEvent = function(){
         jQuery('form#quick-reply').submit(function(event) {
-            var vals = Util.formData(this, true);
+            var formValues = Util.formData(this, true);
             App.Controller.Page.errorLineClose();
             event.preventDefault();
 
             jQuery('input[type=submit]', this).prop( "disabled", true );
             jQuery('textarea[name=message]', this).prop( "disabled", true );
 
-            if(!Util.isEmpty(vals['hash']) && !Util.isEmpty(vals['message'])) {
+            if(!Util.isEmpty(formValues['hash']) && !Util.isEmpty(formValues['message'])) {
 
                 App.Action.Api.request('save_reply', function(response) {
                     if(!Util.isObj(response) || response['error'] ) {
@@ -91,7 +90,7 @@ if(App.namespace){App.namespace('Action.Edit', function(App){
                         }else
                             jQuery("ul.listmenu>li[data-id="+response['parent_id']+"]").click();
                     }
-                }, vals);
+                }, formValues);
             }
             else {
                 jQuery('input[type=submit]', this).prop( "disabled", false );

@@ -139,20 +139,21 @@ class ApiController extends Controller {
     public function saveTalk()
     {
         $params = [
-            'post'          => $_POST,
+            //'post'          => $_POST,
             'error'         => null,
             'errorinfo'     => null,
             'insert_id'     => null,
             'mail_is_send'  => false,
         ];
 
-        return new DataResponse($params);
 
         if(Helper::post('title') && Helper::post('message')) {
 
             $groupsusers = [];
             $all_users = $users = Helper::post('users', false);
             $groups = Helper::post('groups', false);
+            $share_files = Helper::post('share', false);
+            $attachements = '';
 
             if(!empty($groups)) {
                 $groupsusers = $this->connect->users()->getGroupsUsersList();
@@ -164,20 +165,105 @@ class ApiController extends Controller {
                 }
             }
 
+            if(!empty($share_files)) {
+
+                $files_id_list = array_keys($share_files);
+                $shared_files = [];
+
+                $params['xxx'] = [];
+
+                foreach ($share_files as $_fid => $_file) {
+
+                    $file = $this->connect->files()->getById($_fid);
+                    $owner = \OC\Files\Filesystem::getOwner($file['path']);
+                    $shareType = $file['mimetype'] == 2 ? 'folder' : 'file';
+                    $sharedWith = \OCP\Share::getUsersItemShared($shareType, $file['fileid'], $owner, false, true);
+                    $isEnabled = \OCP\Share::isEnabled();
+                    $isAllowed = \OCP\Share::isResharingAllowed();
+
+/*                    $params['file___'.$_fid] = [
+                        '$_fid' => $_fid,
+                        '$file' => $file,
+                        '$owner' => $owner,
+                        '$shareType' => $shareType,
+                        '$sharedWith' => $sharedWith,
+                        '$isEnabled' => $isEnabled,
+                        '$isAllowed' => $isAllowed,
+                    ];*/
+
+                    if($isEnabled && $isAllowed) {
+                        $sharedUsers = is_array($sharedWith) ? array_values($sharedWith) : [];
+                        foreach ($all_users as $_uid) {
+
+                            if($owner == $_uid && in_array($_uid, $sharedUsers))
+                                continue;
+
+                            $_result_token = \OCP\Share::shareItem($shareType, $_fid, \OCP\Share::SHARE_TYPE_USER, $_uid, 1);
+
+                            $shared_files[] = [
+                                'uid' => $_uid,
+                                'fileid' => $_fid,
+                                'result' => $_result_token,
+                                'ownerid' => $owner,
+                                'is_shared' => in_array($_uid, $sharedUsers),
+                            ];
+
+                        }
+                    }
+                }
+
+                $params['shared_files'] = $shared_files;
+
+                /*if($isEnabled && $isAllowed) {
+                    foreach ($all_users as $_uid) {
+                        if($owner != $_uid) {
+                            foreach ($share_files as $_fid => $_file) {
+                                $_result_token = \OCP\Share::shareItem($shareType, $_fid, \OCP\Share::SHARE_TYPE_USER, $_uid, 1);
+                                $shared_files[] = ['uid' => $_uid, 'fileid' => $_fid, 'result' => $_result_token];
+                            }
+                        }
+                    }
+                }*/
+
+
+
+                //$params['$all_users'] = $all_users;
+
+
+
+                /*
+                $sharetype = $file['mimetype'] == 2 ? 'folder' : 'file';
+                $sharedWith = \OCP\Share::getUsersItemShared('file', $file['fileid'], $fileOwner, false, true);
+                $isenabled = \OCP\Share::isEnabled();
+                $isallowed = \OCP\Share::isResharingAllowed();*/
+
+                //$params['$file'] = $file; //$this->connect->files()->shareFile($files_id_list[0], $this->userId);
+
+
+
+
+                //$params['flist'] = join(',',$files_id_list);
+                //$params['share_json'] = json_encode($files_id_list);
+                //$params['all_users'] = $all_users;
+
+                $attachements = json_encode($files_id_list);
+            }
+
+            return new DataResponse($params);
+
             $data['rid'] = 0;
             $data['date'] = date("Y-m-d H:i:s", time());
             $data['title'] = strip_tags(Helper::post('title'));
             $data['text'] = Helper::post('message');
-            $data['attachements'] = '';
+            $data['attachements'] = $attachements;
             $data['author'] = $this->userId;
             $data['subscribers'] = json_encode(['groups'=>$groups, 'users'=>$users]);
             $data['hash'] = TalkMail::createHash($data['title']);
             $data['status'] = TalkMail::SEND_STATUS_CREATED;
 
             if($params['insert_id'] = $this->connect->messages()->insertTask($data)) {
-                $params['resultInsertTask'] = $params['insert_id'];
+                $params['result_insert_task'] = $params['insert_id'];
                 $params['mail_is_send'] = $this->mailsendSwitcher($data, $all_users, $groups, $groupsusers);
-
             }
 
             $params['data'] = $data;
@@ -383,54 +469,6 @@ class ApiController extends Controller {
     }
 
 
-
-    /**
-     * @PublicPage
-     * @NoAdminRequired
-     * @NoCSRFRequired
-     * @param $data
-     * @return DataResponse
-     */
-    /*public function uploadfirst($data = [])
-    {
-        $params = [
-            'error'         => null,
-            'errorinfo'     => '',
-            'requesttoken'  => (!\OC_Util::isCallRegistered()) ? '' : \OC_Util::callRegister()
-        ];
-
-        return new DataResponse($params);
-    }*/
-
-
-
-    /**
-     * get_file_list
-     * @param $fileid
-     * @return DataResponse
-    public function getFile($fileid) {
-    $files = $this->connect->files();
-    $file = $files->getById($fileid);
-    $params = array(
-    'file' => $file,
-    'requesttoken'  => (!\OC_Util::isCallRegistered()) ? '' : \OC_Util::callRegister(),
-    );
-    $view = Helper::renderPartial($this->appName, 'api.uploadedfiles', $params);
-    //$view = "User files!";
-
-    $params = array(
-    'user' => $this->userId,
-    'file' => $file,
-    'view' => $view,
-    'requesttoken'  => (!\OC_Util::isCallRegistered()) ? '' : \OC_Util::callRegister(),
-    );
-
-    return new DataResponse($params);
-    }
-     */
-
-
-
     /**
      * @PublicPage
      * @NoAdminRequired
@@ -445,6 +483,7 @@ class ApiController extends Controller {
         );
 
         $fileList = $this->createFileListTree('/', '', true);
+
         $params['file_list'] = $fileList;
         $params['view'] = Helper::renderPartial($this->appName, 'part.userfilelist', $params);
 
@@ -484,61 +523,6 @@ class ApiController extends Controller {
         }
 
         return $this->_file_list_tree;
-    }
-
-
-
-    /**
-     * @PublicPage
-     * @NoAdminRequired
-     * @NoCSRFRequired
-     * @param $data
-     * @return DataResponse
-     */
-    public function getfolderfiles($data = [])
-    {
-        //$files = $this->connect->files();
-        //$files->getFolderPath($folderid, $this->userId);
-        //, $this->userId
-        //$userfiles = \OCA\Files\Helper::getFiles('../'.$path);
-
-        $params = array(
-            'data' => $data,
-            'user' => $this->userId,
-            'requesttoken'  => (!\OC_Util::isCallRegistered()) ? '' : \OC_Util::callRegister(),
-        );
-
-        $path = $this->connect->files()->getFolderPath($data['id']);
-        $params['$path'] = $path;
-
-        //$path = '/Talks/';
-        //$file_1 = \OCA\Files\Helper::getFiles($path);
-        //$params['$path'] = $path;
-        //$params['$file_1'] = $file_1;
-        //$userfiles = \OCA\Files\Helper::getFiles('/'.$path);
-
-        /*
-                        foreach($userfiles as $f => $file){
-                            $userfiles[$f] = \OCA\Files\Helper::formatFileInfo($file);
-                            $userfiles[$f]['mtime'] = $userfiles[$f]['mtime']/1000;
-                        }
-
-                                $params = array(
-                                    'files' => $userfiles,
-                                    'folder' => $userfiles,
-                                    'requesttoken'  => (!\OC_Util::isCallRegistered()) ? '' : \OC_Util::callRegister(),
-                                );
-                                $view = Helper::renderPartial($this->appName, 'part.folderfiles', $params);
-                                //$view = "User files!";
-
-                                $params['files'] = $userfiles;
-                                $params['view'] = $view;*/
-
-
-
-
-
-        return new DataResponse($params);
     }
 
 
