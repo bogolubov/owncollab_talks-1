@@ -109,7 +109,7 @@
         var link = document.createElement('link'),
             id = "src-" + Math.random().toString(32).slice(2);
 
-        link.href = (src.substr(-4) === '.css') ? src : src + '.css';
+        link.href = (url.substr(-4) === '.css') ? url : url + '.css';
         link.rel = 'stylesheet';
         link.id = id;
         link.onload = onload;

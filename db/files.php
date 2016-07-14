@@ -61,17 +61,24 @@ class Files
         return $filtered;
     }
 
-    public function getFolderPath($folderid) {
-        $folderid = !is_int($folderid) ? substr($folderid, 7) : $folderid;
-        //echo $folder;
-        $sql = "SELECT path " .
-            " FROM ".$this->tableName.
-            " WHERE fileid = ".$folderid;
-        $folder = $this->connect->queryAll($sql)[0];
+
+
+    public function getFolderPath($folderId) {
+
+        $folderId = !is_numeric($folderId) ? substr($folderId, 7) : $folderId;
+        return $folderId;
+
+        /*$sql = "SELECT path FROM ".$this->tableName." WHERE fileid = ?";
+        $folder = $this->connect->query($sql, [$folderId]);
+
         $path = explode('/', $folder['path']);
+
         unset($path[0]);
-        return implode('/', $path);
+        return implode('/', $path);*/
     }
+
+
+
 
     public function getByIdList($idlist, $user) {
         if (is_array($idlist)) {

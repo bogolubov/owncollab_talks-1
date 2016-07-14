@@ -13,16 +13,49 @@ if(App.namespace){App.namespace('Action.Edit', function(App){
 
         _.checkSubscribersEvent();
         _.submitFormEvent();
-        _.submitFileUploadEvent();
+
+
+        App.style('/apps/owncollab_talks/css/uploadfile.css');
+
+        App.require('jq_uploadfile', [
+            App.urlScript + 'libs/jquery.form.js',
+            App.urlScript + 'libs/jquery.uploadfile.js'
+        ], function(){
+            _.submitFileUploadEvent();
+            _.attachUserFileList();
+        }).requireStart('jq_uploadfile');
+
     };
 
     _.submitFormEvent = function(){
+
         jQuery('form#begin-talk').submit(function(event){
+
             event.preventDefault();
 
-            var vals = Util.formData(this, true);
+            var form = this;
+            var shareElements = App.query('#share_list_elements');
+            var vals = Util.formData(form, true);
+
+            // clear share elements
+            shareElements.textContent = '';
+
             if(Util.isObj(vals) && vals['title'].length > 2 && vals['message'].length > 2 &&
                 ( vals['nogroup[]'] || vals['nogroup_users[]'] || vals['groups[]'] || vals['users[]'] )) {
+
+                for (var key in App.Action.File.selectShareFilesData) {
+
+                    var hideInput = Util.createElement('input', {
+                        type:'text',
+                        name:'share['+key+']',
+                        value: JSON.stringify(App.Action.File.selectShareFilesData[key]),
+                        hidden:'hidden'
+                    });
+
+                    shareElements.appendChild(hideInput);
+                }
+
+                //console.log(Util.formData(form, true));
                 this.submit();
             }else{
                 App.Controller.Page.errorLine("Не все поля заполненны!");
@@ -34,7 +67,7 @@ if(App.namespace){App.namespace('Action.Edit', function(App){
      *
      */
     _.submitFormReplyEvent = function(){
-        jQuery('form#quick-reply').submit(function(event){
+        jQuery('form#quick-reply').submit(function(event) {
             var vals = Util.formData(this, true);
             App.Controller.Page.errorLineClose();
             event.preventDefault();
@@ -96,14 +129,67 @@ if(App.namespace){App.namespace('Action.Edit', function(App){
 
         });
     };
+    _._last_uploads_result = [];
 
-    _.submitFileUploadEvent = function(){
-        jQuery('form[name=uploadfile]');
+    /**
+     * @namespace App.Action.Edit.submitFileUploadEvent
+     * Uses jquery plugin - http://hayageek.com/docs/jquery-upload-file.php
+     */
+    _.submitFileUploadEvent = function () {
+        var
+            i = 0,
+            fileList,
+            uploadConfig = {
+                url: App.url + "/api/uploadfirst",
+                fileName:"file"
+            };
 
+        uploadConfig.onSelect = function (files) {fileList = files};
+        uploadConfig.onSuccess = function (files, response, xhr, pd) {
+            if(typeof fileList === 'object' && fileList.length > 0) {
+                // all files upload
+                for(i = 0; i < fileList.length; i ++) {
+                    App.Action.File.uploadFile(fileList[i], function (response) {
+                        console.log('File upload complete! Response:', response);
+                        _._last_uploads_result[i] = response;
 
+                        //http://owncloud.loc/index.php/apps/files/ajax/getstoragestats.php
+                    });
+                }
+            }
+        };
+        jQuery("#uploadfile_plugin").uploadFile(uploadConfig);
     };
 
+    /**
+     * @namespace App.Action.Edit.attachUserFileList
+     * Uses jquery plugin - http://hayageek.com/docs/jquery-upload-file.php
+     */
+    _.attachUserFileList = function () {
 
+        var loadIcon = Util.createElement('div', {'class':'loader_files'}, '<div class="loader_min"></div>');
+
+        jQuery("#attach_files_btn").click(function(){
+
+            App.inject("#attach_files", loadIcon);
+
+            App.Action.Api.request('getuserfiles', function (response) {
+
+                console.log('getuserfiles:', response);
+
+                if (response.requesttoken) {
+                    App.requesttoken = response.requesttoken;
+
+                    App.inject("#attach_files", response.view);
+                    jQuery('#attach_files').css('border', '1px solid #ddd');
+
+                    App.Action.File.fileListSourceData = response['file_list'] ? response['file_list'] : [];
+                    App.Action.File.selectShareFiles("#attach_files");
+                }
+            });
+        });
+
+    };
 
     return _;
 })}

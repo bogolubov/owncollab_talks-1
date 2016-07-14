@@ -396,6 +396,20 @@ class ApiController extends Controller {
 		return new DataResponse($params);
 	}
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	/**
 	 * @param int $talkid
 	 * @param string $text
@@ -604,6 +618,11 @@ class ApiController extends Controller {
 
 		return new DataResponse($params);
 	}
+
+
+
+
+
 
 	/**
 	 * @param array $message

@@ -21,13 +21,6 @@ if(App.namespace){App.namespace('Controller.Page', function(App){
 
         if(['/','/begin'].indexOf(App.uriPath)!==-1) {
             // init visual editor
-            //App.style('/apps/files/css/upload.css');
-            // App.require('file', [
-            //     '/apps/files/js/jquery.fileupload.js',
-            //     '/apps/files/js/file-upload.js'
-            // ], function(){
-            //
-            // }).requireStart('file');
             App.Action.Edit.init();
         }
 

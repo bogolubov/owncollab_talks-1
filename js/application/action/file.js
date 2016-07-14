@@ -4,7 +4,11 @@ if(App.namespace){App.namespace('Action.File', function(App){
      */
     var _ = {};
 
-    _.date = function(){};
+    /**
+     *
+     * @namespace App.Action.File.__
+     */
+    _.__ = function(){};
 
 
     _.clickUpload = function(){
@@ -31,7 +35,7 @@ if(App.namespace){App.namespace('Action.File', function(App){
     };
 
     /**
-     * @namespace App.Action.uploadFile
+     * @namespace App.Action.File.uploadFile
      * @param myFile
      * @param callback
      * @returns {boolean}
@@ -41,29 +45,61 @@ if(App.namespace){App.namespace('Action.File', function(App){
         var fd = new FormData();
         var success = false;
         fd.append('files[]', myFile);
-        fd.append('requesttoken', $('head').attr('data-requesttoken'));
+        fd.append('requesttoken', jQuery('head').attr('data-requesttoken'));
         fd.append('dir', '/');
         fd.append('file_directory', 'Talks');
 
-        $.ajax({
+        jQuery.ajax({
             url: "/index.php/apps/files/ajax/upload.php",
             type: "POST",
             data: fd,
             processData: false,
             contentType: false,
             success: function(response) {
-                callback.call({}, response);
+                if(typeof callback === 'function')
+                    callback.call({}, response);
                 //success = response;
-                console.log(response);
+                console.log('uploadFile::success>>>', response);
             },
             error: function(jqXHR, textStatus, errorMessage) {
-                console.log(errorMessage); // Optional
+                console.log('uploadFile::error>>>', textStatus, errorMessage);
             }
         });
         return success;
     };
 
+    /**
+     * @namespace App.Action.File.fileListSourceData
+     */
+    _.fileListSourceData = [];
+
+    /**
+     * @namespace App.Action.File.selectFilesData
+     */
+    _.selectFilesData = {};
+    /**
+     * @namespace App.Action.File.selectShareFiles
+     */
+    _.selectShareFiles = function(parentElement) {
+
+        jQuery('input[type=checkbox]', parentElement).change(function(event) {
+            var target = event['target'];
+            if(target.checked) {
+                var info = {};
+                info['name'] = target.getAttribute('data-name');
+                info['path'] = target.getAttribute('data-path');
+                info['id'] = target.getAttribute('data-id');
+                info['parentid'] = target.getAttribute('data-parentid');
+                _.selectFilesData[info['id']] = info;
+            } else {
+                var _id = target.getAttribute('data-id');
+                if(_.selectFilesData[_id] !== undefined)
+                    delete _.selectFilesData[_id];
+            }
+        });
+
+    };
 
 
-    return _;
+        return _;
 })}

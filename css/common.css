@@ -164,6 +164,24 @@ ul.messagelist li.title .id {
 	font-weight: bold;
 }
 
+.btn_default{
+    display: inline-block;
+    text-align: center;
+    line-height: 18px;
+    padding: 4px 10px;
+    background-color: rgba(240,240,240,.9);
+    border-radius: 3px;
+    font-weight: 600;
+    color: #555;
+    border: 1px solid rgba(240,240,240,.9);
+    cursor: pointer;
+}
+.btn_default:hover{
+    background-color: rgba(255, 255, 255, .95);
+    color: #111;
+}
+
+
 /* Message list */
 .messagelist {
 	width:100%;
@@ -667,12 +685,50 @@ input[type="text"], input[type="password"], input[type="search"], input[type="nu
     padding-bottom: 25px;
 }
 
+/* Upload file views*/
+
+#upload_box{
+    /*display: table;*/
+    width: 100%;
+}
+/*#upload_box>div:nth-child(1), #upload_box>div:nth-child(2){
+    display: table-cell;
+    vertical-align: top;
+}
+#upload_box>div:nth-child(2){}*/
 
 
+.ajax-file-upload-statusbar{
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+}
 
+.ajax-file-upload-bar {
+    background-color: #ddd;
+}
 
+#attach_files{
+	padding: 5px 5px;
+	max-height: 300px;
+	overflow-x: auto;
+	margin-top: 5px;
+}
+#attach_files .file_list_icon{
+	width: 25px;
+	padding-top: 2px;
+}
+#attach_files .file_list_checkbox{}
 
+.loader_files{
 
+}
+.loader_files .loader_min{
+	margin: 50px auto;
+	display: block;
+	float: none;
+}
 
 
 
