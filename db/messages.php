@@ -55,15 +55,18 @@ class Messages
     public function getMy($id)
     {
         $all = $this->getAll();
-        $message = array_filter($all, function ($item) use ($id) {
-            try {
-                $subscribers = json_decode($item['subscribers'], true);
-                return isset($subscribers['users']) && in_array($id, $subscribers['users']);
-            } catch (\Exception $error) {
-                return false;
-            }
-        });
-        return $message;
+
+        if(is_array($all)) {
+            $message = array_filter($all, function ($item) use ($id) {
+                try {
+                    $subscribers = json_decode($item['subscribers'], true);
+                    return isset($subscribers['users']) && in_array($id, $subscribers['users']);
+                } catch (\Exception $error) {
+                    return false;
+                }
+            });
+            return $message;
+        }
     }
 
     /**

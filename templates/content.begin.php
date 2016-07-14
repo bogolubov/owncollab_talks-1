@@ -32,6 +32,18 @@ $text = '';
 
         <div class="talk_title">Upload file</div>
 
+
+        <div class="actions creatable" style=""><a href="#" class="button new" data-original-title="" title=""><img src="/core/img/actions/add.svg" alt="New"></a>
+            <div id="uploadprogresswrapper">
+                <div id="uploadprogressbar"></div>
+                <button class="stop icon-close" style="display:none">
+					<span class="hidden-visually">
+						Cancel upload</span>
+                </button>
+            </div>
+        </div>
+
+
         <div class="talk_title">Attachements file</div>
 
         <!--

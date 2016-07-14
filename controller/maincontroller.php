@@ -147,10 +147,11 @@ class MainController extends Controller
      */
     public function my()
     {
+        $messages = $this->connect->messages()->getMy($this->userId);
         $data = [
             'menu' => 'my',
             'content' => 'list',
-            'messages' => $this->connect->messages()->getMy($this->userId),
+            'messages' => $messages,
         ];
         return new TemplateResponse($this->appName, 'main', $data);
     }

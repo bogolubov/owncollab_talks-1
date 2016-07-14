@@ -64,12 +64,12 @@ class Connect
      * @param $fields
      * @param $table
      * @param null $where
-     * @param null $params
+     * @param array $params
      * @return mixed
      */
-    public function select($fields, $table, $where = null, $params = null) {
+    public function select($fields, $table, $where = null, $params = []) {
         $sql = "SELECT " . $fields . " FROM " . $table . ($where ? " WHERE " . $where : "") . ";";
-        return  $this->queryAll($sql, $params);
+        return  $this->queryAll($sql, (array) $params);
     }
 
     /**
