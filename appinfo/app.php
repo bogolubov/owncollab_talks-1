@@ -16,8 +16,6 @@ use OCP\AppFramework\App;
 use OCP\Util;
 
 
-
-
 $appName = 'owncollab_talks';
 $app = new App($appName);
 $container = $app->getContainer();
@@ -39,11 +37,10 @@ $container->query('OCP\INavigationManager')->add(function () use ($container, $a
 	];
 });
 
-
-$aliaser = new Aliaser();
-//$connectMTA = Aliaser::getConnectToMTA();
-//var_dump($aliaser);
-//die;
+/**
+ * Aliaser class a listen the events "create new users" and "create new group"
+ */
+$aliaser = new Aliaser($appName);
 
 
 /**
@@ -56,7 +53,7 @@ Util::addTranslations($appName);
 /**
  * Common styles and scripts
  */
-if(Helper::isAppPage($appName)){
+if(Helper::isAppPage($appName)) {
 	Util::addStyle($appName, 'common');
 	Util::addScript($appName, 'libs/ns.application');
 	Util::addScript($appName, 'application/init');

@@ -62,12 +62,21 @@ class ApiController extends Controller {
      * @NoCSRFRequired
      */
     public function index() {
+
         $key = Helper::post('key');
         $data = Helper::post('data',false);
         $pid = Helper::post('pid');
         $uid = Helper::post('uid');
 
-        if(!$this->mailDomain) return new DataResponse(['error'=>'Email domain is undefined']);
+        if(!$this->mailDomain)
+            return new DataResponse(['error'=>'Email domain is undefined']);
+
+        // added base needed params global static object
+        Helper::val([
+            'userId'  => $this->userId,
+            'appName' => $this->appName,
+            'mailDomain' => $this->mailDomain,
+        ]);
 
         if(method_exists($this, $key)) {
             TalkMail::registerMailDomain($this->mailDomain);
@@ -210,34 +219,20 @@ class ApiController extends Controller {
             $data['hash'] = TalkMail::createHash($data['title']);
             $data['status'] = TalkMail::SEND_STATUS_CREATED;
 
-            /*if($params['insert_id'] = $data['id'] = $this->connect->messages()->insertTask($data)) {
-
-                $data['title'] = "Owncollab Talks " . $data['title'];
-                $data['text'] = Helper::renderPartial($this->appName, 'emails/begin', [
-                    'message' => $data,
-                    'attachements_info' => $attachements_info,
-                ]);
-                //$params['mail_is_send'] = $this->mailsendSwitcher($data, $all_users, $groups, $groupsusers);
-            }*/
-
-            $data['email_body'] = Helper::renderPartial($this->appName, 'emails/begin', [
-                'message' => $data,
-                'mail_domain' => $this->mailDomain,
-                'attachements_info' => $attachements_info,
-            ]);
+            /**/
+            if($params['insert_id'] = $data['id'] = $this->connect->messages()->insertTask($data)) {
+                $params['mail_is_send'] = $this->mailsendSwitcher($data, $all_users, $groups, $groupsusers, $attachements_info);
+            }
 
             $params['data'] = $data;
         }
-
-        //var_dump($params);
-        echo $data['email_body'];
-        exit;
 
         if($params['insert_id']) {
             Helper::cookies('goto_message', $params['insert_id']);
             header("Location: /index.php/apps/owncollab_talks/started");
             exit;
         }
+
         return new DataResponse($params);
     }
 
@@ -249,9 +244,10 @@ class ApiController extends Controller {
      * @param $users
      * @param $groups
      * @param $groupsusers
+     * @param $attaches
      * @return bool|int|string
      */
-    public function mailsendSwitcher($talk = [], $users = [], $groups = [], $groupsusers = [])
+    public function mailsendSwitcher($talk = [], $users = [], $groups = [], $groupsusers = [], $attaches = [])
     {
         $to = [];
         $fromUser = $this->mailUser ? $this->mailUser : $this->userId;
@@ -265,7 +261,14 @@ class ApiController extends Controller {
                 $to[] = [$_userData['email'], $_userData['displayname']];
         }
 
-        $result =  TalkMail::createMail(
+        $talk['text'] = Helper::renderPartial($this->appName, 'emails/begin', [
+            'user_id' => $this->userId,
+            'message' => $talk,
+            'mail_domain' => $this->mailDomain,
+            'attachements_info' => $attaches,
+        ]);
+
+        $result = TalkMail::createMail(
             [$fromUser.'@'.$this->mailDomain, $fromUser],
             [$fromUser.'+'.$talk['hash'].'@'.$this->mailDomain, $fromUser],
             $to,

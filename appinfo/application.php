@@ -15,9 +15,45 @@ use \OC\AppFramework\DependencyInjection\DIContainer;
 class Application extends App {
 
     public function __construct ( array $urlParams = [] ) {
-        $appName = Application::appName('owncollab_talks');
+
+        // Static saved the application name
+        $appName = Helper::setAppName('owncollab_talks');
         parent::__construct($appName, $urlParams);
         $container = $this->getContainer();
+
+
+        /**
+         * App Config Control
+         */
+        $container->registerService('MTAConfig', function (IAppContainer $c) use ($appName)
+        {
+            $mtaConfigFile  = \OC_App::getAppPath($appName) . '/appinfo/config.php';
+            $config         = Helper::includePHP($mtaConfigFile);
+            $mailDomain     = Aliaser::getMailDomain();
+
+            $hasEmptyParams = empty($config['mail_domain']) || empty($config['mail_domain']) || empty($config['mail_domain']);
+
+            if($hasEmptyParams || !$config['installed']) {
+
+                $updateResult = $this->updateAppConfig([
+                    'file_path'   => $mtaConfigFile,
+                    'mail_domain' => $mailDomain,
+                    'server_host' => Helper::val('serverHost'),
+                    'site_url'    => Helper::val('urlFull'),
+                ]);
+
+                if($updateResult)
+                    $config = Helper::includePHP($mtaConfigFile);
+            }
+
+            Helper::val([
+                'mtaConfig' => $config,
+                'mtaConfigFile' => $mtaConfigFile,
+                'mailDomain' => $mailDomain
+            ]);
+
+            return $config;
+        });
 
         /**
          * Core for application registers service
@@ -60,6 +96,9 @@ class Application extends App {
          * Controllers
          */
         $container->registerService('ApiController', function(DIContainer $c) {
+
+            $c->query('MTAConfig');
+
             return new ApiController(
                 $c->query('AppName'),
                 $c->query('Request'),
@@ -72,6 +111,9 @@ class Application extends App {
 
 
         $container->registerService('MainController', function(DIContainer $c) {
+
+            $c->query('MTAConfig');
+
             return new MainController(
                 $c->query('AppName'),
                 $c->query('Request'),
@@ -85,9 +127,49 @@ class Application extends App {
 
     }
 
-    public static function appName ($name = null){
-        static $_appName;
-        if (!empty($name)) $_appName = $name;
-        return $_appName;
+
+    /**
+     * @param array $params ['file_path'=>null,'mail_domain'=>null,'server_host'=>null,'site_url'=>null]
+     * @return mixed
+     */
+    public function updateAppConfig(array $params)
+    {
+        $overwrite   = $putResult = false;
+
+        $file_path   = $params['file_path'];
+        $mail_domain = $params['mail_domain'];
+        $server_host = $params['server_host'];
+        $site_url    = $params['site_url'];
+
+        $fileLines   = file($file_path);
+        $len = count($fileLines);
+
+        for ($i = 0; $i < $len; $i ++) {
+            if(strpos($fileLines[$i], 'mail_domain') !== false) {
+                $overwrite = true;
+                $fileLines[$i] = "    'mail_domain' => '{$mail_domain}',\n";
+            }
+            else if(strpos($fileLines[$i], 'server_host') !== false) {
+                $overwrite = true;
+                $fileLines[$i] = "    'server_host' => '{$server_host}',\n";
+            }
+            else if(strpos($fileLines[$i], 'site_url') !== false) {
+                $overwrite = true;
+                $fileLines[$i] = "    'site_url' => '{$site_url}',\n";
+            }
+            else if(strpos($fileLines[$i], 'installed') !== false) {
+                $overwrite = true;
+                $fileLines[$i] = "    'installed' => true,\n";
+            }
+        }
+        if($overwrite) {
+            if(!is_writable($file_path)) {
+                chmod($file_path, 0777);
+            }
+            $putResult = file_put_contents($file_path, join("", $fileLines));
+            return $putResult;
+        }
+        return $overwrite;
     }
+
 }

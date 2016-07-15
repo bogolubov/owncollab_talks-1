@@ -2,14 +2,24 @@
 
 namespace OCA\Owncollab_Talks\AppInfo;
 
+use OCA\Owncollab_Talks\Helper;
+use OCP\IGroupManager;
 use OCP\IUserManager;
 
 class Aliaser
 {
-    private $appConfig = '';
-    //private $serverHost = '';
+    /**
+     * @var array $appConfig
+     * @var string $mailDomain
+     * @var IUserManager $userManager
+     * @var IGroupManager $groupManager
+     * @var \OC\Session\Memory $session
+     * @var \OC\User\Session $userSession
+     */
+
+    private $appName = null;
+    private $appConfig = null;
     private $mailDomain = '';
-    /** @var IUserManager  */
     private $userManager;
     private $groupManager;
     private $session;
@@ -17,14 +27,16 @@ class Aliaser
 
     /**
      * Aliaser constructor.
+     * @param $appName
      */
-    public function __construct()
+    public function __construct($appName)
     {
-        $this->appConfig = include __DIR__ . '/app_config.php';
-        $this->userManager = \OC::$server->getUserManager();
+        $this->appName      = $appName;
+        $this->appConfig    = Helper::includePHP(\OC_App::getAppPath($appName) . '/appinfo/config.php');
+        $this->userManager  = \OC::$server->getUserManager();
         $this->groupManager = \OC::$server->getGroupManager();
-        $this->session = new \OC\Session\Memory('');
-        $this->userSession = new \OC\User\Session($this->userManager, $this->session);
+        $this->session      = new \OC\Session\Memory('');
+        $this->userSession  = new \OC\User\Session($this->userManager, $this->session);
 
         if(!self::$_instanceMTAConnection)
             self::$_instanceMTAConnection = $this->createMTAConnection();
@@ -60,8 +72,11 @@ class Aliaser
      */
     public function onPreCreateGroup($gid)
     {
-        if(!empty($gid)){
-            $group_prefix = !empty($this->appConfig['group_prefix'])?$this->appConfig['group_prefix']:'-group';
+        if(!empty($gid)) {
+            $group_prefix = !empty($this->appConfig['group_prefix'])
+                ? $this->appConfig['group_prefix']
+                : '-group';
+
             $this->insertNewAlias(strtolower($gid).$group_prefix.'@'.$this->mailDomain, 'pass'.strtolower($gid));
         }
     }
@@ -155,6 +170,9 @@ class Aliaser
             $stmt->bindValue(2, $newemail);
             $stmt->execute();
         }
+
     }
+
+
 
 }

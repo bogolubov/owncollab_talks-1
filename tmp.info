@@ -136,6 +136,8 @@ CREATE TABLE `oc_collab_messages` (
 -------------------------------------------------------------------
 
 
+
+
   2 =>
     array (size=2)
       'info' =>
@@ -175,6 +177,72 @@ CREATE TABLE `oc_collab_messages` (
 -------------------------------------------------------------------
 
 
+    /**
+     * @param $path
+     * @return array
+     */
+    static public function linkOpenFile($path)
+    {
+        //$path = '/'.trim($path, '/');
+        //$path = '/admindev/files/Talks/art6.jpg';
+        //$path = '/files/Talks/art6.jpg';
+        $path = '/Talks/art6.jpg';
+        //$pathAbsolute = \OC::$SERVERROOT . '/data/' . $path;
+
+        $res = [];
+        $res['path'] = $path;
+
+        //$view = new \OC\Files\View('/'.self::getUID().'/files');
+        //$fileInfo = $view->getFileInfo($path, false);
+        $fileInfo = \OC\Files\Filesystem::getFileInfo($path, true);
+        $res['fileInfo'] = $fileInfo;
+
+        /*if($fileInfo) {
+            $formatFileInfo = \OCA\Files\Helper::formatFileInfo($fileInfo);
+            $res['formatFileInfo'] = $formatFileInfo;
+        }*/
+
+        //$res['pathAbsolute'] = $pathAbsolute;
+
+        //if(\OC\Files\Filesystem::is_file($path))
+        //    $res['is_file'] = $pathAbsolute; //\OC\Files\Filesystem::getFileInfo($path);
+
+
+
+        //$res['path'] = \OC::$SERVERROOT . '/data/' . $path;
+        /*
+        if($fileInfo = $view->getFileInfo($path)) {
+            $formatFileInfo = \OCA\Files\Helper::formatFileInfo($fileInfo);
+
+            $res['fileInfo'] = $fileInfo;
+            $res['formatFileInfo'] = $formatFileInfo;
+
+
+        }*/
+        //if(substr($path, 0, 6) === 'files/')
+        //    $path = substr($path, 6);
+
+
+
+        //$res['view'] = $view;
+        //$res['path'] = $path;
+        //$res['full_path'] = \OC::$SERVERROOT . '/data/' . $path;
+        //$res['info_root'] = \OC\Files\Filesystem::getFileInfo('/', false);
+        //$res['info_file'] = \OC\Files\Filesystem::getFileInfo($path, false);
+
+        //if(\OC\Files\Filesystem::is_file($path))
+        //    $res['info'] = \OC\Files\Filesystem::getFileInfo($path);
+
+        //$res['fileData'] = \OCA\Files\Helper::formatFileInfo($res['fileInfo']);
+
+
+        return $res;
+        //$appName = 'files';
+        //$filePaths = // explode('/', $atc['file']['path']);
+        //array_shift($filePaths);
+        //$fileFolder = array_slice($filePaths, 0, count($filePaths)-1);
+        //return Helper::linkTo('files', '', ['dir' => '/'.join('/', $fileFolder)]) . '#/'.join('/', $filePaths);
+    }
 
 
 

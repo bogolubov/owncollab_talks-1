@@ -47,21 +47,26 @@ function loger_error($data_string)
 function parse_source_mail_data()
 {
     // for xDebug
-    //$resource   = fopen("mails/team.mail", "r");
+    $resource   = fopen("mails/bogdan.mail", "r");
 
     $data       = [];
-    $resource   = fopen("php://stdin", "r");
+    //$resource   = fopen("php://stdin", "r");
     $mailParser = new ZBateson\MailMimeParser\MailMimeParser();
     $message    = $mailParser->parse($resource);
 
     try {
-        $data['to']         = $message->getHeaderValue('to');
-        $data['to_name']    = is_object($message->getHeader('to')) ? $message->getHeader('to')->getPersonName() : '';
-        $data['from']       = $message->getHeaderValue('from');
-        $data['from_name']  = is_object($message->getHeader('from')) ? $message->getHeader('from')->getPersonName() : '';
-        $data['subject']    = $message->getHeaderValue('subject');
-        $data['content']    = stream_get_contents($message->getTextStream());
-        $data['files']      = $message->getAttachmentCount();
+        $data['mailParser']  = $message;
+        $data['to']          = $message->getHeaderValue('to');
+        $data['to_name']     = is_object($message->getHeader('to')) ? $message->getHeader('to')->getPersonName() : '';
+        $data['from']        = $message->getHeaderValue('from');
+        $data['from_name']   = is_object($message->getHeader('from')) ? $message->getHeader('from')->getPersonName() : '';
+        $data['subject']     = $message->getHeaderValue('subject');
+        $data['content']     = stream_get_contents($message->getTextStream());
+        $data['files_count'] = $message->getAttachmentCount();
+        $data['files_parts'] = (is_numeric($data['files_count']) && $data['files_count'] > 0)
+                                ? $message->getAllAttachmentParts()
+                                : false;
+
     } catch (Exception $error) {
         loger_error("Line: ".__LINE__."; Error parse source stdin resource. Message error: ".$error->getMessage());
     }
@@ -72,9 +77,9 @@ function parse_source_mail_data()
 
 
 /**
- * @param array $arr_data
+ * @param array $messageData
  */
-function send_to_app(array $arr_data)
+function send_to_app(array $messageData)
 {
     $config_file = dirname(dirname(dirname(__DIR__))) . '/config/config.php';
 
@@ -87,12 +92,21 @@ function send_to_app(array $arr_data)
 
     /** @var array $CONFIG */
     $url = $CONFIG['overwrite.cli.url'] . '/index.php/apps/owncollab_talks/parse_manager';
-    $arr_data['config'] = $CONFIG;
+
+    $messageFilesCount = $messageData['files_count'];
+    $messageFilesParts = $messageData['files_parts'];
+    $objectMailParser = $messageData['mailParser'];
+
+    unset($messageData['mailParser']);
+    unset($messageData['files_parts']);
+
+    $fieldsData = $messageData;
+    $fieldsData['config'] = $CONFIG;
 
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url);
     curl_setopt($ch, CURLOPT_POST, true);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, $arr_data);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $fieldsData);
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
     curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -108,10 +122,10 @@ function send_to_app(array $arr_data)
     try {
         $resultData = json_decode($result, true);
 
-        if ($resultData['type'] != 'ok')
+        if ($resultData['type'] != 'ok') {
             loger_error("Line: " . __LINE__ . "; Result from server is bad! QueryData:" . $result);
-        else {
-            loger("Parse and send mail data is success! From: " .$arr_data['from']. " To: " . $arr_data['to'] . " Result data: " . $result);
+        } else {
+            loger("Parse and send mail data is success! From: " .$fieldsData['from']. " To: " . $fieldsData['to'] . " Result data: " . $result);
             exit();
         }
 
