@@ -197,4 +197,28 @@ class MainController extends Controller
     }
 
 
+    /**
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * @return TemplateResponse
+     */
+    public function test()
+    {
+        $data = [];
+        //$data['files']
+
+        $files = \OCA\Files\Helper::getFiles('/Talks');
+        $data['files'] = $files;
+
+        $data['isShared'] = $files[0]->isShared();
+
+        //$list = \OCA\Files\Helper::formatFileInfo($files[0]);
+        //$data['list'] = $list;
+
+
+        var_dump($data);
+        return new DataResponse($data);
+    }
+
+
 }

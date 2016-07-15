@@ -7,6 +7,7 @@
 
 $flist = !empty($_['file_list']) && is_array($_['file_list']) ? $_['file_list'] : [];
 
+//var_dump($flist);
 /*3 =>
     array (size=13)
       'id' => string '238' (length=3)
@@ -21,7 +22,8 @@ $flist = !empty($_['file_list']) && is_array($_['file_list']) ? $_['file_list'] 
       'size' => int 233724
       'type' => string 'file' (length=4)
       'etag' => string 'a64191665ada14e54612c7d0823ef6f0' (length=32)
-      'path' => string '/Photos/Squirrel.jpg' (length=20)*/
+      'path' => string '/Photos/Squirrel.jpg' (length=20)
+*/
 ?>
 
 <ul>

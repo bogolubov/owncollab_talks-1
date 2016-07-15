@@ -70,8 +70,8 @@ if(App.namespace){App.namespace('Action.File', function(App){
 
     /**
      * @namespace App.Action.File.fileListSourceData
-     */
-    _.fileListSourceData = [];
+
+    _.fileListSourceData = []; */
 
     /**
      * @namespace App.Action.File.selectFilesData

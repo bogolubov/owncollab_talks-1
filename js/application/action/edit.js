@@ -9,7 +9,7 @@ if(App.namespace){App.namespace('Action.Edit', function(App){
      */
     _.init = function(){
 
-        jQuery("textarea[name=message]").trumbowyg();
+        jQuery("textarea[name=message]").show().trumbowyg();
 
         _.checkSubscribersEvent();
         _.submitFormEvent();
@@ -179,10 +179,15 @@ if(App.namespace){App.namespace('Action.Edit', function(App){
                 if (response.requesttoken) {
                     App.requesttoken = response.requesttoken;
 
+                    var userfiles = response['file_list'] ? response['file_list'] : [];
+
                     App.inject("#attach_files", response.view);
                     jQuery('#attach_files').css('border', '1px solid #ddd');
 
-                    App.Action.File.fileListSourceData = response['file_list'] ? response['file_list'] : [];
+                    //console.log('App.Cache', App.Cache);
+                    App.Cache.put('userfiles', userfiles);
+
+                    //App.Action.File.fileListSourceData = userfiles;
                     App.Action.File.selectShareFiles("#attach_files");
                 }
             });

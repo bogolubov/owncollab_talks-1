@@ -28,7 +28,7 @@ $text = '';
         </div>
 
         <div class="talk-message">
-            <textarea name="message" required placeholder="<?php p($l->t('Enter your text here')); ?>"></textarea>
+            <textarea name="message" style="display: none" required placeholder="<?php p($l->t('Enter your text here')); ?>"></textarea>
         </div>
 
 

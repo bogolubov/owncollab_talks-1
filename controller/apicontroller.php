@@ -153,7 +153,8 @@ class ApiController extends Controller {
             $all_users = $users = Helper::post('users', false);
             $groups = Helper::post('groups', false);
             $share_files = Helper::post('share', false);
-            $attachements = '';
+            $attachements = [];
+            $attachements_info = [];
 
             if(!empty($groups)) {
                 $groupsusers = $this->connect->users()->getGroupsUsersList();
@@ -168,9 +169,6 @@ class ApiController extends Controller {
             if(!empty($share_files)) {
 
                 $files_id_list = array_keys($share_files);
-                $shared_files = [];
-
-                $params['xxx'] = [];
 
                 foreach ($share_files as $_fid => $_file) {
 
@@ -181,95 +179,61 @@ class ApiController extends Controller {
                     $isEnabled = \OCP\Share::isEnabled();
                     $isAllowed = \OCP\Share::isResharingAllowed();
 
-/*                    $params['file___'.$_fid] = [
-                        '$_fid' => $_fid,
-                        '$file' => $file,
-                        '$owner' => $owner,
-                        '$shareType' => $shareType,
-                        '$sharedWith' => $sharedWith,
-                        '$isEnabled' => $isEnabled,
-                        '$isAllowed' => $isAllowed,
-                    ];*/
+                    $attachements_info[] = [
+                        'info' => \OCA\Files\Helper::formatFileInfo(\OC\Files\Filesystem::getFileInfo(substr($file['path'],6))),
+                        'file' => $file,
+                    ];
 
                     if($isEnabled && $isAllowed) {
                         $sharedUsers = is_array($sharedWith) ? array_values($sharedWith) : [];
                         foreach ($all_users as $_uid) {
-
-                            if($owner == $_uid && in_array($_uid, $sharedUsers))
+                            if ($owner == $_uid || in_array($_uid, $sharedUsers)) {
                                 continue;
+                            }
 
                             $_result_token = \OCP\Share::shareItem($shareType, $_fid, \OCP\Share::SHARE_TYPE_USER, $_uid, 1);
-
-                            $shared_files[] = [
-                                'uid' => $_uid,
-                                'fileid' => $_fid,
-                                'result' => $_result_token,
-                                'ownerid' => $owner,
-                                'is_shared' => in_array($_uid, $sharedUsers),
-                            ];
-
                         }
                     }
+
                 }
 
-                $params['shared_files'] = $shared_files;
-
-                /*if($isEnabled && $isAllowed) {
-                    foreach ($all_users as $_uid) {
-                        if($owner != $_uid) {
-                            foreach ($share_files as $_fid => $_file) {
-                                $_result_token = \OCP\Share::shareItem($shareType, $_fid, \OCP\Share::SHARE_TYPE_USER, $_uid, 1);
-                                $shared_files[] = ['uid' => $_uid, 'fileid' => $_fid, 'result' => $_result_token];
-                            }
-                        }
-                    }
-                }*/
-
-
-
-                //$params['$all_users'] = $all_users;
-
-
-
-                /*
-                $sharetype = $file['mimetype'] == 2 ? 'folder' : 'file';
-                $sharedWith = \OCP\Share::getUsersItemShared('file', $file['fileid'], $fileOwner, false, true);
-                $isenabled = \OCP\Share::isEnabled();
-                $isallowed = \OCP\Share::isResharingAllowed();*/
-
-                //$params['$file'] = $file; //$this->connect->files()->shareFile($files_id_list[0], $this->userId);
-
-
-
-
-                //$params['flist'] = join(',',$files_id_list);
-                //$params['share_json'] = json_encode($files_id_list);
-                //$params['all_users'] = $all_users;
-
-                $attachements = json_encode($files_id_list);
+                $attachements = $files_id_list;
             }
-
-            return new DataResponse($params);
 
             $data['rid'] = 0;
             $data['date'] = date("Y-m-d H:i:s", time());
             $data['title'] = strip_tags(Helper::post('title'));
-            $data['text'] = Helper::post('message');
-            $data['attachements'] = $attachements;
+            $data['text'] = addslashes(Helper::post('message'));
+            $data['attachements'] = json_encode((array) $attachements);
             $data['author'] = $this->userId;
             $data['subscribers'] = json_encode(['groups'=>$groups, 'users'=>$users]);
             $data['hash'] = TalkMail::createHash($data['title']);
             $data['status'] = TalkMail::SEND_STATUS_CREATED;
 
-            if($params['insert_id'] = $this->connect->messages()->insertTask($data)) {
-                $params['result_insert_task'] = $params['insert_id'];
-                $params['mail_is_send'] = $this->mailsendSwitcher($data, $all_users, $groups, $groupsusers);
-            }
+            /*if($params['insert_id'] = $data['id'] = $this->connect->messages()->insertTask($data)) {
+
+                $data['title'] = "Owncollab Talks " . $data['title'];
+                $data['text'] = Helper::renderPartial($this->appName, 'emails/begin', [
+                    'message' => $data,
+                    'attachements_info' => $attachements_info,
+                ]);
+                //$params['mail_is_send'] = $this->mailsendSwitcher($data, $all_users, $groups, $groupsusers);
+            }*/
+
+            $data['email_body'] = Helper::renderPartial($this->appName, 'emails/begin', [
+                'message' => $data,
+                'mail_domain' => $this->mailDomain,
+                'attachements_info' => $attachements_info,
+            ]);
 
             $params['data'] = $data;
         }
 
-        if($params['mail_is_send']) {
+        //var_dump($params);
+        echo $data['email_body'];
+        exit;
+
+        if($params['insert_id']) {
             Helper::cookies('goto_message', $params['insert_id']);
             header("Location: /index.php/apps/owncollab_talks/started");
             exit;
@@ -514,10 +478,15 @@ class ApiController extends Controller {
                 if($file['type'] == 'dir') {
                     $this->createFileListTree('/'.$file['name'], '/'.$file['name'], false);
                 } else {
+
                     $_to_list = \OCA\Files\Helper::formatFileInfo($file);
-                    $_to_list['mtime'] = $file['mtime']/1000;
-                    $_to_list['path'] = $root_path .'/'. $file['name'];
-                    $this->_file_list_tree[] = $_to_list;
+
+                    if(!$file->isShared()) {
+                        $_to_list['mtime'] = $file['mtime']/1000;
+                        $_to_list['path'] = $root_path .'/'. $file['name'];
+
+                        $this->_file_list_tree[] = $_to_list;
+                    }
                 }
             }
         }

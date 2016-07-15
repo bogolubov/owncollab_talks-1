@@ -58,20 +58,117 @@ PIDPID
 
 
 
+                    /*
+                                        $params['share'][] = [
+                                            '$_fid' => $_fid,
+                                            '$file' => $file,
+                                            '$owner' => $owner,
+                                            '$shareType' => $shareType,
+                                            '$sharedWith' => $sharedWith,
+                                            '$isEnabled' => $isEnabled,
+                                            '$isAllowed' => $isAllowed,
+                                        ];
+
+                            $shared_files[] = [
+                                'uid' => $_uid,
+                                'fileid' => $_fid,
+                                'result' => $_result_token,
+                                'ownerid' => $owner,
+                                'is_shared' => in_array($_uid, $sharedUsers),
+                            ];
+
+                $params['shared_files'] = $shared_files;
+                                       */
+
+
+
+                /*if($isEnabled && $isAllowed) {
+                    foreach ($all_users as $_uid) {
+                        if($owner != $_uid) {
+                            foreach ($share_files as $_fid => $_file) {
+                                $_result_token = \OCP\Share::shareItem($shareType, $_fid, \OCP\Share::SHARE_TYPE_USER, $_uid, 1);
+                                $shared_files[] = ['uid' => $_uid, 'fileid' => $_fid, 'result' => $_result_token];
+                            }
+                        }
+                    }
+                }*/
+
+
+
+                //$params['$all_users'] = $all_users;
+
+
+
+                /*
+                $sharetype = $file['mimetype'] == 2 ? 'folder' : 'file';
+                $sharedWith = \OCP\Share::getUsersItemShared('file', $file['fileid'], $fileOwner, false, true);
+                $isenabled = \OCP\Share::isEnabled();
+                $isallowed = \OCP\Share::isResharingAllowed();*/
+
+                //$params['$file'] = $file; //$this->connect->files()->shareFile($files_id_list[0], $this->userId);
+
+
+
+
+                //$params['flist'] = join(',',$files_id_list);
+                //$params['share_json'] = json_encode($files_id_list);
+                //$params['all_users'] = $all_users;
+
+-------------------------------------------------------------------
+
+CREATE TABLE `oc_collab_messages` (
+  `id` int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  `rid` int(11) NOT NULL DEFAULT '0',
+  `date` datetime NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `text` text NULL,
+  `attachements` varchar(1255),
+  `author` varchar(64) NOT NULL,
+  `subscribers` varchar(1255) NOT NULL,
+  `hash` varchar(32) DEFAULT NULL,
+  `status` int(1) NOT NULL DEFAULT '0'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+-- 2016-07-14 02:14:36
+
 
 
 
 -------------------------------------------------------------------
 
 
-
-
-
-
--------------------------------------------------------------------
-
-
-
+  2 =>
+    array (size=2)
+      'info' =>
+        array (size=12)
+          'id' => int 60
+          'parentId' => string '43' (length=2)
+          'date' => string '15 июля 2016 г., 7:40:05 GMT+3' (length=35)
+          'mtime' => int 1468557605000
+          'icon' => string '/core/img/filetypes/image.svg' (length=29)
+          'isPreviewAvailable' => boolean true
+          'name' => string 'developer-contest-code.jpg' (length=26)
+          'permissions' => int 27
+          'mimetype' => string 'image/jpeg' (length=10)
+          'size' => int 281260
+          'type' => string 'file' (length=4)
+          'etag' => string '49755ce0e703fb6a35c27c8728d47e76' (length=32)
+      'file' =>
+        array (size=15)
+          'fileid' => string '60' (length=2)
+          'storage' => string '3' (length=1)
+          'path' => string 'files/Talks/developer-contest-code.jpg' (length=38)
+          'path_hash' => string 'a2feaf9273456e58ffb3f250883f1f82' (length=32)
+          'parent' => string '43' (length=2)
+          'name' => string 'developer-contest-code.jpg' (length=26)
+          'mimetype' => string '6' (length=1)
+          'mimepart' => string '5' (length=1)
+          'size' => string '281260' (length=6)
+          'mtime' => string '1468557605' (length=10)
+          'storage_mtime' => string '1468557605' (length=10)
+          'encrypted' => string '0' (length=1)
+          'unencrypted_size' => string '0' (length=1)
+          'etag' => string '49755ce0e703fb6a35c27c8728d47e76' (length=32)
+          'permissions' => string '27' (length=2)
 
 
 
