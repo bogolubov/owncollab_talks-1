@@ -328,6 +328,7 @@ class ApiController extends Controller {
             'to' => null,
             'from' => null,
             'type' => 'fail',
+            'error' => null,
         ];
 
         if(!$this->mailDomain) {
@@ -372,9 +373,8 @@ class ApiController extends Controller {
                     if(!empty($users)) {
 
                         $builder = $this->saveTalkBuilder($params, $subscribers, $group.'-group');
-                        //$returned['$builder'] = $builder;
 
-                        if(isset($builder['insert']) && $builder['insert'])
+                        if($builder === true)
                             $returned['type'] = 'ok';
                         else
                             $returned['error'] = 'Save task failed!';
@@ -494,7 +494,7 @@ class ApiController extends Controller {
      *                  content - message
      * @param $subscribers ['groups' => false, 'users' => false, ]
      * @param $mailUser
-     * @return bool|int|string
+     * @return array
      */
     public function saveTalkBuilder($post, $subscribers, $mailUser = null)
     {
@@ -503,7 +503,9 @@ class ApiController extends Controller {
             'emails' => false,
             'error' => false,
         ];
+        $inserted = false;
 
+/**/
         try {
             $mailUser = $mailUser ? $mailUser : 'root';
             $author = $post['author'];
@@ -531,13 +533,12 @@ class ApiController extends Controller {
         $data['status'] = TalkMail::SEND_STATUS_CREATED;
 
         if($insert_id = $this->connect->messages()->insertTask($data)) {
-
+            $inserted = true;
             $this->mailUser = $mailUser;
-            $result['insert'] = $insert_id;
-            $result['emails'] = $this->mailsendSwitcher($data, $users);
+            //$this->mailsendSwitcher($data, $users);
         }
 
-        return $result;
+        return $inserted;
     }
 
 

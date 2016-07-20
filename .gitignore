@@ -26,5 +26,6 @@ tmp
 lib/_old
 lib/mails
 templates/_old
-mailparser.log
-mailparser_error.log
+/mailparser.log
+/mailparser_error.log
+/appinfo/config.php

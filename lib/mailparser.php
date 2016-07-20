@@ -77,21 +77,28 @@ function parse_source_mail_data()
 
 
 /**
+ * @var array $config
  * @param array $messageData
  */
 function send_to_app(array $messageData)
 {
-    $config_file = dirname(dirname(dirname(__DIR__))) . '/config/config.php';
+    /*$config_file = dirname(dirname(dirname(__DIR__))) . '/config/config.php';
+    if(!is_file($config_file)) {
+        loger_error("Line: ".__LINE__."; Not found file config.php");
+        exit;
+    }
+    include $config_file;
+    $url = $CONFIG['overwrite.cli.url'] . '/index.php/apps/owncollab_talks/parse_manager';*/
 
+    $config_file = dirname(__DIR__) . '/appinfo/config.php';
     if(!is_file($config_file)) {
         loger_error("Line: ".__LINE__."; Not found file config.php");
         exit;
     }
 
-    include $config_file;
+    $config = include $config_file;
+    $url = $config['site_url'] . 'index.php/apps/owncollab_talks/parse_manager';
 
-    /** @var array $CONFIG */
-    $url = $CONFIG['overwrite.cli.url'] . '/index.php/apps/owncollab_talks/parse_manager';
 
     $messageFilesCount = $messageData['files_count'];
     $messageFilesParts = $messageData['files_parts'];
@@ -126,7 +133,6 @@ function send_to_app(array $messageData)
             loger_error("Line: " . __LINE__ . "; Result from server is bad! QueryData:" . $result);
         } else {
             loger("Parse and send mail data is success! From: " .$fieldsData['from']. " To: " . $fieldsData['to'] . " Result data: " . $result);
-            exit();
         }
 
     } catch (Exception $e) {
