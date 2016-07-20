@@ -139,8 +139,8 @@ class Users
 
         if($usersData === null || $refresh) {
             $sql = "SELECT u.uid, u.displayname, p.configvalue as email
-                    FROM owncloud.oc_users u
-                    LEFT OUTER JOIN owncloud.oc_group_user gu ON (gu.uid = u.uid)
+                    FROM *PREFIX*users u
+                    LEFT OUTER JOIN *PREFIX*group_user gu ON (gu.uid = u.uid)
                     LEFT JOIN *PREFIX*preferences p ON (p.userid = u.uid AND p.appid = 'settings' AND p.configkey = 'email')
                     WHERE gu.uid IS NULL";
 
