@@ -1,8 +1,8 @@
 <?php
 
-//set_include_path(__DIR__);
+define('APPROOT', dirname(__DIR__));
 
-include __DIR__ . "/ZBateson/MailMimeParser/MailMimeParser.php";
+include APPROOT . "/lib/ZBateson/MailMimeParser/MailMimeParser.php";
 
 /**
  * Autoloader for ZBateson PHP libruary
@@ -11,11 +11,12 @@ include __DIR__ . "/ZBateson/MailMimeParser/MailMimeParser.php";
 function __autoload($classname)
 {
     if (strpos($classname, "ZBateson") !== false) {
-        $filename = __DIR__ . "/" . str_replace("\\", "/", $classname) . ".php";
-        if (is_file($filename))
-            include_once($filename);
+        $filepath = APPROOT . "/lib/" . str_replace("\\", "/", $classname) . ".php";
+        if (is_file($filepath))
+            include_once($filepath);
     }
 }
+
 
 /**
  * Mail log writer
@@ -23,18 +24,19 @@ function __autoload($classname)
  */
 function loger($data_string)
 {
-    $file_path = dirname(__DIR__) . "/mailparser.log";
+    $file_path = APPROOT . "/mailparser.log";
     chmod($file_path, 0777);
     $data = "\n" . date("Y.m.d H:i:s") . ": " .trim($data_string);
     file_put_contents($file_path, $data, FILE_APPEND);
 }
+
 
 /**
  * @param $data_string
  */
 function loger_error($data_string)
 {
-    $file_path = dirname(__DIR__) . "/mailparser_error.log";
+    $file_path = APPROOT . "/mailparser_error.log";
     chmod($file_path, 0777);
     $data = "\n" . date("Y.m.d H:i:s") . ": " .trim($data_string);
     file_put_contents($file_path, $data, FILE_APPEND);
@@ -47,10 +49,10 @@ function loger_error($data_string)
 function parse_source_mail_data()
 {
     // for xDebug
-    //$resource   = fopen(__DIR__."/mails/group.mail", "r");
+    $resource   = fopen(__DIR__."/group.mail", "r");
 
     $data       = [];
-    $resource   = fopen("php://stdin", "r");
+    //$resource   = fopen("php://stdin", "r");
     $mailParser = new ZBateson\MailMimeParser\MailMimeParser();
     $message    = $mailParser->parse($resource);
 
@@ -82,15 +84,8 @@ function parse_source_mail_data()
  */
 function send_to_app(array $messageData)
 {
-    /*$config_file = dirname(dirname(dirname(__DIR__))) . '/config/config.php';
-    if(!is_file($config_file)) {
-        loger_error("Line: ".__LINE__."; Not found file config.php");
-        exit;
-    }
-    include $config_file;
-    $url = $CONFIG['overwrite.cli.url'] . '/index.php/apps/owncollab_talks/parse_manager';*/
 
-    $config_file = dirname(__DIR__) . '/appinfo/config.php';
+    $config_file = APPROOT . '/appinfo/config.php';
     if(!is_file($config_file)) {
         loger_error("Line: ".__LINE__."; Not found file config.php");
         exit;

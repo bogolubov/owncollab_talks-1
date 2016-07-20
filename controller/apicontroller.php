@@ -498,14 +498,13 @@ class ApiController extends Controller {
      */
     public function saveTalkBuilder($post, $subscribers, $mailUser = null)
     {
+        $inserted = false;
         $result = [
             'insert' => false,
             'emails' => false,
             'error' => false,
         ];
-        $inserted = false;
 
-/**/
         try {
             $mailUser = $mailUser ? $mailUser : 'root';
             $author = $post['author'];
@@ -519,18 +518,18 @@ class ApiController extends Controller {
 
         $users = array_values(array_unique(array_diff($subscribers['users'],[$mailUser])));
 
-        $data['rid'] = 0;
-        $data['date'] = date("Y-m-d H:i:s", time());
-        $data['title'] = strip_tags($title);
-        $data['text'] = $message;
-        $data['attachements'] = '';
-        $data['author'] = $author;
-        $data['subscribers'] = json_encode([
-            'groups'    => isset($subscribers['groups']) ? $subscribers['groups'] : false,
-            'users'     => $users
-        ]);
-        $data['hash'] = TalkMail::createHash($title);
-        $data['status'] = TalkMail::SEND_STATUS_CREATED;
+        $data['rid']            = 0;
+        $data['date']           = date("Y-m-d H:i:s", time());
+        $data['title']          = strip_tags($title);
+        $data['text']           = $message;
+        $data['attachements']   = '';
+        $data['author']         = $author;
+        $data['subscribers']    = json_encode([
+                                    'groups'    => isset($subscribers['groups']) ? $subscribers['groups'] : false,
+                                    'users'     => $users
+                                ]);
+        $data['hash']           = TalkMail::createHash($title);
+        $data['status']         = TalkMail::SEND_STATUS_CREATED;
 
         if($insert_id = $this->connect->messages()->insertTask($data)) {
             $inserted = true;

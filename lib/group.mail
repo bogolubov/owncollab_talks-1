@@ -1,0 +1,34 @@
+Return-Path: <o.werdffelynir@sk-consulting.com.ua>
+Delivered-To: <developers-group@owncloud.loc>
+Received: from owncloud.loc
+	by owncloud.loc (Dovecot) with LMTP id WvyvBgikf1frLwAAKhkKzQ
+	for <developers-group@owncloud.loc>; Fri, 08 Jul 2016 16:00:59 +0300
+Received: from mx-out-7.default-host.net (mx-out-7.default-host.net [185.104.44.9])
+	by owncloud.loc (Postfix) with ESMTPS id 178C322244B
+	for <developers-group@owncloud.loc>; Fri,  8 Jul 2016 16:00:56 +0300 (EEST)
+Received: from www.webmail.adm.tools (unknown [185.104.44.6])
+	by mx-out-7.default-host.net (Postfix) with ESMTPA id A5CB91289518
+	for <developers-group@owncloud.loc>; Fri,  8 Jul 2016 16:00:55 +0300 (EEST)
+Received: from mail.mksbrok.com.ua ([91.196.159.84])
+ by www.webmail.adm.tools
+ with HTTP (HTTP/1.0 POST); Fri, 08 Jul 2016 16:00:55 +0300
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date: Fri, 08 Jul 2016 16:00:55 +0300
+From: o.werdffelynir@sk-consulting.com.ua
+To: developers-group@owncloud.loc
+Subject: For group developers
+Message-ID: <f96cf7853ea6d44e6d77a85f3720e6e4@sk-consulting.com.ua>
+X-Sender: o.werdffelynir@sk-consulting.com.ua
+User-Agent: adm.tools webmail
+X-Delta-Virus-Check: ok
+X-Delta-Spam-Symbols: Symbols: ONCE_RECEIVED(1.00); 
+X-Delta-Spam-Score: 1
+
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo 
+ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis 
+parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, 
+pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec 
+pede justo, fringilla vel, aliquet nec, vulputate

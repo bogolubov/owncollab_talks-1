@@ -1,8 +1,0 @@
-
-2016.07.20 12:47:40: Line: 126; Result from server is bad! QueryData:{"to":null,"from":null,"type":"fail","error":"Save task failed!"}
-2016.07.20 12:48:20: Line: 126; Result from server is bad! QueryData:{"to":null,"from":null,"type":"fail","builder":[{"to":"developers-group@owncloud.loc","to_name":"","from":"o.werdffelynir@sk-consulting.com.ua","from_name":"","subject":"For group developers","content":"Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo \nligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis \nparturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, \npellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec \npede justo, fringilla vel, aliquet nec, vulputate\n","files_count":"0","author":"man1"},{"groups":["developers"],"users":["admindev","dev1","dev2","dev3"]},"developers-group"],"error":"Save task failed!"}
-2016.07.20 12:50:09: Line: 126; Result from server is bad! QueryData:{"to":null,"from":null,"type":"fail","builder":true,"error":"Save task failed!"}
-2016.07.20 12:51:36: Line: 126; Result from server is bad! QueryData:{"to":null,"from":null,"type":"fail","builder":true,"error":"Save task failed!"}
-2016.07.20 12:53:18: Line: 126; Result from server is bad! QueryData:{"to":null,"from":null,"type":"fail","error":null}
-2016.07.20 12:54:39: Line: 126; Result from server is bad! QueryData:{"to":null,"from":null,"type":"fail","error":null}
-2016.07.20 12:54:54: Line: 126; Result from server is bad! QueryData:{"to":null,"from":null,"type":"fail","error":null,"t":"Users in group 'developers' not find."}
