@@ -97,7 +97,7 @@ class Application extends App {
          */
         $container->registerService('ApiController', function(DIContainer $c) {
 
-            $c->query('MTAConfig');
+            //$c->query('MTAConfig');
 
             return new ApiController(
                 $c->query('AppName'),

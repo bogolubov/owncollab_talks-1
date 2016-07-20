@@ -30,9 +30,6 @@ $attaches = isset($_['attachements_info']) && is_array($_['attachements_info'])
     ? $_['attachements_info']
     : [];
 
-function getUrlFull($path = '') {
-    return Helper::val('urlFull') . trim($path,'/');
-}
 
 
 ?>
@@ -67,7 +64,7 @@ function getUrlFull($path = '') {
                 Dear <b><?php p($user_name)?></b>,
             </p>
             <p>The user <b><?php p($message['author'])?></b> dropped following email to you <?php print_unescaped($message_subscribers ? ' and <b>'.$message_subscribers.'</b>':'') ?>.
-                Please answer directly using your preferred email client or login to your <a href="<?=getUrlFull('index.php/apps/owncollab_talks')?>" target="_blank">Owncollab Talk</a> instance.</p>
+                Please answer directly using your preferred email client or login to your <a href="<?php echo $mail_domain.'/index.php/apps/owncollab_talks'?>" target="_blank">Owncollab Talk</a> instance.</p>
 
             <?php if (!empty($attaches)): ?>
                 <p>Following files have been attached to the email:</p>
@@ -76,7 +73,7 @@ function getUrlFull($path = '') {
                     <?php foreach ($attaches as $atc): ?>
                         <tr>
                             <td width="18">
-                                <img src="<?= getUrlFull($atc['info']['icon'])?>" class="thumbnail"/>
+                                <img src="<?php echo $mail_domain.'/'.$atc['info']['icon']?>" class="thumbnail"/>
                             </td>
                             <td style="vertical-align: top">
                                 <?php
@@ -90,10 +87,10 @@ function getUrlFull($path = '') {
                                     $path   = '/'.join('/', $parts);
                                     $file_link = Helper::linkTo('files', '', ['dir'=>$folder]) . '#' .$path;
                                 ?>
-                                <a href="<?= getUrlFull('index.php'.$file_link) ?>" class="name"><?=$atc['info']['name'];?></a>
+                                <a href="<?php echo $mail_domain.'/index.php'.$file_link ?>" class="name"><?php echo $atc['info']['name'];?></a>
                             </td>
                             <td width="150">
-                                <?=number_format($atc['info']['size']/1024, 3, '.', ' ');?> Kb
+                                <?php echo number_format($atc['info']['size']/1024, 3, '.', ' ');?> Kb
                             </td>
                         </tr>
                     <?php endforeach; ?>

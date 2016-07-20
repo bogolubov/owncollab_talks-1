@@ -250,9 +250,9 @@ class ApiController extends Controller {
     public function mailsendSwitcher($talk = [], $users = [], $groups = [], $groupsusers = [], $attaches = [])
     {
         $to = [];
-        $fromUser = $this->mailUser ? $this->mailUser : $this->userId;
+        $mailUser = $this->mailUser ? $this->mailUser : $this->userId;
 
-        if(!$fromUser)
+        if(!$mailUser)
             return false;
 
         foreach ($users as $user) {
@@ -262,15 +262,15 @@ class ApiController extends Controller {
         }
 
         $talk['text'] = Helper::renderPartial($this->appName, 'emails/begin', [
-            'user_id' => $this->userId,
+            'user_id' => $this->userId ? $this->userId : 'root',
             'message' => $talk,
             'mail_domain' => $this->mailDomain,
             'attachements_info' => $attaches,
         ]);
 
         $result = TalkMail::createMail(
-            [$fromUser.'@'.$this->mailDomain, $fromUser],
-            [$fromUser.'+'.$talk['hash'].'@'.$this->mailDomain, $fromUser],
+            [$mailUser.'@'.$this->mailDomain, $mailUser],
+            [$mailUser.'+'.$talk['hash'].'@'.$this->mailDomain, $mailUser],
             $to,
             $talk['title'],
             $talk['text']
@@ -324,7 +324,8 @@ class ApiController extends Controller {
      */
     public function parseManager()
     {
-        $mail_domain = Helper::getSysConfig('mail_domain', false);
+        //$mail_domain = Helper::getSysConfig('mail_domain', false);
+        //$this->mailDomain = $this->mailDomain ? $this->mailDomain : $params['mail_domain'];
 
         $returned = [
             'to' => null,
@@ -332,28 +333,81 @@ class ApiController extends Controller {
             'type' => 'fail',
         ];
 
+        if(!$this->mailDomain) {
+            $returned['error'] = 'mailDomain not find!';
+            return new DataResponse($returned);
+        }
+
         $params = Helper::post();
         $to = explode('@', $params['to']);
         $idhash = explode('+',$to[0]);
 
         if (count($idhash) == 1) {
 
-            // Groups emails
-            // for the future realization
+            //$returned['trigger'] = strpos('-group', $to[0]);
 
-            // Static emails
-            switch ($idhash[0]) {
-                case 'team':
-                    $count_mails = $this->saveTaskTeam($params);
-                    if(is_numeric($count_mails)) {
-                        $returned['type'] = 'ok';
-                        $returned['count_mails'] = $count_mails;
-                    } else
-                        $returned['type'] = 'error_team';
-                    break;
-                case 'support':
-                    // for the future realization
-                    break;
+            // Groups emails
+            if(strpos($to[0], '-group') !== false) {
+
+                $group = explode('-group', $to[0])[0];
+
+                $resultTaskBuilder = false;
+                $usersGroup = false;
+                $usersGroupList = $this->connect->users()->getGroupsUsersList();
+
+                foreach($usersGroupList as $_group => $_users) {
+                    if (strtolower($_group) == strtolower($group)) {
+                        $usersGroup = $_users;
+                        break;
+                    }
+                }
+
+                $returned['trigger'] = $group;
+                $returned['trigger2'] = $usersGroup;
+
+                if(is_array($usersGroup)) {
+
+
+                    $author = 'root';
+                    $from = $params['from'];
+
+                    $users = array_map(function ($item) use ($from, &$author) {
+                        if($from == $item['email'])
+                            $author = $item['uid'];
+                        return $item['uid'];
+                    }, $usersGroup);
+
+                    $params['author'] = $author;
+
+                    if(!empty($users))
+                        $resultTaskBuilder = $this->saveTaskBuilder($params, $users, $group.'-group');
+                    else
+                        $returned['error'] = "Users in group '{$group}' not find.";
+
+                };
+
+                if(is_numeric($resultTaskBuilder)) {
+                    $returned['type'] = 'ok';
+                    $returned['count_mails'] = $resultTaskBuilder;
+                } else
+                    $returned['type'] = 'error_team';
+
+            }else{
+
+                // Static emails
+                switch ($idhash[0]) {
+                    case 'team':
+                        $count_mails = $this->saveTaskTeam($params);
+                        if(is_numeric($count_mails)) {
+                            $returned['type'] = 'ok';
+                            $returned['count_mails'] = $count_mails;
+                        } else
+                            $returned['type'] = 'error_team';
+                        break;
+                    case 'support':
+                        // for the future realization
+                        break;
+                }
             }
 
         } else {
@@ -385,7 +439,8 @@ class ApiController extends Controller {
                         $returned['type'] = 'ok';
                     else
                         $returned['type'] = 'error_insert';
-                }
+                }else
+                    $returned['error'] = "User sender not find '{$userSender}' not find.";
             }
         }
 
@@ -429,6 +484,47 @@ class ApiController extends Controller {
 
         if($insert_id = $this->connect->messages()->insertTask($data)) {
             $this->mailUser = $author;
+            $count_mails = $this->mailsendSwitcher($data, $users);
+            return $count_mails;
+        }
+        return false;
+    }
+
+
+    /**
+     * @param $post ['from'=>null,'subject'=>null,'content'=>null] , $users = [], 'mailUser'=>content,
+     *                  from - author
+     *                  subject - title
+     *                  content - message
+     * @param $users
+     * @param $mailUser
+     * @return bool|int|string
+     */
+    public function saveTaskBuilder($post, $users, $mailUser = null)
+    {
+        try {
+            $mailUser = $mailUser ? $mailUser : 'root';
+            $author = $post['author'];
+            $title = $post['subject'];
+            $message = $post['content'];
+        } catch(\Exception $e) {
+            return false;
+        }
+
+        $users = array_values(array_unique(array_diff($users,[$mailUser])));
+
+        $data['rid'] = 0;
+        $data['date'] = date("Y-m-d H:i:s", time());
+        $data['title'] = strip_tags($title);
+        $data['text'] = $message;
+        $data['attachements'] = '';
+        $data['author'] = $author;
+        $data['subscribers'] = json_encode(['groups'=>false, 'users'=>$users]);
+        $data['hash'] = TalkMail::createHash($title);
+        $data['status'] = TalkMail::SEND_STATUS_CREATED;
+
+        if($insert_id = $this->connect->messages()->insertTask($data)) {
+            $this->mailUser = $mailUser;
             $count_mails = $this->mailsendSwitcher($data, $users);
             return $count_mails;
         }

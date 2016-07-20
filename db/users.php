@@ -84,7 +84,7 @@ class Users
      * Retrieve all registered resource
      *
      * @param bool $refresh
-     * @return array|null
+     * @return array|null [0][gid]=>[gid,uid,displayname,email]
      */
     public function getGroupsUsersList($refresh = false)
     {

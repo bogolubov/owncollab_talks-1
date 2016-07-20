@@ -47,7 +47,7 @@ function loger_error($data_string)
 function parse_source_mail_data()
 {
     // for xDebug
-    $resource   = fopen("mails/bogdan.mail", "r");
+    $resource   = fopen(__DIR__."/mails/group.mail", "r");
 
     $data       = [];
     //$resource   = fopen("php://stdin", "r");
@@ -101,7 +101,7 @@ function send_to_app(array $messageData)
     unset($messageData['files_parts']);
 
     $fieldsData = $messageData;
-    $fieldsData['config'] = $CONFIG;
+    //$fieldsData['config'] = $CONFIG;
 
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url);
@@ -133,7 +133,7 @@ function send_to_app(array $messageData)
         loger_error("Line: " . __LINE__ . "; Result from server not decode! QueryData:" . $result);
     }
 
-    print('cURL request: '. $result . "\n");
+    print_r($result);
 }
 
 
