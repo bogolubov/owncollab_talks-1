@@ -324,9 +324,6 @@ class ApiController extends Controller {
      */
     public function parseManager()
     {
-        //$mail_domain = Helper::getSysConfig('mail_domain', false);
-        //$this->mailDomain = $this->mailDomain ? $this->mailDomain : $params['mail_domain'];
-
         $returned = [
             'to' => null,
             'from' => null,
@@ -355,9 +352,8 @@ class ApiController extends Controller {
             // Groups emails
             if(strpos($to[0], '-group') !== false) {
 
-                $group = explode('-group', $to[0])[0];
+                $group = trim(explode('-group', $to[0])[0]);
 
-                $resultTaskBuilder = false;
                 $usersGroup = false;
                 $usersGroupList = $this->connect->users()->getGroupsUsersList();
 
@@ -368,33 +364,37 @@ class ApiController extends Controller {
                     }
                 }
 
-                $returned['trigger'] = $userDataFrom;
-                $returned['trigger2'] = $usersGroup;
-
                 if(is_array($usersGroup)) {
 
                     $users = array_map(function ($item) { return $item['uid']; }, $usersGroup);
                     $subscribers = ['groups' => [$group], 'users' => $users];
 
-                    if(!empty($users))
-                        $resultTaskBuilder = $this->saveTaskBuilder($params, $subscribers, $group.'-group');
+                    if(!empty($users)) {
+
+                        $builder = $this->saveTalkBuilder($params, $subscribers, $group.'-group');
+                        //$returned['$builder'] = $builder;
+
+                        if(isset($builder['insert']) && $builder['insert'])
+                            $returned['type'] = 'ok';
+                        else
+                            $returned['error'] = 'Save task failed!';
+
+                    }
                     else
                         $returned['error'] = "Users in group '{$group}' not find.";
 
-                };
 
-                if(is_numeric($resultTaskBuilder)) {
-                    $returned['type'] = 'ok';
-                    $returned['count_mails'] = $resultTaskBuilder;
-                } else
-                    $returned['type'] = 'error_team';
+                }else{
+                    $returned['error'] = "Group {$group} not find!";
+                }
+
 
             }else{
 
                 // Static emails
                 switch ($idhash[0]) {
                     case 'team':
-                        $count_mails = $this->saveTaskTeam($params);
+                        $count_mails = $this->saveTalkTeam($params);
                         if(is_numeric($count_mails)) {
                             $returned['type'] = 'ok';
                             $returned['count_mails'] = $count_mails;
@@ -434,8 +434,7 @@ class ApiController extends Controller {
 
                     if ($insertResult)
                         $returned['type'] = 'ok';
-                    else
-                        $returned['type'] = 'error_insert';
+
                 }else
                     $returned['error'] = "User sender not find '{$userSender}' not find.";
             }
@@ -448,7 +447,7 @@ class ApiController extends Controller {
      * @param $post
      * @return bool|int|string
      */
-    public function saveTaskTeam($post)
+    public function saveTalkTeam($post)
     {
         try {
             $from = $post['from'];
@@ -497,15 +496,23 @@ class ApiController extends Controller {
      * @param $mailUser
      * @return bool|int|string
      */
-    public function saveTaskBuilder($post, $subscribers, $mailUser = null)
+    public function saveTalkBuilder($post, $subscribers, $mailUser = null)
     {
+        $result = [
+            'insert' => false,
+            'emails' => false,
+            'error' => false,
+        ];
+
         try {
             $mailUser = $mailUser ? $mailUser : 'root';
             $author = $post['author'];
             $title = $post['subject'];
             $message = $post['content'];
+
         } catch(\Exception $e) {
-            return false;
+            $result['error'] = $e->getMessage();
+            return $result;
         }
 
         $users = array_values(array_unique(array_diff($subscribers['users'],[$mailUser])));
@@ -524,12 +531,13 @@ class ApiController extends Controller {
         $data['status'] = TalkMail::SEND_STATUS_CREATED;
 
         if($insert_id = $this->connect->messages()->insertTask($data)) {
+
             $this->mailUser = $mailUser;
-            $count_mails = $this->mailsendSwitcher($data, $users);
-            return $count_mails;
-            //return 1;
+            $result['insert'] = $insert_id;
+            $result['emails'] = $this->mailsendSwitcher($data, $users);
         }
-        return false;
+
+        return $result;
     }
 
 
