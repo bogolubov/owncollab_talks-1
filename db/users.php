@@ -58,7 +58,7 @@ class Users
     public function getByEmail($email)
     {
         $sql = "SELECT *
-                FROM owncloud.oc_preferences
+                FROM *PREFIX*preferences
                 WHERE appid = 'settings' AND configkey = 'email' AND configvalue = :email";
 
         return $this->connect->query($sql, [':email'=>$email]);

@@ -48,11 +48,8 @@ function loger_error($data_string)
  */
 function parse_source_mail_data()
 {
-
-
     // for xDebug
     //$resource   = fopen(__DIR__."/group.mail", "r");
-
 
     $data       = [];
     $resource   = fopen("php://stdin", "r");
@@ -60,7 +57,7 @@ function parse_source_mail_data()
     $message    = $mailParser->parse($resource);
 
     try {
-        $data['mailParser']  = $message;
+        $data['parsMessage']  = $message;
         $data['to']          = $message->getHeaderValue('to');
         $data['to_name']     = is_object($message->getHeader('to')) ? $message->getHeader('to')->getPersonName() : '';
         $data['from']        = $message->getHeaderValue('from');
@@ -97,16 +94,19 @@ function send_to_app(array $messageData)
     $config = include $config_file;
     $url = $config['site_url'] . 'index.php/apps/owncollab_talks/parse_manager';
 
+    $fcount = $messageData['files_count'];
+    $fparts = $messageData['files_parts'];
+    $parsMessage = $messageData['parsMessage'];
 
-    $messageFilesCount = $messageData['files_count'];
-    $messageFilesParts = $messageData['files_parts'];
-    $objectMailParser = $messageData['mailParser'];
+    if($fcount > 0) {
+        $fieldsData['files'] = files_parser($fparts, $parsMessage);
+    }
 
-    unset($messageData['mailParser']);
+    unset($messageData['parsMessage']);
     unset($messageData['files_parts']);
 
     $fieldsData = $messageData;
-    //$fieldsData['config'] = $CONFIG;
+    $fieldsData['mail_domain'] = $config['mail_domain'];
 
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url);
@@ -140,7 +140,10 @@ function send_to_app(array $messageData)
     print_r($result);
 }
 
+function files_parser($fparts, $parsMessage)
+{
 
+}
 
 loger("The script is is running...");
 
