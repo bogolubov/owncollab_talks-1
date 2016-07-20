@@ -47,10 +47,10 @@ function loger_error($data_string)
 function parse_source_mail_data()
 {
     // for xDebug
-    $resource   = fopen(__DIR__."/mails/group.mail", "r");
+    //$resource   = fopen(__DIR__."/mails/group.mail", "r");
 
     $data       = [];
-    //$resource   = fopen("php://stdin", "r");
+    $resource   = fopen("php://stdin", "r");
     $mailParser = new ZBateson\MailMimeParser\MailMimeParser();
     $message    = $mailParser->parse($resource);
 
