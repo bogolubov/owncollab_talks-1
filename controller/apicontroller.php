@@ -341,10 +341,16 @@ class ApiController extends Controller {
         $params = Helper::post();
         $to = explode('@', $params['to']);
         $idhash = explode('+',$to[0]);
+        $userDataFrom = $this->connect->users()->getByEmail($params['from']);
+
+        if(!is_array($userDataFrom)) {
+            $returned['error'] = "User with email '{$params['from']}' not find!";
+            return new DataResponse($returned);
+        }
+
+        $params['author'] = $userDataFrom['userid'];
 
         if (count($idhash) == 1) {
-
-            //$returned['trigger'] = strpos('-group', $to[0]);
 
             // Groups emails
             if(strpos($to[0], '-group') !== false) {
@@ -362,25 +368,16 @@ class ApiController extends Controller {
                     }
                 }
 
-                $returned['trigger'] = $group;
+                $returned['trigger'] = $userDataFrom;
                 $returned['trigger2'] = $usersGroup;
 
                 if(is_array($usersGroup)) {
 
-
-                    $author = 'root';
-                    $from = $params['from'];
-
-                    $users = array_map(function ($item) use ($from, &$author) {
-                        if($from == $item['email'])
-                            $author = $item['uid'];
-                        return $item['uid'];
-                    }, $usersGroup);
-
-                    $params['author'] = $author;
+                    $users = array_map(function ($item) { return $item['uid']; }, $usersGroup);
+                    $subscribers = ['groups' => [$group], 'users' => $users];
 
                     if(!empty($users))
-                        $resultTaskBuilder = $this->saveTaskBuilder($params, $users, $group.'-group');
+                        $resultTaskBuilder = $this->saveTaskBuilder($params, $subscribers, $group.'-group');
                     else
                         $returned['error'] = "Users in group '{$group}' not find.";
 
@@ -496,11 +493,11 @@ class ApiController extends Controller {
      *                  from - author
      *                  subject - title
      *                  content - message
-     * @param $users
+     * @param $subscribers ['groups' => false, 'users' => false, ]
      * @param $mailUser
      * @return bool|int|string
      */
-    public function saveTaskBuilder($post, $users, $mailUser = null)
+    public function saveTaskBuilder($post, $subscribers, $mailUser = null)
     {
         try {
             $mailUser = $mailUser ? $mailUser : 'root';
@@ -511,7 +508,7 @@ class ApiController extends Controller {
             return false;
         }
 
-        $users = array_values(array_unique(array_diff($users,[$mailUser])));
+        $users = array_values(array_unique(array_diff($subscribers['users'],[$mailUser])));
 
         $data['rid'] = 0;
         $data['date'] = date("Y-m-d H:i:s", time());
@@ -519,7 +516,10 @@ class ApiController extends Controller {
         $data['text'] = $message;
         $data['attachements'] = '';
         $data['author'] = $author;
-        $data['subscribers'] = json_encode(['groups'=>false, 'users'=>$users]);
+        $data['subscribers'] = json_encode([
+            'groups'    => isset($subscribers['groups']) ? $subscribers['groups'] : false,
+            'users'     => $users
+        ]);
         $data['hash'] = TalkMail::createHash($title);
         $data['status'] = TalkMail::SEND_STATUS_CREATED;
 
@@ -527,6 +527,7 @@ class ApiController extends Controller {
             $this->mailUser = $mailUser;
             $count_mails = $this->mailsendSwitcher($data, $users);
             return $count_mails;
+            //return 1;
         }
         return false;
     }
