@@ -534,7 +534,7 @@ class ApiController extends Controller {
         if($insert_id = $this->connect->messages()->insertTask($data)) {
             $inserted = true;
             $this->mailUser = $mailUser;
-            //$this->mailsendSwitcher($data, $users);
+            $this->mailsendSwitcher($data, $users);
         }
 
         return $inserted;
