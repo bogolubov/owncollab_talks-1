@@ -376,6 +376,39 @@ class Helper
             return $data;
     }
 
+    /**
+     * Absolute path to application OwnCollabTalks
+     * @param string $addSubPath
+     * @return string
+     */
+    static public function pathAppTalks($addSubPath = '')
+    {
+        return \OC_App::getAppPath('owncollab_talks') . ($addSubPath ? '/' . ltrim($addSubPath,'/') : '');
+    }
+
+    /**
+     * Mail log writer
+     * @param $data_string
+     */
+    static public function mailParserLoger($data_string)
+    {
+        $file_path = self::pathAppTalks("/mailparser.log");
+        if(!is_writable($file_path) && is_file($file_path)) chmod($file_path, 0777);
+        $data = "\n" . date("Y.m.d H:i:s") . ": " .trim($data_string);
+        file_put_contents($file_path, $data, FILE_APPEND);
+    }
+
+    /**
+     * @param $data_string
+     */
+    static public function mailParserLogerError($data_string)
+    {
+        $file_path = self::pathAppTalks("/mailparser_error.log");
+        if(!is_writable($file_path) && is_file($file_path)) chmod($file_path, 0777);
+        $data = "\n" . date("Y.m.d H:i:s") . ": " .trim($data_string);
+        file_put_contents($file_path, $data, FILE_APPEND);
+    }
+
 
 
 

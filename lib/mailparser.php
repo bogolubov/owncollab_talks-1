@@ -49,7 +49,7 @@ function loger_error($data_string)
 function parse_source_mail_data()
 {
     // for xDebug
-    //$resource   = fopen(__DIR__."/group.mail", "r");
+    //$resource   = fopen(__DIR__."/mails/bogdan.mail", "r");
 
     $data       = [];
     $resource   = fopen("php://stdin", "r");
@@ -57,7 +57,7 @@ function parse_source_mail_data()
     $message    = $mailParser->parse($resource);
 
     try {
-        $data['parsMessage']  = $message;
+        $data['parser_message'] = $message;
         $data['to']          = $message->getHeaderValue('to');
         $data['to_name']     = is_object($message->getHeader('to')) ? $message->getHeader('to')->getPersonName() : '';
         $data['from']        = $message->getHeaderValue('from');
@@ -65,9 +65,9 @@ function parse_source_mail_data()
         $data['subject']     = $message->getHeaderValue('subject');
         $data['content']     = stream_get_contents($message->getTextStream());
         $data['files_count'] = $message->getAttachmentCount();
-        $data['files_parts'] = (is_numeric($data['files_count']) && $data['files_count'] > 0)
-                                ? $message->getAllAttachmentParts()
-                                : false;
+        //$data['all_attachment_parts'] = (is_numeric($data['files_count']) && $data['files_count'] > 0)
+        //                        ? $message->getAllAttachmentParts()
+        //                        : false;
 
     } catch (Exception $error) {
         loger_error("Line: ".__LINE__."; Error parse source stdin resource. Message error: ".$error->getMessage());
@@ -80,9 +80,9 @@ function parse_source_mail_data()
 
 /**
  * @var array $config
- * @param array $messageData
+ * @param array $fieldsData
  */
-function send_to_app(array $messageData)
+function send_to_app(array $fieldsData)
 {
 
     $config_file = APPROOT . '/appinfo/config.php';
@@ -94,24 +94,21 @@ function send_to_app(array $messageData)
     $config = include $config_file;
     $url = $config['site_url'] . 'index.php/apps/owncollab_talks/parse_manager';
 
-    $fcount = $messageData['files_count'];
-    $fparts = $messageData['files_parts'];
-    $parsMessage = $messageData['parsMessage'];
+    $fcount = $fieldsData['files_count'];
+    $parserMessage = $fieldsData['parser_message'];
 
     if($fcount > 0) {
-        $fieldsData['files'] = files_parser($fparts, $parsMessage);
+        $fieldsData['files'] = files_parser($parserMessage, $fieldsData);
     }
 
-    unset($messageData['parsMessage']);
-    unset($messageData['files_parts']);
-
-    $fieldsData = $messageData;
+    unset($fieldsData['parser_message']);
     $fieldsData['mail_domain'] = $config['mail_domain'];
+    $fieldsData['site_url'] = $config['site_url'];
 
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url);
     curl_setopt($ch, CURLOPT_POST, true);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, $fieldsData);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($fieldsData));
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
     curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -119,6 +116,9 @@ function send_to_app(array $messageData)
     $result = curl_exec($ch);
     $error = curl_error($ch);
     curl_close($ch);
+
+    // console info
+    print_r($result);
 
     if ($error) {
         loger_error("Line: " . __LINE__ . "; cURL request fail! Error: " . $error);
@@ -137,12 +137,43 @@ function send_to_app(array $messageData)
         loger_error("Line: " . __LINE__ . "; Result from server not decode! QueryData:" . $result);
     }
 
-    print_r($result);
 }
 
-function files_parser($fparts, $parsMessage)
+/**
+ * @param \ZBateson\MailMimeParser\MimePart[] $mimePart
+ * @param \ZBateson\MailMimeParser\Message $message
+ * @return array
+ */
+function files_parser($message, $messageData)
 {
+    $i = 0;
+    $files = [];
 
+    while ($att = $message->getAttachmentPart($i)) {
+
+        try{
+            //$typeHeaders =  $att->getHeaders();
+            $typeHeader     =  $att->getHeader('Content-Type');
+            $filetype       = $typeHeader->getValue();
+            $filename       = trim(explode('name=',$typeHeader->getRawValue())[1], "\"'");
+            $filecontent    = stream_get_contents($att->getContentResourceHandle());
+
+            $tmp_name = APPROOT . '/temp/' . time() . '-' . $messageData['from'] . '-' . $filename;
+
+            if(file_put_contents($tmp_name, $filecontent)){
+                $files[$i]['filename'] = $filename;
+                $files[$i]['filetype'] = $filetype;
+                $files[$i]['tmpfile'] = $tmp_name;
+            } else
+                loger_error("Line: ".__LINE__."; Error save file part: $i; name: $filename;");
+
+        }catch (Exception $error) {
+            loger_error("Line: ".__LINE__."; Error parse file part $i. Message error: ".$error->getMessage());
+        }
+        $i ++;
+    }
+
+    return $files;
 }
 
 loger("The script is is running...");

@@ -146,7 +146,7 @@ class Aliaser
      */
     static public function emailExist($email) {
         if(self::$_instanceMTAConnection){
-            $stmt = self::$_instanceMTAConnection->prepare('SELECT `name` FROM `mailserver`.`virtual_users` WHERE `email` = ?');
+            $stmt = self::$_instanceMTAConnection->prepare('SELECT * FROM `mailserver`.`virtual_users` WHERE `email` = ?');
             $stmt->execute([$email]);
             $result = $stmt->fetch();
             return is_array($result) ? $result : false;
@@ -161,7 +161,7 @@ class Aliaser
      */
     public function insertNewAlias($newemail, $newpassword)
     {
-        if(self::$_instanceMTAConnection){
+        if(self::$_instanceMTAConnection && !self::emailExist($newemail)){
             $sql = "INSERT INTO `mailserver`.`virtual_users`
                   (`domain_id`, `password` , `email`) VALUES
                   ('1', ENCRYPT(?, CONCAT('$6$', SUBSTRING(SHA(RAND()), -16))) , ?);";

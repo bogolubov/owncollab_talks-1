@@ -330,6 +330,7 @@ class ApiController extends Controller {
             'type' => 'fail',
             'error' => null,
         ];
+        $shareUIds = [];
 
         if(!$this->mailDomain) {
             $returned['error'] = 'mailDomain not find!';
@@ -340,21 +341,19 @@ class ApiController extends Controller {
         $to = explode('@', $params['to']);
         $idhash = explode('+',$to[0]);
         $userDataFrom = $this->connect->users()->getByEmail($params['from']);
-
         if(!is_array($userDataFrom)) {
             $returned['error'] = "User with email '{$params['from']}' not find!";
             return new DataResponse($returned);
         }
 
-        $params['author'] = $userDataFrom['userid'];
+        $shareUIds[] = $params['author'] = $userDataFrom['userid'];
 
+        // Work with static mail name and groups
         if (count($idhash) == 1) {
 
             // Groups emails
             if(strpos($to[0], '-group') !== false) {
-
                 $group = trim(explode('-group', $to[0])[0]);
-
                 $usersGroup = false;
                 $usersGroupList = $this->connect->users()->getGroupsUsersList();
 
@@ -366,41 +365,36 @@ class ApiController extends Controller {
                 }
 
                 if(is_array($usersGroup)) {
-
                     $users = array_map(function ($item) { return $item['uid']; }, $usersGroup);
+
+                    $shareUIds = array_merge($shareUIds, $users);
                     $subscribers = ['groups' => [$group], 'users' => $users];
 
                     if(!empty($users)) {
-
                         $builder = $this->saveTalkBuilder($params, $subscribers, $group.'-group');
-
-                        if($builder === true)
-                            $returned['type'] = 'ok';
-                        else
-                            $returned['error'] = 'Save task failed!';
-
+                        if($builder === true) $returned['type'] = 'ok';
+                        else $returned['error'] = 'Save task failed!';
                     }
-                    else
-                        $returned['error'] = "Users in group '{$group}' not find.";
-
-
-                }else{
+                    else  $returned['error'] = "Users in group '{$group}' not find.";
+                }else
                     $returned['error'] = "Group {$group} not find!";
-                }
-
 
             }else{
-
                 // Static emails
                 switch ($idhash[0]) {
                     case 'team':
                         $count_mails = $this->saveTalkTeam($params);
+
+                        $users = $this->connect->users()->getAll();
+                        $shareUIds = array_merge($shareUIds, array_map(function ($item) { return $item['uid']; }, $users));
+
                         if(is_numeric($count_mails)) {
                             $returned['type'] = 'ok';
                             $returned['count_mails'] = $count_mails;
                         } else
                             $returned['type'] = 'error_team';
                         break;
+
                     case 'support':
                         // for the future realization
                         break;
@@ -416,6 +410,29 @@ class ApiController extends Controller {
             // checked message by hash key
             if ($message = $this->connect->messages()->getByHash(trim($hash))) {
 
+                // added users for shared file
+                if (!empty($message['subscribers'])) {
+                    try {
+                        $subscribers = json_decode($message['subscribers'], true);
+                        if ($subscribers['groups']) {
+                            $users = [];
+                            $_groupsUsers = $this->connect->users()->getGroupsUsers();
+                            foreach ($subscribers['groups'] as $group) {
+                                if (!empty($_groupsUsers[$group])) {
+                                    $users = array_merge($users, array_map(function ($item) { return $item['uid']; }, $_groupsUsers[$group]));
+                                }
+                            }
+                            $shareUIds = array_merge($shareUIds, $users);
+                        }
+                        if ($subscribers['users']) {
+                            $shareUIds = array_merge($shareUIds, $subscribers['users']);
+                        }
+
+                    } catch (\Exception $e) {
+                    }
+                }
+
+
                 $userSender = $this->connect->users()->getByEmail($params['from']);
 
                 if ($userSender) {
@@ -426,7 +443,7 @@ class ApiController extends Controller {
                     $data['text'] = $params['content'];
                     $data['attachements'] = '';
                     $data['author'] = $userSender['userid'];
-                    $data['subscribers'] = json_encode(['groups' => [], 'users' => []]);
+                    $data['subscribers'] = $message['subscribers']; //json_encode(['groups' => [], 'users' => []]);
                     $data['hash'] = TalkMail::createHash($data['date']);
                     $data['status'] = TalkMail::SEND_STATUS_REPLY;
 
@@ -440,8 +457,14 @@ class ApiController extends Controller {
             }
         }
 
+        // Work with files
+        if(isset($params['files']) && is_array($params['files']) &&!empty($shareUIds)) {
+            $returned['shared_with'] = $this->parserFileHandler($params['files'], $shareUIds);
+        }
+
         return new DataResponse($returned);
     }
+
 
     /**
      * @param $post
@@ -602,24 +625,114 @@ class ApiController extends Controller {
         return $this->_file_list_tree;
     }
 
+    /**
+     * @PublicPage
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * @return DataResponse
+     */
+    public function test()
+    {
+        $files = [
+            [
+                'filename' => 'bananas.png',
+                'filetype' => 'image/png',
+                'tmpfile' => Helper::pathAppTalks().'/temp/1469089690-bogdan@mail.com-bananas.png'
+            ],
+            [
+                'filename' => 'bananas2.png',
+                'filetype' => 'image/png',
+                'tmpfile' => Helper::pathAppTalks().'/temp/1469090757-bogdan@mail.com-bananas.png'
+            ],
+            [
+                'filename' => 'bananas3.png',
+                'filetype' => 'image/png',
+                'tmpfile' => Helper::pathAppTalks().'/temp/1469090846-bogdan@mail.com-bananas.png'
+            ],
+        ];
+        $userForSharing = ['admindev', 'bogdan', 'man1', 'collab_user'];
+    }
 
 
+    private function parserFileHandler($files, $userForSharing)
+    {
+        $shareResult = false;
+        if($this->loginVirtualUser()) {
+
+            foreach($files as $file){
+
+                if (!\OC\Files\Filesystem::is_dir('/Talks'))
+                    \OC\Files\Filesystem::mkdir('/Talks');
+
+                if (is_file($file['tmpfile'])) {
+                    $filePathTo = '/Talks/'.$file['filename'];
+
+                    $fileInfoExist = \OC\Files\Filesystem::getFileInfo($filePathTo, false);
+                    if($fileInfoExist){
+                        $filePathTo = '/Talks/'.time().'-'.$file['filename'];
+                    }
+
+                    $saved = \OC\Files\Filesystem::file_put_contents($filePathTo, file_get_contents($file['tmpfile']));
+
+                    if($saved) {
+                        // rmdir($tmpfile);
+                        $fileInfo = \OC\Files\Filesystem::getFileInfo($filePathTo, false);
+                        $shareResult = $this->shareFileToUsers($fileInfo, $userForSharing);
+                    }
+                }
+            }
+        }
+        return $shareResult;
+    }
 
 
+    private function loginVirtualUser()
+    {
+        $user = 'collab_user';
+
+        if (!\OC_User::userExists($user)) {
+            # create user if not exist
+            $userManager = \OC::$server->getUserManager();
+            $userManager->createUser($user, $user);
+
+            $user = new \OC\User\User($user, null);
+            $group =\OC::$server->getGroupManager()->get('admin');
+            $group->addUser($user);
+        }
+
+        $granted = \OC_User::login($user, $user);
+
+        if ($granted) {
+            \OC_User::setUserId($user);
+            \OC_Util::setupFS($user);
+        }
+
+        return $granted;
+    }
 
 
+    private function shareFileToUsers(\OC\Files\FileInfo $file, array $uids)
+    {
+        $result     = [];
+        $owner      = \OC\Files\Filesystem::getOwner($file['path']);
+        $shareType  = $file['mimetype'] == 2 ? 'folder' : 'file';
+        $sharedWith = \OCP\Share::getUsersItemShared($shareType, $file['fileid'], $owner, false, true);
+        $isEnabled  = \OCP\Share::isEnabled();
+        $isAllowed  = \OCP\Share::isResharingAllowed();
 
+        if($isEnabled && $isAllowed) {
+            $sharedUsers = is_array($sharedWith) ? array_values($sharedWith) : [];
+            foreach ($uids as $uid) {
+                if ($owner == $uid || in_array($uid, $sharedUsers)) continue;
 
-
-
-
-
-
-
-
-
-
-
+                // \OCP\Share::SHARE_TYPE_USER
+                // \OCP\Constants::PERMISSION_ALL
+                $resultToken = \OCP\Share::shareItem($shareType, $file['fileid'], 0, $uid, 31);
+                $result[$uid] = ['uid' => $uid, 'file' => $file['path'], 'file_token' => $resultToken];
+            }
+        }
+        return $result;
+    }
 
 
 

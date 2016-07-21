@@ -55,6 +55,7 @@ class Users
         return $user;
     }
 
+
     public function getByEmail($email)
     {
         $sql = "SELECT *
@@ -63,6 +64,7 @@ class Users
 
         return $this->connect->query($sql, [':email'=>$email]);
     }
+
 
     /**
      * Retrieve all records from Users

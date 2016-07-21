@@ -23,6 +23,7 @@ index
 
 # use
 tmp
+temp/*
 lib/_old
 lib/mails
 templates/_old

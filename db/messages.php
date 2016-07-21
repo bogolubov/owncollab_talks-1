@@ -102,6 +102,39 @@ class Messages
     }
 
 
+    /**
+     * @param $uid
+     * @param $mimetype
+     * @return mixed [mimetype_id, mimetype, storage_id, filecache_id]
+     */
+    public function getParseFileData($uid, $mimetype)
+    {
+        $sql = "SELECT
+                    mt.id as mimetype_id,
+                    mt.mimetype as mimetype,
+                    sg.numeric_id as storage_id,
+                    fch.fileid as filecache_id
+                FROM *PREFIX*mimetypes mt
+                LEFT JOIN *PREFIX*storages sg ON (sg.id = :uid)
+                LEFT JOIN *PREFIX*filecache fch ON (fch.path = 'files/Talks')
+                WHERE mt.mimetype = :mimetype";
+
+        return $this->connect->query($sql, [
+            ':uid' => 'home::'.$uid,
+            ':mimetype' => $mimetype,
+        ]);
+    }
+
+    public function addtoFilecache($data)
+    {
+        return $this->connect->insert('*PREFIX*filecache',$data)->execute();
+    }
+
+    public function addtoActivity($data)
+    {
+        return $this->connect->insert('*PREFIX*activity',$data)->execute();
+    }
+
 
 
     /*
