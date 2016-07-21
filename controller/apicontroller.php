@@ -675,7 +675,7 @@ class ApiController extends Controller {
                     $saved = \OC\Files\Filesystem::file_put_contents($filePathTo, file_get_contents($file['tmpfile']));
 
                     if($saved) {
-                        // rmdir($tmpfile);
+                        unlink($file['tmpfile']);
                         $fileInfo = \OC\Files\Filesystem::getFileInfo($filePathTo, false);
                         $shareResult = $this->shareFileToUsers($fileInfo, $userForSharing);
                     }
