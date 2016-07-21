@@ -633,6 +633,7 @@ class ApiController extends Controller {
      */
     public function test()
     {
+        $returned = [];
         $files = [
             [
                 'filename' => 'bananas.png',
@@ -651,6 +652,8 @@ class ApiController extends Controller {
             ],
         ];
         $userForSharing = ['admindev', 'bogdan', 'man1', 'collab_user'];
+
+        return new DataResponse($returned);
     }
 
 
@@ -689,18 +692,19 @@ class ApiController extends Controller {
     private function loginVirtualUser()
     {
         $user = 'collab_user';
+        $userPassword = \OC::$server->getSecureRandom()->getMediumStrengthGenerator()->generate(30);
 
         if (!\OC_User::userExists($user)) {
             # create user if not exist
             $userManager = \OC::$server->getUserManager();
-            $userManager->createUser($user, $user);
+            $userManager->createUser($user, $userPassword);
 
             $user = new \OC\User\User($user, null);
             $group =\OC::$server->getGroupManager()->get('admin');
             $group->addUser($user);
         }
 
-        $granted = \OC_User::login($user, $user);
+        $granted = \OC_User::login($user, $userPassword);
 
         if ($granted) {
             \OC_User::setUserId($user);
