@@ -340,6 +340,7 @@ ul.messagelist li.title .id {
 	background-color: #777777;
 }
 
+
 /* Begin talk */
 .begin-talk {
 	/*width: 550px;*/
@@ -619,18 +620,26 @@ input[type="text"], input[type="password"], input[type="search"], input[type="nu
 .read_btns{
     margin: 5px 10px;
 }
-.read_head li:first-child{
+.read_head>li:first-child{
     padding-top: 10px
 }
-.read_head li{
+.read_head>li{
     padding: 2px 10px;
     border-bottom: 1px solid #eee;
 }
-.read_head li>strong:first-child{
+.read_head>li>strong:first-child{
     display: inline-block;
     width: 100px;
     font-weight: bold;
 }
+.read_attachements{
+    margin-left: 100px;
+    margin-top: -21px;
+}
+.read_attachements li{
+	border: none;
+}
+
 
 .read_body{
 

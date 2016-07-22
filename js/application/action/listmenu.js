@@ -68,9 +68,13 @@ if(App.namespace){App.namespace('Action.Listmenu', function(App) {
         App.query('.loader_min').style.display = 'block';
 
         App.Action.Api.request('message_children',function(response) {
-            if(Util.isObj(response) && response.requesttoken) {
 
-                App.requesttoken = response.requesttoken;
+            console.log(response);
+
+            if(Util.isObj(response)) {
+
+                //App.requesttoken = response.requesttoken;
+
                 if(response.error){
                     return;
                 }

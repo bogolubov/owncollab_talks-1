@@ -183,6 +183,25 @@ class MainController extends Controller
     {
         $message = $this->connect->messages()->getById((int)$id);
         $parent = $this->connect->messages()->getById((int)$message[0]['rid']);
+        $attachements_info = [];
+
+        if(!empty($message[0]['attachements'])) {
+            try{
+                $attach = json_decode($message[0]['attachements'], true);
+                foreach($attach as $at){
+                    $file = $this->connect->files()->getById($at);
+                    if($file) {
+                        $fileInfo = \OC\Files\Filesystem::getFileInfo(substr($file['path'],6));
+                        $attachements_info[] = [
+                            'file' => $file,
+                            'info' => \OCA\Files\Helper::formatFileInfo($fileInfo),
+                        ];
+                    }
+                }
+            }catch(\Exception $e){
+                var_dump('Exception: '.$e->getMessage());
+            }
+        }
 
         Helper::cookies('goto_message', ($message[0]['rid'] == 0 ? $message[0]['id'] : $parent[0]['id']), 0, '/');
 
@@ -191,6 +210,7 @@ class MainController extends Controller
             'content' => 'read',
             'message' => $message,
             'parent' => $parent,
+            'attachements_info' => $attachements_info,
         ];
 
         return new TemplateResponse($this->appName, 'main', $data);

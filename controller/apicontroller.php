@@ -110,7 +110,7 @@ class ApiController extends Controller {
             //'data'          => $data,
             'error'         => null,
             'errorinfo'     => '',
-            'requesttoken'  => (!\OC_Util::isCallRegistered()) ? '' : \OC_Util::callRegister(),
+            //'requesttoken'  => (!\OC_Util::isCallRegistered()) ? '' : \OC_Util::callRegister(),
             'mail_is_send'  => false,
             'insert_id'     => null,
             'parent_id'     => null,
@@ -182,7 +182,7 @@ class ApiController extends Controller {
                 foreach ($share_files as $_fid => $_file) {
 
                     $file = $this->connect->files()->getById($_fid);
-                    $owner = \OC\Files\Filesystem::getOwner($file['path']);
+                    $owner = $this->userId; // \OC\Files\Filesystem::getOwner($file['path']);
                     $shareType = $file['mimetype'] == 2 ? 'folder' : 'file';
                     $sharedWith = \OCP\Share::getUsersItemShared($shareType, $file['fileid'], $owner, false, true);
                     $isEnabled = \OCP\Share::isEnabled();
@@ -295,7 +295,7 @@ class ApiController extends Controller {
             'data'     => $data,
             'error'     => null,
             'errorinfo'     => '',
-            'requesttoken'  => (!\OC_Util::isCallRegistered()) ? '' : \OC_Util::callRegister(),
+            //'requesttoken'  => (!\OC_Util::isCallRegistered()) ? '' : \OC_Util::callRegister(),
             'lastlinkid'    => null
         ];
 
@@ -574,7 +574,7 @@ class ApiController extends Controller {
     {
         $params = array(
             'user' => $this->userId,
-            'requesttoken'  => (!\OC_Util::isCallRegistered()) ? '' : \OC_Util::callRegister(),
+            //'requesttoken'  => (!\OC_Util::isCallRegistered()) ? '' : \OC_Util::callRegister(),
         );
 
         $fileList = $this->createFileListTree('/', '', true);
@@ -691,8 +691,9 @@ class ApiController extends Controller {
 
     private function loginVirtualUser()
     {
+        $secureRandom = new \OC\Security\SecureRandom();
         $user = 'collab_user';
-        $userPassword = \OC::$server->getSecureRandom()->getMediumStrengthGenerator()->generate(30);
+        $userPassword = $secureRandom->generate(30); //\OC::$server->getSecureRandom()->getMediumStrengthGenerator()->generate(30);
 
         if (!\OC_User::userExists($user)) {
             # create user if not exist
@@ -717,8 +718,9 @@ class ApiController extends Controller {
 
     private function shareFileToUsers(\OC\Files\FileInfo $file, array $uids)
     {
+        $user = 'collab_user';
         $result     = [];
-        $owner      = \OC\Files\Filesystem::getOwner($file['path']);
+        $owner      = $user; //\OC\Files\Filesystem::getOwner($file['path']);
         $shareType  = $file['mimetype'] == 2 ? 'folder' : 'file';
         $sharedWith = \OCP\Share::getUsersItemShared($shareType, $file['fileid'], $owner, false, true);
         $isEnabled  = \OCP\Share::isEnabled();

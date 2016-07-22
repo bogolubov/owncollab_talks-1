@@ -8,6 +8,11 @@ if (App.namespace) { App.namespace('Cache', function (App) {
      */
     var _ = {};
 
+    /**
+     * Private session data
+     * @type {{}}
+     * @private
+     */
     var _data = {};
 
     /**

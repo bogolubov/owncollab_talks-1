@@ -45,7 +45,7 @@ if(App.namespace){App.namespace('Action.File', function(App){
         var fd = new FormData();
         var success = false;
         fd.append('files[]', myFile);
-        fd.append('requesttoken', jQuery('head').attr('data-requesttoken'));
+        //fd.append('requesttoken', jQuery('head').attr('data-requesttoken'));
         fd.append('dir', '/');
         fd.append('file_directory', 'Talks');
 

@@ -14,7 +14,7 @@ if(App.namespace) { App.namespace('Action.Api', function(App) {
      * @param timeout_ms
      */
     _.request = function(key, callback, args, timeout_ms) {
-        $.ajax({
+        jQuery.ajax({
             url: App.url + '/api',
             data: {key: key, uid: App.uid, data: args},
             type: 'POST',
@@ -30,6 +30,7 @@ if(App.namespace) { App.namespace('Action.Api', function(App) {
                 console.error("API request error to the key: [" + key + "] Error message: ", error);
             },
             complete: function (jqXHR, status) {
+                //console.log(status, jqXHR.getAllResponseHeaders());
                 if (status == 'timeout') {
                     console.error("You have exceeded the request time. possible problems with the Internet, or an error on the server");
                 }

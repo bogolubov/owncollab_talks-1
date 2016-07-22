@@ -1,7 +1,6 @@
 
 
 var App = new NamespaceApplication({
-
     debug: true,
     constructsType: false,
     name: 'owncollab_talks',
