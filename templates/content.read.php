@@ -8,6 +8,7 @@ $attaches = isset($_['attachements_info']) && is_array($_['attachements_info'])
 
 //var_dump($attaches);
 
+
 if($message):
     $parent = (!empty($_['parent'][0]) && is_array($_['parent'][0])) ? $_['parent'][0] : false;
     $subscribers = json_decode($message['subscribers'],true);
@@ -27,7 +28,12 @@ if($message):
                     <?php foreach ($attaches as $atc): ?>
                         <li>
                             <div class="tbl">
-                                <div class="tbl_cell"><?php echo $atc['info']['name'];?></div>
+                                <div class="tbl_cell width5"><img src="<?php echo $atc['preview'];?>" alt=""></div>
+                                <div class="tbl_cell">
+                                    <a href="<?php echo $atc['link'];?>">
+                                        <?php echo $atc['info']['name'];?>
+                                    </a>
+                                </div>
                                 <div class="tbl_cell width10 text_right"><?php echo number_format($atc['info']['size']/1024, 3, '.', ' ');?> Kb</div>
                             </div>
                         </li>

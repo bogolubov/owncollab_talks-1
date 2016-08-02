@@ -21,10 +21,13 @@ var App = new NamespaceApplication({
 });
 
 
-
+/**
+ * date.js - https://code.google.com/archive/p/datejs/wikis/APIDocumentation.wiki
+ */
 
 App.require('libs', [
     App.urlScript + 'libs/util.js',
+    App.urlScript + 'libs/date.js',
     App.urlScript + 'libs/timer.js',
     App.urlScript + 'libs/linker.js'
 ], initLibrary, initError);

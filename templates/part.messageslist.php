@@ -8,22 +8,54 @@ use \OCA\Owncollab_Talks\Helper;
  */
 $parent = (isset($_['parent']) && is_array($_['parent']))
     ? $_['parent']
-    : false;
+    : [];
 
 /**
  * @type array
  */
 $children = (isset($_['children']) && is_array($_['children']))
     ? $_['children']
-    : false;
+    : [];
+//
+//var_dump(attachCount($parent));
+//var_dump($children[0]['attachements']);
+
+function attachCount(array $message){
+    $attachements = 0;
+    if(!empty($message['attachements'])){
+        try{
+            $attachements = count(json_decode($message['attachements'], true));
+        }catch(\Exception $e){}
+    }
+    return $attachements;
+};
 
 ?>
 
 <div id="message_parent">
     <div class="item_msg linker" data-id="toreadmsg" data-link="<?=$parent['id']?>">
         <div class="msg_title"><a href="<?=Helper::linkToRoute('owncollab_talks.main.read', ['id'=>$parent['id']])?>"><?php p($parent['title'])?></a></div>
-        <div class="msg_desc"><?=$parent['author']?> <?php p(date("d.m.Y H:i:s", strtotime($parent['date'])))?></div>
+        <div class="msg_desc">
+            <?php
+                $downcount = Helper::dateDowncounter($parent['date']);
+                if ($downcount['days'] == 1) echo "One day ago";
+                else if ($downcount['days'] > 1) echo $downcount['days']." days ago";
+                else if ($downcount['hours'] == 1 ) echo "One hour ago";
+                else if ($downcount['hours'] > 1 ) echo $downcount['hours'] . " hours ago";
+                else if ($downcount['minutes'] <= 10 ) echo "A few minutes ago";
+                else if ($downcount['minutes'] > 10 ) echo $downcount['minutes'] . " minutes ago";
+            ?>
+            &nbsp;<strong> <?=$parent['author']?> </strong>
+        </div>
         <div class="msg_text"><?php p(substr($parent['text'],0,50))?>...</div>
+        <?php if(attachCount($parent) > 0):?>
+            <div class="msg_attach">
+                <?php echo attachCount($parent) == 1
+                    ? "Attachment file"
+                    : "Attachments <strong>".attachCount($parent)."</strong> files";
+                ?>
+            </div>
+        <?php endif;?>
     </div>
 </div>
 
@@ -35,6 +67,7 @@ $children = (isset($_['children']) && is_array($_['children']))
                 <div class="msg_title"><a href="<?=Helper::linkToRoute('owncollab_talks.main.read', ['id'=>$child['id']])?>"><?php p($child['title'])?></a></div>
                 <div class="msg_desc"><?=$child['author']?> <?php p(date("d.m.Y H:i:s", strtotime($child['date'])))?></div>
                 <div class="msg_text"><?php p(substr($child['text'],0,50))?>...</div>
+                <?php var_dump(attachCount($child));?>
             </div>
         <?php endforeach; ?>
     </div>

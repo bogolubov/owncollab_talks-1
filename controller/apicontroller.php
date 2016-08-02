@@ -36,7 +36,7 @@ class ApiController extends Controller {
      * @param IRequest $request
      * @param $userId
      * @param $isAdmin
-     * @param \OC_L10N $l10n
+     * @param $l10n
      * @param Connect $connect
      */
     public function __construct(
@@ -44,7 +44,7 @@ class ApiController extends Controller {
         IRequest $request,
         $userId,
         $isAdmin,
-        \OC_L10N $l10n,
+        $l10n,
         Connect $connect
     ){
         parent::__construct($appName, $request);
@@ -634,25 +634,25 @@ class ApiController extends Controller {
     public function test()
     {
         $returned = [];
-        $files = [
-            [
-                'filename' => 'bananas.png',
-                'filetype' => 'image/png',
-                'tmpfile' => Helper::pathAppTalks().'/temp/1469089690-bogdan@mail.com-bananas.png'
-            ],
-            [
-                'filename' => 'bananas2.png',
-                'filetype' => 'image/png',
-                'tmpfile' => Helper::pathAppTalks().'/temp/1469090757-bogdan@mail.com-bananas.png'
-            ],
-            [
-                'filename' => 'bananas3.png',
-                'filetype' => 'image/png',
-                'tmpfile' => Helper::pathAppTalks().'/temp/1469090846-bogdan@mail.com-bananas.png'
-            ],
-        ];
-        $userForSharing = ['admindev', 'bogdan', 'man1', 'collab_user'];
+        /*
 
+                    $file = $this->connect->files()->getById($at);
+                    if($file) {
+                        $fileInfo = \OC\Files\Filesystem::getFileInfo(substr($file['path'],6));
+                        $attachements_info[] = [
+                            'file' => $file,
+                            'info' => \OCA\Files\Helper::formatFileInfo($fileInfo),*/
+
+//        $returned['file'] = $file = $this->connect->files()->getById('18');
+//        $path = str_replace('files/', '',  $file['path']);
+//        $returned['path'] = $path;
+//        $returned['previewIcon'] = \OC_Helper::previewIcon( $path );
+//        $returned['getStorageInfo'] = 'http://owncloud9.loc/remote.php/webdav/art1.jpg';
+
+        //$returned['image_path'] = link_to('files', $file['path'] );
+
+        var_dump($returned);
+        exit;
         return new DataResponse($returned);
     }
 

@@ -410,7 +410,66 @@ class Helper
     }
 
 
+    /**
+     * Countdown counter
+     * @param $date
+     * @return bool|string
+     */
+    static function dateDowncounter($date){
 
+        $check_time = time() - strtotime($date);
+//        if($check_time <= 0){
+//            return false;
+//        }
+
+        $days = floor($check_time/86400);
+        $hours = floor(($check_time%86400)/3600);
+        $minutes = floor(($check_time%3600)/60);
+        $seconds = $check_time % 60;
+
+//        $str = '';
+//        if($days > 0) $str .= self::declension($days,array('день','дня','дней')).' ';
+//        if($hours > 0) $str .= self::declension($hours,array('час','часа','часов')).' ';
+//        if($minutes > 0) $str .= self::declension($minutes,array('минута','минуты','минут')).' ';
+//        if($seconds > 0) $str .= self::declension($seconds,array('секунда','секунды','секунд'));
+
+//        if($days > 0) $str .= self::dateDeclension($days,array('day','day','days')).' ';
+//        if($hours > 0) $str .= self::dateDeclension($hours,array('hour','hour','hours')).' ';
+//        if($minutes > 0) $str .= self::dateDeclension($minutes,array('minute','minute','minutes')).' ';
+//        if($seconds > 0) $str .= self::dateDeclension($seconds,array('second','second','seconds'));
+
+        return [
+            'days' => self::dateDeclension($days,array('','','')),
+            'hours' => self::dateDeclension($hours,array('','','')),
+            'minutes' => self::dateDeclension($minutes,array('','','')),
+            'seconds' => self::dateDeclension($seconds,array('','','')),
+        ];
+    }
+
+
+    /**
+     * Words declension
+     *
+     * @param mixed $digit
+     * @param mixed $expr
+     * @param bool $onlyword
+     * @return
+     */
+    static function dateDeclension($digit,$expr,$onlyword=false){
+        if(!is_array($expr)) $expr = array_filter(explode(' ', $expr));
+        if(empty($expr[2])) $expr[2]=$expr[1];
+        $i=preg_replace('/[^0-9]+/s','',$digit)%100;
+        if($onlyword) $digit='';
+        if($i>=5 && $i<=20) $res=$digit.' '.$expr[2];
+        else
+        {
+            $i%=10;
+            if($i==1) $res=$digit.' '.$expr[0];
+            elseif($i>=2 && $i<=4) $res=$digit.' '.$expr[1];
+            else $res=$digit.' '.$expr[2];
+        }
+        return trim($res);
+    }
 
 
 

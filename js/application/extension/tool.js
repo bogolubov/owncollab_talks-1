@@ -7,16 +7,8 @@ App.namespace('Tool', function(App, mod){
     var _ = {};
 
     /**
-     * @namespace App.Tool.line
+     * @namespace App.node
      */
-    _.line = function(){};
-
-    /**
-     * @namespace App.Tool.page
-     */
-    _.page = function(){};
-
-
     App.node = function(key, value){
         if(typeof key === 'string' && value === undefined) {
             return App.store('node.' + key);
@@ -25,7 +17,7 @@ App.namespace('Tool', function(App, mod){
     };
 
     /**
-     *
+     * @namespace App.uriPath
      * @returns {string}
      */
     App.uriPath = function(){
@@ -35,7 +27,7 @@ App.namespace('Tool', function(App, mod){
     };
 
     /**
-     *
+     * @namespace App.template
      * @returns {string}
      */
     App.template = function(urlView, data, callback){
@@ -45,6 +37,23 @@ App.namespace('Tool', function(App, mod){
         jQuery.get( urlView, callback);
     };
 
+
+
+    /**
+     * @namespace App.Tool.getDateDuration
+     * @param startDate
+     * @returns {{hour: number, minute: number, second: number}}
+     */
+    _.getDateDuration = function(startDate){
+        var currDate = new Date();
+        var duration = new Date(currDate - startDate);
+        return {
+            days: duration.getDayOfYear(),
+            hour: duration.getHours(),
+            minute: duration.getMinutes(),
+            second: duration.getSeconds()
+        };
+    };
 
     return _;
 });

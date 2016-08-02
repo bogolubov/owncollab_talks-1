@@ -27,11 +27,14 @@ if(App.namespace){App.namespace('Action.Edit', function(App){
 
     };
 
+    _.submitFormSendNow = false;
     _.submitFormEvent = function(){
 
         jQuery('form#begin-talk').submit(function(event){
 
             event.preventDefault();
+
+            if(_.submitFormSendNow) return false;
 
             var form = this;
             var formValues = Util.formData(form, true);
@@ -54,6 +57,7 @@ if(App.namespace){App.namespace('Action.Edit', function(App){
                     shareElements.appendChild(hideInput);
                 }
 
+                _.submitFormSendNow = true;
                 //console.log(Util.formData(form, true));
                 this.submit();
             }else{

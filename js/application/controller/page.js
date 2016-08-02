@@ -2,16 +2,20 @@ if(App.namespace){App.namespace('Controller.Page', function(App){
 
     /**
      * @namespace App.Controller.Page
-     *
      */
     var _ = {node: {}};
             
-    _.construct = function(){
-
+    _.construct = function () {
         App.uriPath = App.uriPath();
         App.domLoaded(afterDOMLoaded);
 
+        //var b = App.Tool.getDateDuration(new Date('2016-07-20'));
+        //console.log(b);
+        //console.log(Date.today());0
+        //console.log(Date.now());
+
     };
+
 
     function afterDOMLoaded () {
 

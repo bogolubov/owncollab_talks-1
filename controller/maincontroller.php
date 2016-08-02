@@ -191,8 +191,11 @@ class MainController extends Controller
                 foreach($attach as $at){
                     $file = $this->connect->files()->getById($at);
                     if($file) {
-                        $fileInfo = \OC\Files\Filesystem::getFileInfo(substr($file['path'],6));
+                        $path = str_replace('files/', '',  $file['path']);
+                        $fileInfo = \OC\Files\Filesystem::getFileInfo($path);
                         $attachements_info[] = [
+                            'preview' => \OC_Helper::previewIcon( $path ),
+                            'link' => "/remote.php/webdav/$path",
                             'file' => $file,
                             'info' => \OCA\Files\Helper::formatFileInfo($fileInfo),
                         ];

@@ -639,7 +639,10 @@ input[type="text"], input[type="password"], input[type="search"], input[type="nu
 .read_attachements li{
 	border: none;
 }
-
+.read_attachements a:hover{
+    text-decoration: underline;
+}
+.read_attachements li>.tbl>.tbl_cell:first-child{}
 
 .read_body{
 
