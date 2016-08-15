@@ -1,12 +1,14 @@
 <?php
 
-namespace OCA\Owncollab_Talks\AppInfo;
+//namespace OCA\Owncollab_Talks\AppInfo;
+namespace OCA\Owncollab_Talks;
+
 
 use OCA\Owncollab_Talks\Helper;
 use OCP\IGroupManager;
 use OCP\IUserManager;
 
-class Aliaser
+class AliaserOld
 {
     /**
      * @var array $appConfig

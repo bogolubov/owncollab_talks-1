@@ -27,8 +27,15 @@ class Application extends App {
          */
         $container->registerService('MTAConfig', function (IAppContainer $c) use ($appName)
         {
-            $mtaConfigFile  = \OC_App::getAppPath($appName) . '/appinfo/config.php';
-            $config         = Helper::includePHP($mtaConfigFile);
+            $configFile  = \OC_App::getAppPath($appName) . '/config/config.php';
+
+            if(is_file($configFile)) {
+
+                $config = Helper::includePHP($configFile);
+
+                return $config;
+            }
+            /*
             $mailDomain     = Aliaser::getMailDomain();
 
             $hasEmptyParams = empty($config['mail_domain']) || empty($config['mail_domain']) || empty($config['mail_domain']);
@@ -50,9 +57,8 @@ class Application extends App {
                 'mtaConfig' => $config,
                 'mtaConfigFile' => $mtaConfigFile,
                 'mailDomain' => $mailDomain
-            ]);
+            ]);*/
 
-            return $config;
         });
 
         /**
@@ -112,7 +118,7 @@ class Application extends App {
 
         $container->registerService('MainController', function(DIContainer $c) {
 
-            $c->query('MTAConfig');
+            //$c->query('MTAConfig');
 
             return new MainController(
                 $c->query('AppName'),
@@ -131,7 +137,7 @@ class Application extends App {
     /**
      * @param array $params ['file_path'=>null,'mail_domain'=>null,'server_host'=>null,'site_url'=>null]
      * @return mixed
-     */
+
     public function updateAppConfig(array $params)
     {
         $overwrite   = $putResult = false;
@@ -170,6 +176,6 @@ class Application extends App {
             return $putResult;
         }
         return $overwrite;
-    }
+    } */
 
 }

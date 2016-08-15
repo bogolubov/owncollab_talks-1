@@ -14,6 +14,7 @@ namespace OCA\Owncollab_Talks\Controller;
 use OC\Files\Filesystem;
 use OCA\Owncollab_Talks\AppInfo\Aliaser;
 use OCA\Owncollab_Talks\AppInfo\TempFile;
+use OCA\Owncollab_Talks\Configurator;
 use OCA\Owncollab_Talks\Db\Connect;
 use OCA\Owncollab_Talks\Helper;
 use OCA\Owncollab_Talks\MailParser;
@@ -59,7 +60,7 @@ class MainController extends Controller
         $this->isAdmin = $isAdmin;
         $this->l10n = $l10n;
         $this->connect = $connect;
-        $this->mailDomain = Aliaser::getMailDomain();
+        //$this->mailDomain = Aliaser::getMailDomain();
 
     }
 
@@ -75,10 +76,35 @@ class MainController extends Controller
      */
     public function index()
     {
+        $configurator = new Configurator();
+        $this->mailDomain = $configurator->get('mail_domain');
+
+
+
+
+/*        var_dump($configurator->get('installed'));
+        var_dump($configurator->get('mail_domain'));
+
+        $configurator->update([
+            'installed' => true,
+            'mail_domain' => 'owncloud.loc',
+        ]);
+
+        var_dump($configurator->get('installed'));
+        var_dump($configurator->get('mail_domain'));
+
+        if($configurator->getError())
+            var_dump($configurator->getError());*/
+
+        die;
+
+
         if (!$this->mailDomain) {
             $error = "<p>Failed to get a domain name</p>";
-            if (!Aliaser::getMTAConnection())
-                $error .= "<p>Do not connect to an MTA database</p>";
+
+            //if (!Aliaser::getMTAConnection())
+            //    $error .= "<p>Do not connect to an MTA database</p>";
+
             return $this->pageError($error);
         } else
             return $this->begin();

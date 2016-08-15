@@ -41,7 +41,7 @@ $container->query('OCP\INavigationManager')->add(function () use ($container, $a
 /**
  * Aliaser class a listen the events "create new users" and "create new group"
  */
-$aliaser = new Aliaser($appName);
+//$aliaser = new Aliaser($appName);
 
 
 /**

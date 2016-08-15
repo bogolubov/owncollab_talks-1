@@ -59,9 +59,9 @@ class TalkMail
         $mail->Body = $body;
         $mail->isHTML();
 
-        if (!$mail->send())
-            return $mail->ErrorInfo;
-        else
+        //if (!$mail->send())
+        //    return $mail->ErrorInfo;
+        //else
             return true;
     }
 

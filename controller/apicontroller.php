@@ -200,7 +200,7 @@ class ApiController extends Controller {
                                 continue;
                             }
 
-                            $_result_token = \OCP\Share::shareItem($shareType, $_fid, \OCP\Share::SHARE_TYPE_USER, $_uid, 31);
+                            $_result_token = \OCP\Share::shareItem($shareType, $_fid, \OCP\Share::SHARE_TYPE_USER, $_uid, 1);
                         }
                     }
 
