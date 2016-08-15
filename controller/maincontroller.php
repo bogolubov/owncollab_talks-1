@@ -190,38 +190,40 @@ class MainController extends Controller
 
 
         if(!empty($message[0]['attachements'])) {
-
+            $attach = [];
             try{
-
                 $attach = json_decode($message[0]['attachements'], true);
-
-                foreach ($attach as $at) {
-
-                    $file = $this->connect->files()->getById($at);
-
-                    if ($file) {
-
-                        $path = str_replace('files/', '', $file['path']);
-
-                        if(\OC\Files\Filesystem::file_exists($path)) {
-
-                            $fileInfo = \OC\Files\Filesystem::getFileInfo($path);
-
-                            $attachements_info[] = [
-                                'preview' => \OC_Helper::previewIcon($path),
-                                'link' => "/remote.php/webdav/$path",
-                                'file' => $file,
-                                'info' => \OCA\Files\Helper::formatFileInfo($fileInfo),
-                            ];
-
-                        }
-
-                    }
-                }
-
             }catch(\Exception $e){
                 var_dump('Exception: '.$e->getMessage());
             }
+
+            foreach ($attach as $at) {
+
+                $file = $this->connect->files()->getById($at);
+
+                if ($file) {
+                    $path = str_replace('files/', '', $file['path']);
+
+                    if(\OC\Files\Filesystem::file_exists($path)) {
+
+                        $preview = '';
+                        $fileInfo = \OC\Files\Filesystem::getFileInfo($path);
+                        try{
+                            $preview = \OC_Helper::previewIcon($path);
+                        }catch(\Exception $e){}
+
+                        $attachements_info[] = [
+                            'preview' => $preview,
+                            'link' => "/remote.php/webdav/$path",
+                            'file' => $file,
+                            'info' => \OCA\Files\Helper::formatFileInfo($fileInfo),
+                        ];
+
+                    }
+
+                }
+            }
+
         }
 
 
