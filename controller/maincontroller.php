@@ -185,9 +185,6 @@ class MainController extends Controller
         $message = $this->connect->messages()->getById((int)$id);
         $parent = $this->connect->messages()->getById((int) $message[0]['rid']);
         $attachements_info = [];
-        $token = random_int(15,
-            \OCP\Security\ISecureRandom::CHAR_LOWER.\OCP\Security\ISecureRandom::CHAR_UPPER.
-            \OCP\Security\ISecureRandom::CHAR_DIGITS);
 
         if(!empty($message[0]['attachements'])) {
             $attach = [];
@@ -209,7 +206,6 @@ class MainController extends Controller
                         $preview = '';
                         $fileInfo = \OC\Files\Filesystem::getFileInfo($path);
                         try{
-                            $preview = \OC_Helper::publicPreviewIcon($path, $token);
                             //$preview = \OC_Helper::previewIcon($path);
                         }catch(\Exception $e){}
 
