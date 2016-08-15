@@ -1,5 +1,0 @@
-{
-    "require": {
-        "gpilla/php-owncloud-api": "dev-master"
-    }
-}
