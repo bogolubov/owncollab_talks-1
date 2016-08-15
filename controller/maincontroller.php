@@ -18,6 +18,7 @@ use OCA\Owncollab_Talks\Configurator;
 use OCA\Owncollab_Talks\Db\Connect;
 use OCA\Owncollab_Talks\Helper;
 use OCA\Owncollab_Talks\MailParser;
+use OCA\Owncollab_Talks\MtaConnector;
 use OCA\Owncollab_Talks\ParseMail;
 use OCP\Files;
 use OCP\IRequest;
@@ -78,6 +79,32 @@ class MainController extends Controller
     {
         $configurator = new Configurator();
         $this->mailDomain = $configurator->get('mail_domain');
+
+
+        $mta = new MtaConnector($configurator);
+
+//        var_dump($mta->getVirtualDomains());
+//        var_dump($mta->getVirtualDomains(false));
+
+//        var_dump($mta->getVirtualUsers());
+//        var_dump($mta->getVirtualUsers(false));
+
+
+//        var_dump($mta->virtualUserExist('support@owncloud.loc'));
+        var_dump($mta->insertVirtualUser('support3@owncloud.loc','123'));
+
+/*
+  0 => string 'usr_corpo@owncloud.loc' (length=22)
+  1 => string 'develorers-group@owncloud.loc' (length=29)
+  2 => string 'support@owncloud.loc' (length=20)
+  3 => string 'temp_user@owncloud.loc' (length=22)
+  4 => string 'internal_temp_user@owncloud.loc' (length=31)
+  5 => string 'collab_user@owncloud.loc' (length=24)
+  6 => string 'some1@owncloud.loc' (length=18)
+  7 => string 'some2@owncloud.loc' (length=18)
+  8 => string 'some3@owncloud.loc' (length=18)
+  9 => string 'dev_man@owncloud.loc' (length=20)
+  10 => string 'dev_admin@owncloud.loc' (length=22)*/
 
 
 

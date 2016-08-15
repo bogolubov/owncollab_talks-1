@@ -38,32 +38,47 @@ class MtaConnector {
         return $this->instance;
     }
 
+
     /**
      * Return all domains names
      *
-     * @return bool
+     * @param bool $filtering
+     * @return array|null
      * @throws \Doctrine\DBAL\DBALException
      */
-    public function getVirtualDomains() {
+    public function getVirtualDomains($filtering = true) {
         if($this->instance) {
-            $stmt = $this->instance->prepare('SELECT `name` FROM `mailserver`.`virtual_domains`');
+
+            $stmt = $this->instance->prepare('SELECT * FROM `mailserver`.`virtual_domains`');
             $stmt->execute();
-            $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-            return is_array($result) ? $result['name'] : false;
+
+            if ($result = $stmt->fetchAll(\PDO::FETCH_ASSOC)) {
+                if($filtering)
+                    return array_map(function($item){ return $item['name']; }, $result);
+                else
+                    return $result;
+            }
         }
     }
 
     /**
      * Return all virtual users
-     * @return bool
+     *
+     * @param bool $filtering
+     * @return array|null
      * @throws \Doctrine\DBAL\DBALException
      */
-    public function getVirtualUsers() {
+    public function getVirtualUsers($filtering = true) {
         if($this->instance) {
-            $stmt = $this->instance->prepare('SELECT `name` FROM `mailserver`.`virtual_users`');
+            $stmt = $this->instance->prepare('SELECT * FROM `mailserver`.`virtual_users`');
             $stmt->execute();
-            $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-            return is_array($result) ? $result['name'] : false;
+
+            if ($result = $stmt->fetchAll(\PDO::FETCH_ASSOC)) {
+                if($filtering)
+                    return array_map(function($item){ return $item['email']; }, $result);
+                else
+                    return $result;
+            }
         }
     }
 
@@ -78,8 +93,7 @@ class MtaConnector {
         if($this->instance) {
             $stmt = $this->instance->prepare('SELECT * FROM `mailserver`.`virtual_domains` WHERE `name` = ?');
             $stmt->execute([$domain]);
-            $result = $stmt->fetch();
-            return is_array($result) ? $result : false;
+            return is_array($stmt->fetch());
         }
     }
 
@@ -94,8 +108,7 @@ class MtaConnector {
         if($this->instance) {
             $stmt = $this->instance->prepare('SELECT * FROM `mailserver`.`virtual_users` WHERE `email` = ?');
             $stmt->execute([$email]);
-            $result = $stmt->fetch();
-            return is_array($result) ? $result : false;
+            return is_array($stmt->fetch());
         }
     }
 
@@ -104,11 +117,13 @@ class MtaConnector {
      *
      * @param $email
      * @param $password
-     * @return bool
+     * @return null|bool
      * @throws \Doctrine\DBAL\DBALException
      */
     public function insertVirtualUser($email, $password) {
-        if($this->instance) {
+
+        if($this->instance && !$this->virtualUserExist($email)) {
+
             $sql = "INSERT INTO `mailserver`.`virtual_users`
                   (`domain_id`, `password` , `email`) VALUES
                   ('1', ENCRYPT(?, CONCAT('$6$', SUBSTRING(SHA(RAND()), -16))) , ?);";
