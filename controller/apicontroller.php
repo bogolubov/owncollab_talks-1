@@ -200,7 +200,7 @@ class ApiController extends Controller {
                                 continue;
                             }
 
-                            $_result_token = \OCP\Share::shareItem($shareType, $_fid, \OCP\Share::SHARE_TYPE_USER, $_uid, 1);
+                            $_result_token = \OCP\Share::shareItem($shareType, $_fid, \OCP\Share::SHARE_TYPE_USER, $_uid, 31);
                         }
                     }
 
@@ -219,7 +219,6 @@ class ApiController extends Controller {
             $data['hash'] = TalkMail::createHash($data['title']);
             $data['status'] = TalkMail::SEND_STATUS_CREATED;
 
-            /**/
             if($params['insert_id'] = $data['id'] = $this->connect->messages()->insertTask($data)) {
                 $params['mail_is_send'] = $this->mailsendSwitcher($data, $all_users, $groups, $groupsusers, $attachements_info);
             }
