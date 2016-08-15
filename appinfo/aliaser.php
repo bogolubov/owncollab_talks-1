@@ -33,16 +33,18 @@ class Aliaser
     {
         $this->appName      = $appName;
         $this->appConfig    = Helper::includePHP(\OC_App::getAppPath($appName) . '/appinfo/config.php');
-        $this->userManager  = \OC::$server->getUserManager();
-        $this->groupManager = \OC::$server->getGroupManager();
-        $this->session      = new \OC\Session\Memory('');
-        $this->userSession  = new \OC\User\Session($this->userManager, $this->session);
 
         if(!self::$_instanceMTAConnection)
             self::$_instanceMTAConnection = $this->createMTAConnection();
 
-        if(self::$_instanceMTAConnection) {
+        if(self::$_instanceMTAConnection && strpos('/settings/',$_SERVER['REQUEST_URI']) !== false) {
             $this->mailDomain = self::getMailDomain();
+
+            $this->userManager  = \OC::$server->getUserManager();
+            $this->groupManager = \OC::$server->getGroupManager();
+            $this->session      = new \OC\Session\Memory('');
+            $this->userSession  = new \OC\User\Session($this->userManager, $this->session);
+
             $this->initListeners($this->userSession, $this->groupManager);
             return true;
         } else {
