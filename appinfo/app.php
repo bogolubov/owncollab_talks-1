@@ -58,23 +58,3 @@ if(Helper::isAppPage($appName)) {
 	Util::addScript($appName, 'libs/ns.application');
 	Util::addScript($appName, 'application/init');
 }
-
-
-/**
- * Detect and appoints styles and scripts for particular app page
- */
-$currentUri = Helper::getCurrentUri($appName);
-if($currentUri == '/') {
-
-}
-
-/**
-* Set timezone to 'Berlin' 
-* It must be set in the ownCloud config 
-*/ 
-date_default_timezone_set('Europe/Berlin'); 
-
-/**
- * Checking and saving the files send by email
- */
-//$checkFiles = new TempFiles();

@@ -60,7 +60,7 @@ class Aliaser
     public function onPreCreateUser($uid, $password)
     {
         if (!empty($uid) && !empty($password)) {
-            $this->insertNewAlias(strtolower($uid).'@'.$this->mailDomain, $password);
+            $this->insertNewAlias(strtolower($uid).'@'.$this->appConfig['mail_domain'], $password);
         }
     }
 
@@ -77,15 +77,15 @@ class Aliaser
                 ? $this->appConfig['group_prefix']
                 : '-group';
 
-            $this->insertNewAlias(strtolower($gid).$group_prefix.'@'.$this->mailDomain, 'pass'.strtolower($gid));
+            $this->insertNewAlias(strtolower($gid).$group_prefix.'@'.$this->appConfig['mail_domain'], 'pass'.strtolower($gid));
         }
     }
 
     public function onPreDeleteGroup($gid){}
 
     /**
-     * @param $userSession
-     * @param $groupManager
+     * @param IUserManager $userSession
+     * @param IGroupManager $groupManager
      */
     private function initListeners($userSession, $groupManager)
     {
@@ -131,7 +131,7 @@ class Aliaser
      * @throws \Doctrine\DBAL\DBALException
      */
     static public function getMailDomain() {
-        if(self::$_instanceMTAConnection){
+        if(self::$_instanceMTAConnection) {
             $stmt = self::$_instanceMTAConnection->prepare('SELECT `name` FROM `mailserver`.`virtual_domains`');
             $stmt->execute();
             $result = $stmt->fetch();
