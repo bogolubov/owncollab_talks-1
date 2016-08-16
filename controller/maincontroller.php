@@ -12,14 +12,10 @@
 namespace OCA\Owncollab_Talks\Controller;
 
 use OC\Files\Filesystem;
-use OCA\Owncollab_Talks\AppInfo\Aliaser;
-use OCA\Owncollab_Talks\AppInfo\TempFile;
 use OCA\Owncollab_Talks\Configurator;
 use OCA\Owncollab_Talks\Db\Connect;
 use OCA\Owncollab_Talks\Helper;
-use OCA\Owncollab_Talks\MailParser;
 use OCA\Owncollab_Talks\MtaConnector;
-use OCA\Owncollab_Talks\ParseMail;
 use OCP\Files;
 use OCP\IRequest;
 use OCP\AppFramework\Http\TemplateResponse;
@@ -35,8 +31,8 @@ class MainController extends Controller
     private $l10n;
     private $isAdmin;
     private $connect;
-    private $projectname = "Base project";
-    private $mailDomain = null;
+    private $configurator;
+    private $mailDomain;
 
     /**
      * MainController constructor.
@@ -46,6 +42,7 @@ class MainController extends Controller
      * @param $isAdmin
      * @param $l10n
      * @param Connect $connect
+     * @param Configurator $configurator
      */
     public function __construct(
         $appName,
@@ -53,7 +50,8 @@ class MainController extends Controller
         $userId,
         $isAdmin,
         $l10n,
-        Connect $connect
+        Connect $connect,
+        Configurator $configurator
     )
     {
         parent::__construct($appName, $request);
@@ -61,8 +59,8 @@ class MainController extends Controller
         $this->isAdmin = $isAdmin;
         $this->l10n = $l10n;
         $this->connect = $connect;
-        //$this->mailDomain = Aliaser::getMailDomain();
-
+        $this->configurator = $configurator;
+        $this->mailDomain = $this->configurator->get('mail_domain');
     }
 
     /**
@@ -77,54 +75,6 @@ class MainController extends Controller
      */
     public function index()
     {
-        $configurator = new Configurator();
-        $this->mailDomain = $configurator->get('mail_domain');
-
-
-        $mta = new MtaConnector($configurator);
-
-//        var_dump($mta->getVirtualDomains());
-//        var_dump($mta->getVirtualDomains(false));
-
-//        var_dump($mta->getVirtualUsers());
-//        var_dump($mta->getVirtualUsers(false));
-
-
-//        var_dump($mta->virtualUserExist('support@owncloud.loc'));
-        var_dump($mta->insertVirtualUser('support3@owncloud.loc','123'));
-
-/*
-  0 => string 'usr_corpo@owncloud.loc' (length=22)
-  1 => string 'develorers-group@owncloud.loc' (length=29)
-  2 => string 'support@owncloud.loc' (length=20)
-  3 => string 'temp_user@owncloud.loc' (length=22)
-  4 => string 'internal_temp_user@owncloud.loc' (length=31)
-  5 => string 'collab_user@owncloud.loc' (length=24)
-  6 => string 'some1@owncloud.loc' (length=18)
-  7 => string 'some2@owncloud.loc' (length=18)
-  8 => string 'some3@owncloud.loc' (length=18)
-  9 => string 'dev_man@owncloud.loc' (length=20)
-  10 => string 'dev_admin@owncloud.loc' (length=22)*/
-
-
-
-
-/*        var_dump($configurator->get('installed'));
-        var_dump($configurator->get('mail_domain'));
-
-        $configurator->update([
-            'installed' => true,
-            'mail_domain' => 'owncloud.loc',
-        ]);
-
-        var_dump($configurator->get('installed'));
-        var_dump($configurator->get('mail_domain'));
-
-        if($configurator->getError())
-            var_dump($configurator->getError());*/
-
-        die;
-
 
         if (!$this->mailDomain) {
             $error = "<p>Failed to get a domain name</p>";
@@ -259,7 +209,7 @@ class MainController extends Controller
                         $preview = '';
                         $fileInfo = \OC\Files\Filesystem::getFileInfo($path);
                         try{
-                            //$preview = \OC_Helper::previewIcon($path);
+                            $preview = \OC_Helper::previewIcon($path);
                         }catch(\Exception $e){}
 
                         $attachements_info[] = [

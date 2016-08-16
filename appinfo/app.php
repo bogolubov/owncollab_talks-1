@@ -11,7 +11,10 @@
 
 namespace OCA\Owncollab_Talks\AppInfo;
 
+use OCA\Owncollab_Talks\Aliaser;
+use OCA\Owncollab_Talks\Configurator;
 use OCA\Owncollab_Talks\Helper;
+use OCA\Owncollab_Talks\MtaConnector;
 use OCP\AppFramework\App;
 use OCP\Util;
 
@@ -40,8 +43,13 @@ $container->query('OCP\INavigationManager')->add(function () use ($container, $a
 
 /**
  * Aliaser class a listen the events "create new users" and "create new group"
+ * todo: create error logs for Configurator & MtaConnector
  */
-//$aliaser = new Aliaser($appName);
+if( Helper::isAppSettingsUsers() ) {
+    $configurator = new Configurator();
+    $mta = new MtaConnector($configurator);
+    new Aliaser($appName, $configurator, $mta);
+}
 
 
 /**

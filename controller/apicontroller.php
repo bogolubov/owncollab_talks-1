@@ -4,6 +4,7 @@ namespace OCA\Owncollab_Talks\Controller;
 
 use OC\Files\Filesystem;
 use OCA\Owncollab_Talks\AppInfo\Aliaser;
+use OCA\Owncollab_Talks\Configurator;
 use OCA\Owncollab_Talks\Helper;
 use OCA\Owncollab_Talks\Db\Connect;
 use OCA\Owncollab_Talks\PHPMailer\PHPMailer;
@@ -18,15 +19,16 @@ use OCP\Template;
 
 class ApiController extends Controller {
 
+    /**
+     * @var \OCP\IURLGenerator $urlGenerator
+     * @var \OCP\IURLGenerator $configurator
+     */
     private $userId;
     private $l10n;
     private $isAdmin;
     private $connect;
-    private $projectname = "Base project";
-    /**
-     * @var \OCP\IURLGenerator
-     */
     private $urlGenerator;
+    private $configurator;
     private $mailDomain;
 
 
@@ -38,6 +40,7 @@ class ApiController extends Controller {
      * @param $isAdmin
      * @param $l10n
      * @param Connect $connect
+     * @param Configurator $configurator
      */
     public function __construct(
         $appName,
@@ -45,16 +48,17 @@ class ApiController extends Controller {
         $userId,
         $isAdmin,
         $l10n,
-        Connect $connect
+        Connect $connect,
+        Configurator $configurator
     ){
         parent::__construct($appName, $request);
         $this->userId = $userId;
         $this->isAdmin = $isAdmin;
         $this->l10n = $l10n;
         $this->connect = $connect;
+        $this->configurator = $configurator;
+        $this->mailDomain = $this->configurator->get('mail_domain');
         $this->urlGenerator = \OC::$server->getURLGenerator();
-        $this->mailDomain = Aliaser::getMailDomain();
-
     }
 
     /**
@@ -72,11 +76,11 @@ class ApiController extends Controller {
             return new DataResponse(['error'=>'Email domain is undefined']);
 
         // added base needed params global static object
-        Helper::val([
+/*        Helper::val([
             'userId'  => $this->userId,
             'appName' => $this->appName,
             'mailDomain' => $this->mailDomain,
-        ]);
+        ]);*/
 
         if(method_exists($this, $key)) {
             TalkMail::registerMailDomain($this->mailDomain);
@@ -107,10 +111,8 @@ class ApiController extends Controller {
     public function save_reply($data) {
 
         $params = [
-            //'data'          => $data,
             'error'         => null,
             'errorinfo'     => '',
-            //'requesttoken'  => (!\OC_Util::isCallRegistered()) ? '' : \OC_Util::callRegister(),
             'mail_is_send'  => false,
             'insert_id'     => null,
             'parent_id'     => null,
@@ -148,7 +150,6 @@ class ApiController extends Controller {
     public function saveTalk()
     {
         $params = [
-            //'post'          => $_POST,
             'error'         => null,
             'errorinfo'     => null,
             'insert_id'     => null,
@@ -291,10 +292,8 @@ class ApiController extends Controller {
     public function message_children($data)
     {
         $params = [
-            'data'     => $data,
             'error'     => null,
             'errorinfo'     => '',
-            //'requesttoken'  => (!\OC_Util::isCallRegistered()) ? '' : \OC_Util::callRegister(),
             'lastlinkid'    => null
         ];
 
@@ -442,7 +441,7 @@ class ApiController extends Controller {
                     $data['text'] = $params['content'];
                     $data['attachements'] = '';
                     $data['author'] = $userSender['userid'];
-                    $data['subscribers'] = $message['subscribers']; //json_encode(['groups' => [], 'users' => []]);
+                    $data['subscribers'] = $message['subscribers'];
                     $data['hash'] = TalkMail::createHash($data['date']);
                     $data['status'] = TalkMail::SEND_STATUS_REPLY;
 
@@ -573,7 +572,6 @@ class ApiController extends Controller {
     {
         $params = array(
             'user' => $this->userId,
-            //'requesttoken'  => (!\OC_Util::isCallRegistered()) ? '' : \OC_Util::callRegister(),
         );
 
         $fileList = $this->createFileListTree('/', '', true);
@@ -598,11 +596,13 @@ class ApiController extends Controller {
      */
     public function createFileListTree($path = '/', $root_path = '', $clean = false)
     {
-        if($clean) {$this->_file_list_tree = [];}
+        if($clean) {
+            $this->_file_list_tree = [];
+        }
 
         $_files = \OCA\Files\Helper::getFiles($path);
 
-        if(is_array($_files)){
+        if (is_array($_files)) {
             foreach($_files as $f => $file) {
 
                 if($file['type'] == 'dir') {
@@ -613,7 +613,7 @@ class ApiController extends Controller {
 
                     if(!$file->isShared()) {
                         $_to_list['mtime'] = $file['mtime']/1000;
-                        $_to_list['path'] = $root_path .'/'. $file['name'];
+                        $_to_list['path']  = $root_path .'/'. $file['name'];
 
                         $this->_file_list_tree[] = $_to_list;
                     }
@@ -622,37 +622,6 @@ class ApiController extends Controller {
         }
 
         return $this->_file_list_tree;
-    }
-
-    /**
-     * @PublicPage
-     * @NoAdminRequired
-     * @NoCSRFRequired
-     * @return DataResponse
-     */
-    public function test()
-    {
-        $returned = [];
-        /*
-
-                    $file = $this->connect->files()->getById($at);
-                    if($file) {
-                        $fileInfo = \OC\Files\Filesystem::getFileInfo(substr($file['path'],6));
-                        $attachements_info[] = [
-                            'file' => $file,
-                            'info' => \OCA\Files\Helper::formatFileInfo($fileInfo),*/
-
-//        $returned['file'] = $file = $this->connect->files()->getById('18');
-//        $path = str_replace('files/', '',  $file['path']);
-//        $returned['path'] = $path;
-//        $returned['previewIcon'] = \OC_Helper::previewIcon( $path );
-//        $returned['getStorageInfo'] = 'http://owncloud9.loc/remote.php/webdav/art1.jpg';
-
-        //$returned['image_path'] = link_to('files', $file['path'] );
-
-        var_dump($returned);
-        exit;
-        return new DataResponse($returned);
     }
 
 
@@ -692,7 +661,7 @@ class ApiController extends Controller {
     {
         $secureRandom = new \OC\Security\SecureRandom();
         $user = 'collab_user';
-        $userPassword = $secureRandom->generate(30); //\OC::$server->getSecureRandom()->getMediumStrengthGenerator()->generate(30);
+        $userPassword = $secureRandom->generate(30);
 
         if (!\OC_User::userExists($user)) {
             # create user if not exist
@@ -717,9 +686,9 @@ class ApiController extends Controller {
 
     private function shareFileToUsers(\OC\Files\FileInfo $file, array $uids)
     {
-        $user = 'collab_user';
+        $user       = 'collab_user';
         $result     = [];
-        $owner      = $user; //\OC\Files\Filesystem::getOwner($file['path']);
+        $owner      = $user;
         $shareType  = $file['mimetype'] == 2 ? 'folder' : 'file';
         $sharedWith = \OCP\Share::getUsersItemShared($shareType, $file['fileid'], $owner, false, true);
         $isEnabled  = \OCP\Share::isEnabled();

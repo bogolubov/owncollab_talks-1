@@ -3,6 +3,7 @@
 
     //ini_set('display_errors', 1);
 
+use OCA\Owncollab_Talks\Configurator;
 use \OCA\Owncollab_Talks\Helper;
 use OCA\Owncollab_Talks\Controller\ApiController;
 use OCA\Owncollab_Talks\Controller\MainController;
@@ -21,44 +22,14 @@ class Application extends App {
         parent::__construct($appName, $urlParams);
         $container = $this->getContainer();
 
-
         /**
-         * App Config Control
+         * Checks the configuration file, if it does not match the server parameters,
+         * updates the configuration file
          */
-        $container->registerService('MTAConfig', function (IAppContainer $c) use ($appName)
-        {
-            $configFile  = \OC_App::getAppPath($appName) . '/config/config.php';
-
-            if(is_file($configFile)) {
-
-                $config = Helper::includePHP($configFile);
-
-                return $config;
-            }
-            /*
-            $mailDomain     = Aliaser::getMailDomain();
-
-            $hasEmptyParams = empty($config['mail_domain']) || empty($config['mail_domain']) || empty($config['mail_domain']);
-
-            if($hasEmptyParams || !$config['installed']) {
-
-                $updateResult = $this->updateAppConfig([
-                    'file_path'   => $mtaConfigFile,
-                    'mail_domain' => $mailDomain,
-                    'server_host' => Helper::val('serverHost'),
-                    'site_url'    => Helper::val('urlFull'),
-                ]);
-
-                if($updateResult)
-                    $config = Helper::includePHP($mtaConfigFile);
-            }
-
-            Helper::val([
-                'mtaConfig' => $config,
-                'mtaConfigFile' => $mtaConfigFile,
-                'mailDomain' => $mailDomain
-            ]);*/
-
+        $container->registerService('Configurator', function (IAppContainer $c) use ($appName) {
+            $configurator = new Configurator();
+            $this->updateConfig($configurator);
+            return $configurator;
         });
 
         /**
@@ -103,22 +74,19 @@ class Application extends App {
          */
         $container->registerService('ApiController', function(DIContainer $c) {
 
-            //$c->query('MTAConfig');
-
             return new ApiController(
                 $c->query('AppName'),
                 $c->query('Request'),
                 $c->query('UserId'),
                 $c->query('isAdmin'),
                 $c->query('L10N'),
-                $c->query('Connect')
+                $c->query('Connect'),
+                $c->query('Configurator')
             );
         });
 
 
         $container->registerService('MainController', function(DIContainer $c) {
-
-            //$c->query('MTAConfig');
 
             return new MainController(
                 $c->query('AppName'),
@@ -126,56 +94,35 @@ class Application extends App {
                 $c->query('UserId'),
                 $c->query('isAdmin'),
                 $c->query('L10N'),
-                $c->query('Connect')
+                $c->query('Connect'),
+                $c->query('Configurator')
             );
         });
-
 
     }
 
 
     /**
-     * @param array $params ['file_path'=>null,'mail_domain'=>null,'server_host'=>null,'site_url'=>null]
-     * @return mixed
-
-    public function updateAppConfig(array $params)
+     * Проверка на обновления и вывод конфигурационного массива
+     *
+     * @param Configurator $configurator
+     */
+    public function updateConfig($configurator)
     {
-        $overwrite   = $putResult = false;
+        $request = \OC::$server->getRequest();
+        $domain = $request->getServerHost();
 
-        $file_path   = $params['file_path'];
-        $mail_domain = $params['mail_domain'];
-        $server_host = $params['server_host'];
-        $site_url    = $params['site_url'];
+        if ($configurator->get('mail_domain') != $domain || !$configurator->get('installed')) {
 
-        $fileLines   = file($file_path);
-        $len = count($fileLines);
+            $params = [
+                'installed'   => true,
+                'mail_domain' => $domain,
+                'server_host' => $domain,
+                'site_url'    => \OC::$server->getURLGenerator()->getAbsoluteURL('/'),
+            ];
 
-        for ($i = 0; $i < $len; $i ++) {
-            if(strpos($fileLines[$i], 'mail_domain') !== false) {
-                $overwrite = true;
-                $fileLines[$i] = "    'mail_domain' => '{$mail_domain}',\n";
-            }
-            else if(strpos($fileLines[$i], 'server_host') !== false) {
-                $overwrite = true;
-                $fileLines[$i] = "    'server_host' => '{$server_host}',\n";
-            }
-            else if(strpos($fileLines[$i], 'site_url') !== false) {
-                $overwrite = true;
-                $fileLines[$i] = "    'site_url' => '{$site_url}',\n";
-            }
-            else if(strpos($fileLines[$i], 'installed') !== false) {
-                $overwrite = true;
-                $fileLines[$i] = "    'installed' => true,\n";
-            }
+            $configurator->update($params);
         }
-        if($overwrite) {
-            if(!is_writable($file_path)) {
-                chmod($file_path, 0777);
-            }
-            $putResult = file_put_contents($file_path, join("", $fileLines));
-            return $putResult;
-        }
-        return $overwrite;
-    } */
+    }
 
 }

@@ -85,7 +85,7 @@ function parse_source_mail_data()
 function send_to_app(array $fieldsData)
 {
 
-    $config_file = APPROOT . '/appinfo/config.php';
+    $config_file = APPROOT . '/config/config.php';
     if(!is_file($config_file)) {
         loger_error("Line: ".__LINE__."; Not found file config.php");
         exit;
@@ -152,8 +152,8 @@ function files_parser($message, $messageData)
     while ($att = $message->getAttachmentPart($i)) {
 
         try{
-            //$typeHeaders =  $att->getHeaders();
-            $typeHeader     =  $att->getHeader('Content-Type');
+            //$typeHeaders = $att->getHeaders();
+            $typeHeader     = $att->getHeader('Content-Type');
             $filetype       = $typeHeader->getValue();
             $filename       = trim(explode('name=',$typeHeader->getRawValue())[1], "\"'");
             $filecontent    = stream_get_contents($att->getContentResourceHandle());

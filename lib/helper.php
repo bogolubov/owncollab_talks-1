@@ -303,6 +303,36 @@ class Helper
 
 
     /**
+     * Check current the application is running.
+     * If $name return bool if current application equivalent
+     * If $name missing return current application name
+     *
+     * @param $name
+     * @return array|null|bool
+     */
+    static public function isApp($name = null) {
+        $uri = \OC::$server->getRequest()->getRequestUri();
+        $start = strpos($uri, '/apps/') + 6;
+        $app = substr($uri, $start);
+
+        if (strpos($app, '/'))
+            $app = substr($app, 0, strpos($app, '/'));
+
+        if($name)
+            return $app == $name;
+
+        return $app;
+    }
+
+    /**
+     * Check current the application is setting.
+     * @return bool
+     */
+    static public function isAppSettingsUsers() {
+        return strpos(\OC::$server->getRequest()->getRequestUri(), '/settings/users') !== false;
+    }
+
+    /**
      * @param string $path  If $path string started with slash example: '/path/to..' - its was indicate to absolute path.
      *                          And, without slash is relative path
      * @param array $args   Extracted on include file
@@ -329,6 +359,7 @@ class Helper
 
     /**
      * <pre>
+     * Helper::val
      * 'insecureServerHost'
      * 'httpProtocol'
      * 'requestUri'
@@ -341,7 +372,7 @@ class Helper
      * </pre>
      * @param array|string|null $parts
      * @return array|null
-     */
+
     static public function val($parts = null)
     {
         static $data = null;
@@ -374,7 +405,7 @@ class Helper
             return isset($data[$parts]) ? $data[$parts] : null;
         }else
             return $data;
-    }
+    } */
 
     /**
      * Absolute path to application OwnCollabTalks
