@@ -192,7 +192,7 @@ class MainController extends Controller
         if(!empty($message[0]['attachements'])) {
             $attach = [];
             try{
-                $attach = json_decode($message[0]['attachements'], true);
+                $attach = json_decode($message[0]['attachements '], true);
             }catch(\Exception $e){
                 var_dump('Exception: '.$e->getMessage());
             }
@@ -209,7 +209,7 @@ class MainController extends Controller
                         $preview = '';
                         $fileInfo = \OC\Files\Filesystem::getFileInfo($path);
                         try{
-                            $preview = \OC_Helper::previewIcon($path);
+                            //$preview = \OC_Helper::previewIcon($path);
                         }catch(\Exception $e){}
 
                         $attachements_info[] = [
