@@ -186,13 +186,13 @@ class MainController extends Controller
     {
 
         $message = $this->connect->messages()->getById((int)$id);
-        $parent = $this->connect->messages()->getById((int) $message[0]['rid']);
+        $parent = $this->connect->messages()->getById((int) $message['rid']);
         $attachements_info = [];
 
-        if(!empty($message[0]['attachements'])) {
+        if(!empty($message['attachements'])) {
             $attach = [];
             try{
-                $attach = json_decode($message[0]['attachements '], true);
+                $attach = json_decode($message['attachements'], true);
             }catch(\Exception $e){
                 var_dump('Exception: '.$e->getMessage());
             }
@@ -208,8 +208,9 @@ class MainController extends Controller
 
                         $preview = '';
                         $fileInfo = \OC\Files\Filesystem::getFileInfo($path);
+
                         try{
-                            //$preview = \OC_Helper::previewIcon($path);
+                            $preview =  \OCA\Files\Helper::determineIcon($fileInfo); // \OC_Helper::previewIcon($path);
                         }catch(\Exception $e){}
 
                         $attachements_info[] = [
@@ -218,7 +219,6 @@ class MainController extends Controller
                             'file' => $file,
                             'info' => \OCA\Files\Helper::formatFileInfo($fileInfo),
                         ];
-
                     }
 
                 }
@@ -227,7 +227,7 @@ class MainController extends Controller
         }
 
 
-        Helper::cookies('goto_message', ($message[0]['rid'] == 0 ? $message[0]['id'] : $parent[0]['id']), 0, '/');
+        Helper::cookies('goto_message', ($message['rid'] == 0 ? $message['id'] : $parent['id']), 0, '/');
 
         $data = [
             'menu' => 'all',
@@ -249,20 +249,73 @@ class MainController extends Controller
     public function test()
     {
         $data = [];
-        //$data['files']
+        //$message = $this->connect->messages()->getById(2);
+        //$attach = self::decodeAttachements($message['attachements']);
 
-        $files = \OCA\Files\Helper::getFiles('/Talks');
-        $data['files'] = $files;
+        $file = $this->connect->files()->getInfoById(87);
 
-        $data['isShared'] = $files[0]->isShared();
+//        $itemType = 'file';
+//        $itemSource = $file['fileid'];
+//        $shareType = \OCP\Share::SHARE_TYPE_USER;
+//        $shareWith = 'dev2';
+//        $permissions = \OCP\Constants::PERMISSION_READ;
 
-        //$list = \OCA\Files\Helper::formatFileInfo($files[0]);
-        //$data['list'] = $list;
+        //\OC\Share\Share::unshareAll($itemType, $itemSource);
 
 
-        var_dump($data);
-        return new DataResponse($data);
+        // $this->connect->files()->shareFile(87, $this->userId, 'dev3');
+
+
+
+        //\OC\Share\Share::unshareFromSelf($itemType, $itemSource);
+        //var_dump($file);
+        //var_dump($itemSource);
+        //$shareIsSuccess = \OC\Share\Share::shareItem($itemType, $itemSource, $shareType, $shareWith, $permissions);
+        //var_dump($shareIsSuccess);
+
+        //\OC\Share\Share::shareItem($itemType, $itemSource, $shareType, $shareWith, $permissions);
+
+        //$path = \OC::$SERVERROOT.'/data/'.$file['user'].'/'.$file['path'];
+//        var_dump($file);
+//        var_dump($file['fullpath']);
+//        var_dump(is_file($file['fullpath']));
+//        var_dump(is_readable($file['fullpath']));
+
+        //header('Content-type: '.$file['mimetype']);
+        //echo $file['fullpath'];
+        //readfile($file['fullpath']);
+
+        //exit;
+        return new DataResponse($file);
     }
+
+
+    /**
+     *
+     */
+    static public function getGlobalFileById(){
+
+    }
+
+
+    /**
+     * Return attachements ids in array
+     * Decode JSON string
+     *
+     * @param $json
+     * @return mixed|null
+     */
+    static public function decodeAttachements ($json)
+    {
+        $attach = null;
+        try {
+            $attach = json_decode($json, true);
+        } catch ( \Exception $e) {}
+        return $attach;
+    }
+
+
+
 
 
 }

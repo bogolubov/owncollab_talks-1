@@ -50,6 +50,22 @@ class Files
         return is_array($file) ? $file[0] : null;
     }
 
+    public function getInfoById($id)
+    {
+        $sql = "SELECT * FROM oc_filecache f
+                LEFT JOIN *PREFIX*activity a ON (a.object_id = f.fileid)
+                LEFT JOIN *PREFIX*mimetypes m ON (m.id = f.mimetype)
+                WHERE f.fileid = :id";
+
+        $file = $this->connect->query($sql, [':id' => $id]);
+
+        if (is_array($file)) {
+            $file['fullpath'] = \OC::$SERVERROOT.'/data/'.$file['user'].'/'.$file['path'];
+        }
+
+        return  $file;
+    }
+
 
     public function getByUser($user) {
         $sql = "SELECT activity_id, timestamp, priority, type, user, affecteduser, app, subject, subjectparams, message, messageparams, file, link, object_type, object_id,  fileid, storage, path, path_hash, parent, name, f.mimetype as mimeid, m.mimetype as mimetype, mimepart, size, mtime, storage_mtime, encrypted, unencrypted_size, etag, permissions " .
@@ -232,9 +248,34 @@ class Files
      * @param $fid
      * @param $uid
      */
-    public function shareFile($fid, $uid)
+    public function shareFile($fid, $uid, $withUid)
     {
-        $r = [];
+        $isEnabled = \OCP\Share::isEnabled();
+        $isAllowed = \OCP\Share::isResharingAllowed();
+        $sharedWith = \OCP\Share::getUsersItemShared('file', $fid, $uid, false, true);
+
+        //$file = $this->connect->files()->getInfoById($fid);
+        if($isEnabled && $isAllowed && !in_array($withUid, $sharedWith)) {
+
+            $shareIsSuccess = \OC\Share\Share::shareItem(
+                'file',
+                $fid,
+                \OCP\Share::SHARE_TYPE_USER,
+                $withUid,
+                \OCP\Constants::PERMISSION_READ
+            );
+
+            if($shareIsSuccess) {
+                $result = $this->connect->update('*PREFIX*share', ['uid_initiator' => $uid],
+                    'share_with = :share_with AND uid_owner = :uid_owner AND file_source = :file_source', [
+                        ':share_with' => $withUid,
+                        ':uid_owner' => $uid,
+                        ':file_source' => $fid,
+                    ]);
+            }
+        }
+
+        /*$r = [];
 
         if($file = $this->getById($fid)) {
 
@@ -258,7 +299,7 @@ class Files
 
 
 
-       /*
+
         *
 share_type - (int) ‘0’ = user; ‘1’ = group; ‘3’ = public link
 share_with - (string) user / group id with which the file should be shared

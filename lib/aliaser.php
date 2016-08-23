@@ -74,7 +74,7 @@ class Aliaser
     public function onPreCreateGroup($gid)
     {
         if(!empty($gid)) {
-            $prefix = $this->configurator->get('mail_domain');
+            $prefix = $this->configurator->get('group_prefix');
             $email = $this->encodeUidToEmail($gid.$prefix);
             $this->mtaConnector->insertVirtualUser($email, 'pass'.strtolower($gid));
         }

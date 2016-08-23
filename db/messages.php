@@ -36,9 +36,20 @@ class Messages
     public function getById($id)
     {
         $message = $this->connect->select("*", $this->tableName, "id = :id", [':id' => $id]);
-        return $message;
+        return $message ? $message[0] : false ;
     }
 
+    public function getAttachementsFrom($id)
+    {
+        $message = $this->getById($id);
+        $attach = null;
+        if($message) {
+            try {
+                $attach = json_decode($message['attachements '], true);
+            } catch ( \Exception $e) {}
+        }
+        return $attach;
+    }
 
     public function getByHash($hash)
     {

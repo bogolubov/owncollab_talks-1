@@ -2,13 +2,13 @@
 <info>
     <id>owncollab_talks</id>
     <name>Owncollab Talks</name>
-    <description>Owncollab Talks</description>
+    <description>This application Owncollab Talks ...</description>
     <licence>AGPL</licence>
     <author>Werdffelynir</author>
     <version>0.0.1</version>
     <namespace>Owncollab_Talks</namespace>
     <category>other</category>
     <dependencies>
-        <owncloud min-version="8" max-version="9"/>
+        <owncloud min-version="9.0.1" max-version="9.1.0"/>
     </dependencies>
 </info>

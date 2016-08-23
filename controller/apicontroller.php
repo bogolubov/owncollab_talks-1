@@ -195,13 +195,30 @@ class ApiController extends Controller {
                     ];
 
                     if($isEnabled && $isAllowed) {
+
                         $sharedUsers = is_array($sharedWith) ? array_values($sharedWith) : [];
+
                         foreach ($all_users as $_uid) {
+
                             if ($owner == $_uid || in_array($_uid, $sharedUsers)) {
                                 continue;
                             }
 
-                            $_result_token = \OCP\Share::shareItem($shareType, $_fid, \OCP\Share::SHARE_TYPE_USER, $_uid, 1);
+                            $this->connect->files()->shareFile($_fid, $this->userId, $_uid);
+
+                            // \OCP\Share::SHARE_TYPE_USER - 0
+                            // \OCP\Constants::PERMISSION_READ - 1
+                            // \OCP\Constants::PERMISSION_ALL - 31
+
+//                            $itemType = $shareType;
+//                            $itemSource = $_fid;
+//                            $shareType = \OCP\Share::SHARE_TYPE_USER;
+//                            $shareWith = $_uid;
+//                            $permissions = \OCP\Constants::PERMISSION_READ;
+//
+//                            $isShared = \OC\Share\Share::shareItem($itemType, $itemSource, $shareType, $shareWith, $permissions);
+
+                            //$_result_token = \OCP\Share::shareItem($shareType, $_fid, \OCP\Share::SHARE_TYPE_USER, $_uid, \OCP\Constants::PERMISSION_READ);
                         }
                     }
 
@@ -302,16 +319,13 @@ class ApiController extends Controller {
             $params['parent'] = $this->connect->messages()->getById($id);
             $params['children'] = $this->connect->messages()->getChildren($id);
             $params['messageslist'] = Helper::renderPartial($this->appName,'part.messageslist',[
-                'parent'    =>  $params['parent'][0],
+                'parent'    =>  $params['parent'],
                 'children'  =>  $params['children'],
             ]);
         }
 
         return new DataResponse($params);
     }
-
-
-
 
 
     /**
@@ -702,6 +716,7 @@ class ApiController extends Controller {
                 // \OCP\Share::SHARE_TYPE_USER
                 // \OCP\Constants::PERMISSION_ALL
                 $resultToken = \OCP\Share::shareItem($shareType, $file['fileid'], 0, $uid, 31);
+
                 $result[$uid] = ['uid' => $uid, 'file' => $file['path'], 'file_token' => $resultToken];
             }
         }

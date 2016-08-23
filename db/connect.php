@@ -26,7 +26,8 @@ class Connect
      * Connect constructor.
      * @param IDBConnection $db
      */
-    public function __construct(IDBConnection $db) {
+    public function __construct(IDBConnection $db)
+    {
         $this->db = $db;
 
         // Register tables models
