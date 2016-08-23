@@ -93,7 +93,7 @@ class MtaConnector {
         if($this->instance) {
             $stmt = $this->instance->prepare('SELECT * FROM `mailserver`.`virtual_domains` WHERE `name` = ?');
             $stmt->execute([$domain]);
-            return is_array($stmt->fetch());
+            return is_array($stmt->fetch()) ? $stmt->fetch() : false;
         }
     }
 
@@ -126,7 +126,7 @@ class MtaConnector {
 
             $sql = "INSERT INTO `mailserver`.`virtual_users`
                   (`domain_id`, `password` , `email`) VALUES
-                  ('1', ENCRYPT(?, CONCAT('$6$', SUBSTRING(SHA(RAND()), -16))) , ?);";
+                  ('3', ENCRYPT(?, CONCAT('$6$', SUBSTRING(SHA(RAND()), -16))) , ?);";
 
             $stmt = $this->instance->prepare($sql);
             $stmt->bindValue(1, $password);
