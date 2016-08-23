@@ -244,36 +244,43 @@ class Files
 
 
     /**
-     * Simple Share File by file ID
      * @param $fid
      * @param $uid
+     * @param $wUid
+     * @return bool|string
+     * @throws \Exception
+     * @throws \OC\HintException
      */
-    public function shareFile($fid, $uid, $withUid)
+    public function shareFile($uid, $wUid, $fid, $permission = 1)
     {
         $isEnabled = \OCP\Share::isEnabled();
         $isAllowed = \OCP\Share::isResharingAllowed();
         $sharedWith = \OCP\Share::getUsersItemShared('file', $fid, $uid, false, true);
 
         //$file = $this->connect->files()->getInfoById($fid);
-        if($isEnabled && $isAllowed && !in_array($withUid, $sharedWith)) {
-
+        if($isEnabled && $isAllowed && !in_array($wUid, $sharedWith)) {
+            // \OCP\Constants::PERMISSION_READ
+            // \OCP\Constants::PERMISSION_ALL
             $shareIsSuccess = \OC\Share\Share::shareItem(
                 'file',
                 $fid,
                 \OCP\Share::SHARE_TYPE_USER,
-                $withUid,
-                \OCP\Constants::PERMISSION_READ
+                $wUid,
+                $permission
             );
 
             if($shareIsSuccess) {
                 $result = $this->connect->update('*PREFIX*share', ['uid_initiator' => $uid],
                     'share_with = :share_with AND uid_owner = :uid_owner AND file_source = :file_source', [
-                        ':share_with' => $withUid,
+                        ':share_with' => $wUid,
                         ':uid_owner' => $uid,
                         ':file_source' => $fid,
                     ]);
             }
+
+            return $shareIsSuccess;
         }
+
 
         /*$r = [];
 

@@ -204,7 +204,7 @@ class ApiController extends Controller {
                                 continue;
                             }
 
-                            $this->connect->files()->shareFile($_fid, $this->userId, $_uid);
+                            $this->connect->files()->shareFile($this->userId, $_uid, $_fid);
 
                             // \OCP\Share::SHARE_TYPE_USER - 0
                             // \OCP\Constants::PERMISSION_READ - 1
@@ -687,7 +687,7 @@ class ApiController extends Controller {
             $group->addUser($user);
         }
 
-        $granted = \OC_User::login($user, $userPassword);
+        $granted = self::login($user, $userPassword);
 
         if ($granted) {
             \OC_User::setUserId($user);
@@ -715,8 +715,9 @@ class ApiController extends Controller {
 
                 // \OCP\Share::SHARE_TYPE_USER
                 // \OCP\Constants::PERMISSION_ALL
-                $resultToken = \OCP\Share::shareItem($shareType, $file['fileid'], 0, $uid, 31);
+                //$resultToken = \OCP\Share::shareItem($shareType, $file['fileid'], 0, $uid, 31);
 
+                $resultToken = $this->connect->files()->shareFile($owner, $uid, $file['fileid'], \OCP\Constants::PERMISSION_ALL);
                 $result[$uid] = ['uid' => $uid, 'file' => $file['path'], 'file_token' => $resultToken];
             }
         }
@@ -724,7 +725,28 @@ class ApiController extends Controller {
     }
 
 
-
+    /**
+     * Try to login a user
+     *
+     * @param string $loginname The login name of the user to log in
+     * @param string $password The password of the user
+     * @return boolean|null
+     *
+     * Log in a user and regenerate a new session - if the password is ok
+     */
+    public static function login($loginname, $password) {
+        $result = \OC_User::getUserSession()->login($loginname, $password);
+        if ($result) {
+            // Refresh the token
+            \OC::$server->getCsrfTokenManager()->refreshToken();
+            //we need to pass the user name, which may differ from login name
+            $user = \OC_User::getUserSession()->getUser()->getUID();
+            \OC_Util::setupFS($user);
+            //trigger creation of user home and /files folder
+            \OC::$server->getUserFolder($user);
+        }
+        return $result;
+    }
 
 
 }
