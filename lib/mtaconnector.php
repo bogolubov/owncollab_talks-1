@@ -38,6 +38,9 @@ class MtaConnector {
         return $this->instance;
     }
 
+    public function getErrors() {
+        return (!$this->instance) ? false : $this->error;
+    }
 
     /**
      * Return all domains names
@@ -86,22 +89,23 @@ class MtaConnector {
      * Check on the existence of a domain name into table virtual_domains
      *
      * @param $domain
-     * @return array|bool|mixed
+     * @return bool
      * @throws \Doctrine\DBAL\DBALException
      */
     public function virtualDomainExist($domain) {
         if($this->instance) {
             $stmt = $this->instance->prepare('SELECT * FROM `mailserver`.`virtual_domains` WHERE `name` = ?');
             $stmt->execute([$domain]);
-            return is_array($stmt->fetch()) ? $stmt->fetch() : false;
+            return is_array($stmt->fetch());
         }
+        return false;
     }
 
     /**
      * Check on the existence of a user by the email into table virtual_users
      *
      * @param $email
-     * @return array|bool|mixed
+     * @return bool
      * @throws \Doctrine\DBAL\DBALException
      */
     public function virtualUserExist($email) {
@@ -110,6 +114,7 @@ class MtaConnector {
             $stmt->execute([$email]);
             return is_array($stmt->fetch());
         }
+        return false;
     }
 
     /**
@@ -124,13 +129,27 @@ class MtaConnector {
 
         if($this->instance && !$this->virtualUserExist($email)) {
 
+            $domainId = null;
+            $domain = $this->configurator->get('mail_domain');
+            $domains = $this->getVirtualDomains(false);
+
+            for ($i = 0; $i < count($domains); $i ++) {
+                if($domain === $domains[$i]['name']) {
+                    $domainId = $domains[$i]['id'];
+                }
+            }
+
+            if(!$domainId) return false;
+
             $sql = "INSERT INTO `mailserver`.`virtual_users`
                   (`domain_id`, `password` , `email`) VALUES
-                  ('3', ENCRYPT(?, CONCAT('$6$', SUBSTRING(SHA(RAND()), -16))) , ?);";
+                  (?, ENCRYPT(?, CONCAT('$6$', SUBSTRING(SHA(RAND()), -16))) , ?);";
 
             $stmt = $this->instance->prepare($sql);
-            $stmt->bindValue(1, $password);
-            $stmt->bindValue(2, $email);
+            $stmt->bindValue(1, $domainId);
+            $stmt->bindValue(2, $password);
+            $stmt->bindValue(3, $email);
+
             return $stmt->execute();
         }
     }

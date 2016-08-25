@@ -48,6 +48,9 @@ $container->query('OCP\INavigationManager')->add(function () use ($container, $a
 if( Helper::isAppSettingsUsers() ) {
     $configurator = new Configurator();
     $mta = new MtaConnector($configurator);
+    if($mtaErrors = $mta->getErrors()) {
+        Helper::mailParserLogerError($mtaErrors);
+    }
     new Aliaser($appName, $configurator, $mta);
 }
 

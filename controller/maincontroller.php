@@ -249,10 +249,37 @@ class MainController extends Controller
     public function test()
     {
         $data = [];
+
+/*        $configurator = new Configurator();
+        $mta = new MtaConnector($configurator);
+
+        $domainId = null;
+        $domain = $configurator->get('mail_domain');
+        $domains = $mta->getVirtualDomains(false);
+        for ($i = 0; $i < count($domains); $i ++) {
+            if($domain === $domains[$i]['name']) {
+                $domainId = $domains[$i]['id'];
+            }
+        }
+
+        var_dump($domainId);
+        var_dump($domain);
+        var_dump($domains);*/
+
+
+        Helper::mailParserLoger('mailParserLoger XXXXXXXXXXX');
+        Helper::mailParserLogerError('mailParserLogerError XXXXXXXXXXX');
+
+
+
+
+
+
+
         //$message = $this->connect->messages()->getById(2);
         //$attach = self::decodeAttachements($message['attachements']);
 
-        $file = $this->connect->files()->getInfoById(87);
+        //$file = $this->connect->files()->getInfoById(87);
 
 //        $itemType = 'file';
 //        $itemSource = $file['fileid'];
@@ -285,8 +312,8 @@ class MainController extends Controller
         //echo $file['fullpath'];
         //readfile($file['fullpath']);
 
-        //exit;
-        return new DataResponse($file);
+        exit;
+        return new DataResponse($data);
     }
 
 

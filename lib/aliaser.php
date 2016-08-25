@@ -76,7 +76,18 @@ class Aliaser
         if(!empty($gid)) {
             $prefix = $this->configurator->get('group_prefix');
             $email = $this->encodeUidToEmail($gid.$prefix);
-            $this->mtaConnector->insertVirtualUser($email, 'pass'.strtolower($gid));
+            $result = $this->mtaConnector->insertVirtualUser($email, 'pass'.strtolower($gid));
+
+            if (!$result) {
+                $errorMessage = 'Error adding user data in the MTA database, ';
+                if ($result === false)
+                    $errorMessage .= 'the domain specified in the configuration can not be found';
+                else
+                    $errorMessage .= 'possible SQL query error';
+                Helper::mailParserLogerError($errorMessage);
+            }else{
+                Helper::mailParserLoger('Added new virtual user: '.$email);
+            }
         }
     }
 
