@@ -352,7 +352,8 @@ class ApiController extends Controller {
         $params = Helper::post();
         $to = explode('@', $params['to']);
         $idhash = explode('+',$to[0]);
-        $userDataFrom = $this->connect->users()->getByEmail($params['from']);
+        $userDataFrom = $this->connect->users()->getByEmail(trim($params['from']));
+
         if(!is_array($userDataFrom)) {
             $returned['error'] = "User with email '{$params['from']}' not find!";
             return new DataResponse($returned);
@@ -465,7 +466,7 @@ class ApiController extends Controller {
                         $returned['type'] = 'ok';
 
                 }else
-                    $returned['error'] = "User sender not find '{$userSender}' not find.";
+                    $returned['error'] = "User sender '{$userSender}' not find.";
             }
         }
 
@@ -650,6 +651,11 @@ class ApiController extends Controller {
                     \OC\Files\Filesystem::mkdir('/Talks');
 
                 if (is_file($file['tmpfile'])) {
+
+                    try {
+                        chmod($file['tmpfile'], 0755);
+                    } catch (\Exception $e) {}
+
                     $filePathTo = '/Talks/'.$file['filename'];
 
                     $fileInfoExist = \OC\Files\Filesystem::getFileInfo($filePathTo, false);

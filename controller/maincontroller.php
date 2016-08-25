@@ -250,69 +250,6 @@ class MainController extends Controller
     {
         $data = [];
 
-/*        $configurator = new Configurator();
-        $mta = new MtaConnector($configurator);
-
-        $domainId = null;
-        $domain = $configurator->get('mail_domain');
-        $domains = $mta->getVirtualDomains(false);
-        for ($i = 0; $i < count($domains); $i ++) {
-            if($domain === $domains[$i]['name']) {
-                $domainId = $domains[$i]['id'];
-            }
-        }
-
-        var_dump($domainId);
-        var_dump($domain);
-        var_dump($domains);*/
-
-
-        Helper::mailParserLoger('mailParserLoger XXXXXXXXXXX');
-        Helper::mailParserLogerError('mailParserLogerError XXXXXXXXXXX');
-
-
-
-
-
-
-
-        //$message = $this->connect->messages()->getById(2);
-        //$attach = self::decodeAttachements($message['attachements']);
-
-        //$file = $this->connect->files()->getInfoById(87);
-
-//        $itemType = 'file';
-//        $itemSource = $file['fileid'];
-//        $shareType = \OCP\Share::SHARE_TYPE_USER;
-//        $shareWith = 'dev2';
-//        $permissions = \OCP\Constants::PERMISSION_READ;
-
-        //\OC\Share\Share::unshareAll($itemType, $itemSource);
-
-
-        // $this->connect->files()->shareFile(87, $this->userId, 'dev3');
-
-
-
-        //\OC\Share\Share::unshareFromSelf($itemType, $itemSource);
-        //var_dump($file);
-        //var_dump($itemSource);
-        //$shareIsSuccess = \OC\Share\Share::shareItem($itemType, $itemSource, $shareType, $shareWith, $permissions);
-        //var_dump($shareIsSuccess);
-
-        //\OC\Share\Share::shareItem($itemType, $itemSource, $shareType, $shareWith, $permissions);
-
-        //$path = \OC::$SERVERROOT.'/data/'.$file['user'].'/'.$file['path'];
-//        var_dump($file);
-//        var_dump($file['fullpath']);
-//        var_dump(is_file($file['fullpath']));
-//        var_dump(is_readable($file['fullpath']));
-
-        //header('Content-type: '.$file['mimetype']);
-        //echo $file['fullpath'];
-        //readfile($file['fullpath']);
-
-        exit;
         return new DataResponse($data);
     }
 
