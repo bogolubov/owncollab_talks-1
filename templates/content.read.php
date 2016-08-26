@@ -9,12 +9,15 @@ $attaches = isset($_['attachements_info']) && is_array($_['attachements_info'])
 $messageId = $message['id'];
 $messageHash = $message['hash'];
 
+//var_dump($attaches);
+
 if($message):
     $parent = (!empty($_['parent']) && is_array($_['parent'])) ? $_['parent'] : false;
     $subscribers = json_decode($message['subscribers'],true);
     $htmlGroups = (is_array($subscribers['groups'])) ? join(', ',$subscribers['groups']) : false;
     $htmlUsers = (is_array($subscribers['users'])) ? join(', ',$subscribers['users']) : '';
 
+/**/
     if ($parent) {
         $messageId = $parent['id'];
         $messageHash = $parent['hash'];

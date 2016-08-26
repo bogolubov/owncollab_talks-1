@@ -184,13 +184,16 @@ class MainController extends Controller
      */
     public function read($id)
     {
-
+        $attachements_info = [];
         $message = $this->connect->messages()->getById((int)$id);
         $parent = $this->connect->messages()->getById((int) $message['rid']);
-        $attachements_info = [];
+//
+//        if($parent)
+//            $message = $parent;
 
         if(!empty($message['attachements'])) {
             $attach = [];
+
             try{
                 $attach = json_decode($message['attachements'], true);
             }catch(\Exception $e){
@@ -199,9 +202,77 @@ class MainController extends Controller
 
             foreach ($attach as $at) {
 
-                $file = $this->connect->files()->getById($at);
+                $isOwner = false;
+                $file = $this->connect->files()->getInfoById($at);
 
-                if ($file) {
+                $filePath = str_replace('files/', '', $file['path']);
+                $fileInfo = \OC\Files\Filesystem::getFileInfo($filePath);
+
+                if(!$fileInfo){
+                    $itemSource = \OCP\Share::getItemSharedWithBySource('file', $at);
+                    $fileInfo = \OC\Files\Filesystem::getFileInfo($itemSource['file_target']);
+                    $filePath = $itemSource['file_target'];
+                }
+
+                if(!$fileInfo) continue;
+
+                $icon =  \OCA\Files\Helper::determineIcon($fileInfo);
+
+                $attachements_info[] = [
+                    'preview' => $icon,
+                    'link' => "/remote.php/webdav/$filePath",
+                    'file' => $file,
+                    'info' => \OCA\Files\Helper::formatFileInfo($fileInfo),
+                ];
+
+                //$icon = \OC::$server->getMimeTypeDetector()->mimeTypeIcon($fileInfo->getMimetype());
+                //var_dump($icon);
+
+                //var_dump($file);
+                //var_dump($fileInfo);
+                //var_dump($itemSource);
+                //var_dump($fileInfo);
+//
+
+//                $filePath = str_replace('files/', '', $file['path']);
+//                if (\OC\Files\Filesystem::file_exists($filePath))
+//                    $isOwner = true;
+
+                //$fileInfo = \OC\Files\Filesystem::getFileInfo($path);
+                //var_dump($fileInfo);
+
+                //exit;
+
+/*                $usersItemShared = \OCP\Share::getUsersItemShared('file', $at, 'collab_user');
+                var_dump($usersItemShared);
+
+                $itemSource = \OCP\Share::getItemSharedWithBySource('file', $at);
+                var_dump($itemSource);
+
+                $item = \OCP\Share::getItemsSharedWithUser('file', $this->userId);
+                var_dump($item);*/
+
+//                $path = str_replace('files/', '', $item['path']);
+//                $fileInfo = \OC\Files\Filesystem::getFileInfo($path);
+//                var_dump($fileInfo);
+
+                //
+                //var_dump($path);
+
+//                $fileInfo = \OC\Files\Filesystem::getFileInfo($file['path']);
+//                var_dump($fileInfo);
+
+                //$itemShared = \OCP\Share::getItemSharedWithByLink('file', $at, 'collab_user');
+                //$itemShared = \OCP\Share::getItemSharedWithBySource('file', $at);
+                //var_dump($itemShared);
+
+                //$getItemsShared = \OCP\Share::getItemsShared('file');
+                //var_dump($getItemsShared);
+
+
+                //exit;
+
+                /*if ($file) {
                     $path = str_replace('files/', '', $file['path']);
 
                     if(\OC\Files\Filesystem::file_exists($path)) {
@@ -221,7 +292,7 @@ class MainController extends Controller
                         ];
                     }
 
-                }
+                }*/
             }
 
         }

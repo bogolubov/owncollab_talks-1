@@ -343,6 +343,7 @@ class ApiController extends Controller {
             'error' => null,
         ];
         $shareUIds = [];
+        $insertResult = false;
 
         if(!$this->mailDomain) {
             $returned['error'] = 'mailDomain not find!';
@@ -471,8 +472,19 @@ class ApiController extends Controller {
         }
 
         // Work with files
-        if(isset($params['files']) && is_array($params['files']) &&!empty($shareUIds)) {
-            $returned['shared_with'] = $this->parserFileHandler($params['files'], $shareUIds);
+        if(isset($params['files']) && is_array($params['files']) &&!empty($shareUIds) && $insertResult) {
+            $saveFiles = $this->parserFileHandler($params['files'], $shareUIds);
+
+            if(!empty($saveFiles)) {
+                $returned['shared_with'] = $saveFiles['shared_with'];
+                $returned['file_fileid'] = $saveFiles['file_fileid'];
+
+                if(!empty($saveFiles['file_fileid'])) {
+                    $this->connect->update('*PREFIX*collab_messages', ['attachements' => json_encode($saveFiles['file_fileid'])], 'id = ?', [$insertResult]);
+                }
+            } else
+                $returned['shared'] = 'failed';
+
         }
 
         return new DataResponse($returned);
@@ -508,7 +520,7 @@ class ApiController extends Controller {
         $data['date'] = date("Y-m-d H:i:s", time());
         $data['title'] = strip_tags($title);
         $data['text'] = $message;
-        $data['attachements'] = '';
+        $data['attachements'] = '[]';
         $data['author'] = $author;
         $data['subscribers'] = json_encode(['groups'=>false, 'users'=>$users]);
         $data['hash'] = TalkMail::createHash($title);
@@ -639,10 +651,12 @@ class ApiController extends Controller {
         return $this->_file_list_tree;
     }
 
-
+/*$returned['shared_with'] = $saveFiles['shared_with'];
+$returned['file_info'] = $saveFiles['file_info'];*/
     private function parserFileHandler($files, $userForSharing)
     {
-        $shareResult = false;
+        $saveFiles = ['file_fileid'=>[],'shared_with'=>[]];
+
         if($this->loginVirtualUser()) {
 
             foreach($files as $file){
@@ -667,21 +681,29 @@ class ApiController extends Controller {
 
                     if($saved) {
                         unlink($file['tmpfile']);
-                        $fileInfo = \OC\Files\Filesystem::getFileInfo($filePathTo, false);
-                        $shareResult = $this->shareFileToUsers($fileInfo, $userForSharing);
+                        $saveFilesInfo = \OC\Files\Filesystem::getFileInfo($filePathTo);
+
+
+                        Helper::mailParserLoger('FILES INFO: '.json_encode($saveFilesInfo));
+
+
+                        $saveFiles['file_fileid'][] = $saveFilesInfo['fileid'];
+                        $saveFiles['shared_with'][] = $this->shareFileToUsers($saveFilesInfo, $userForSharing);
+
+                        //todo mails sands
                     }
                 }
             }
         }
-        return $shareResult;
+        return $saveFiles;
     }
 
 
     private function loginVirtualUser()
     {
         $secureRandom = new \OC\Security\SecureRandom();
-        $user = 'collab_user';
-        $userPassword = $secureRandom->generate(30);
+        $user = $this->configurator->get('collab_user');
+        $userPassword = $this->configurator->get('collab_user_password');
 
         if (!\OC_User::userExists($user)) {
             # create user if not exist
@@ -706,7 +728,7 @@ class ApiController extends Controller {
 
     private function shareFileToUsers(\OC\Files\FileInfo $file, array $uids)
     {
-        $user       = 'collab_user';
+        $user       = $this->configurator->get('collab_user');
         $result     = [];
         $owner      = $user;
         $shareType  = $file['mimetype'] == 2 ? 'folder' : 'file';

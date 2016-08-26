@@ -48,11 +48,12 @@ function loger_error($data_string)
  */
 function parse_source_mail_data()
 {
-    // for xDebug
-    //$resource   = fopen(__DIR__."/mails/bogdan.mail", "r");
+
 
     $data       = [];
     $resource   = fopen("php://stdin", "r");
+    // for xDebug
+    //$resource   = fopen(__DIR__."/mails/bogdan.mail", "r");
     $mailParser = new ZBateson\MailMimeParser\MailMimeParser();
     $message    = $mailParser->parse($resource);
 
@@ -161,6 +162,8 @@ function files_parser($message, $messageData)
             $tmp_name = APPROOT . '/temp/' . time() . '-' . $messageData['from'] . '-' . $filename;
 
             if(file_put_contents($tmp_name, $filecontent)){
+                chmod($tmp_name, 0755);
+                //chown($tmp_name, 'www-data');
                 $files[$i]['filename'] = $filename;
                 $files[$i]['filetype'] = $filetype;
                 $files[$i]['tmpfile'] = $tmp_name;
