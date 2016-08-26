@@ -162,7 +162,7 @@ function files_parser($message, $messageData)
             $tmp_name = APPROOT . '/temp/' . time() . '-' . $messageData['from'] . '-' . $filename;
 
             if(file_put_contents($tmp_name, $filecontent)){
-                chmod($tmp_name, 0755);
+                chmod($tmp_name, 0777);
                 //chown($tmp_name, 'www-data');
                 $files[$i]['filename'] = $filename;
                 $files[$i]['filetype'] = $filetype;
