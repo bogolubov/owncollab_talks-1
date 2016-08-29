@@ -456,7 +456,7 @@ class ApiController extends Controller {
 
 
         //mail to
-        if (!empty($idhash[1]) && !empty($shareUIds) && is_array($users)) {
+        if (!empty($idhash[1]) && !empty($shareUIds) && is_array($shareUIds)) {
 
             $message = $this->connect->messages()->getByHash($idhash[1]);
             $mailUser = $message['author'];
