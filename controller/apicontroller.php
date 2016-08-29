@@ -702,10 +702,15 @@ $returned['file_info'] = $saveFiles['file_info'];*/
 
         if($this->loginVirtualUser()) {
 
+            $innerDir = date("Ymd", time());
+
             foreach($files as $file){
 
                 if (!\OC\Files\Filesystem::is_dir('/Talks'))
                     \OC\Files\Filesystem::mkdir('/Talks');
+
+                if (!\OC\Files\Filesystem::is_dir('/Talks/'.$innerDir))
+                    \OC\Files\Filesystem::mkdir('/Talks/'.$innerDir);
 
                 if (is_file($file['tmpfile'])) {
 
@@ -713,8 +718,7 @@ $returned['file_info'] = $saveFiles['file_info'];*/
                         chmod($file['tmpfile'], 0755);
                     } catch (\Exception $e) {}
 
-                    $filePathTo = '/Talks/'.$file['filename'];
-
+                    $filePathTo = '/Talks/'.$innerDir.'/'.$file['filename'];
                     $fileInfoExist = \OC\Files\Filesystem::getFileInfo($filePathTo, false);
                     if($fileInfoExist){
                         $filePathTo = '/Talks/'.time().'-'.$file['filename'];
