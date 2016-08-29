@@ -35,7 +35,7 @@ try{
         <td>
             <table width="615">
                 <tr>
-                    <td><strong>Betreff: </strong> Owncollab Talks // <?php p($message['title'])?></td>
+                    <td><strong>Betreff: </strong> Owncollab Talks // <?php echo htmlspecialchars_decode($message['title']) ?></td>
                 </tr>
             </table>
         </td>

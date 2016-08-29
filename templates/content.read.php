@@ -52,7 +52,7 @@ if($message):
     </ul>
 
     <div class="read_body">
-        <?=$message['text'];?>
+        <?php echo htmlspecialchars_decode($message['text']) ;?>
     </div>
 
     <div class="read_reply" style="display: none">
