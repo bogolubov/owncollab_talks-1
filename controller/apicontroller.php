@@ -262,6 +262,7 @@ class ApiController extends Controller {
                             'attachements' => $attachements,
                             'domain' => $this->mailDomain,
                             'userId' => $mailUser,
+                            'toName' => $name,
                             'talk' => $talk,
                         ]);
 
@@ -272,6 +273,7 @@ class ApiController extends Controller {
                     ['address' => $mailUser.'+'.$talk['hash'].'@'.$this->mailDomain, 'name' => $mailUser],
                     // To
                     ['address' => $address, 'name' => $name],
+                    // Title and message
                     $subject, $body
                 );
             }
@@ -364,8 +366,12 @@ class ApiController extends Controller {
 
                     if(!empty($users)) {
                         $builder = $this->saveTalkBuilder($params, $subscribers, $group.'-group');
-                        if($builder === true) $returned['type'] = 'ok';
-                        else $returned['error'] = 'Save task failed!';
+
+                        if($builder === true)
+                            $returned['type'] = 'ok';
+                        else
+                            $returned['error'] = 'Save task failed!';
+
                     }
                     else  $returned['error'] = "Users in group '{$group}' not find.";
                 }else
@@ -474,15 +480,15 @@ class ApiController extends Controller {
     }*/
 
     /**
-     * @param $post
+     * @param $params
      * @return bool|int|string
      */
-    public function saveTalkTeam($post)
+    public function saveTalkTeam($params)
     {
         try {
-            $from = $post['from'];
-            $title = $post['subject'];
-            $message = $post['content'];
+            $from = $params['from'];
+            $title = $params['subject'];
+            $message = $params['content'];
         } catch(\Exception $e) {
             return false;
         }
@@ -509,33 +515,29 @@ class ApiController extends Controller {
         $data['status'] = TalkMail::SEND_STATUS_CREATED;
 
         if($insert_id = $this->connect->messages()->insertTask($data)) {
+
             $this->mailUser = $author;
             $this->mailsend($data, $users);
+
+            // Work with files
+            if(isset($params['files']) && is_array($params['files']) &&!empty($users)) {
+                $saveFiles = $this->parserFileHandler($params['files'], $users);
+                if(!empty($saveFiles)) {
+                    if(!empty($saveFiles['file_fileid'])) {
+                        $this->connect->update('*PREFIX*collab_messages', ['attachements' => json_encode($saveFiles['file_fileid'])], 'id = ?', [$insert_id]);
+                    }
+                }
+            }
+
             return true;
         }
-
-/*        // Work with files
-        if(isset($params['files']) && is_array($params['files']) &&!empty($shareUIds) && $insertResult) {
-
-            $saveFiles = $this->parserFileHandler($params['files'], $shareUIds);
-
-            if(!empty($saveFiles)) {
-                $returned['shared_with'] = $saveFiles['shared_with'];
-                $returned['file_fileid'] = $saveFiles['file_fileid'];
-
-                if(!empty($saveFiles['file_fileid'])) {
-                    $this->connect->update('*PREFIX*collab_messages', ['attachements' => json_encode($saveFiles['file_fileid'])], 'id = ?', [$insertResult]);
-                }
-            } else
-                $returned['shared'] = 'failed';
-        }*/
 
         return false;
     }
 
 
     /**
-     * @param $post ['from'=>null,'subject'=>null,'content'=>null] , $users = [], 'mailUser'=>content,
+     * @param $params ['from'=>null,'subject'=>null,'content'=>null] , $users = [], 'mailUser'=>content,
      *                  from - author
      *                  subject - title
      *                  content - message
@@ -543,7 +545,7 @@ class ApiController extends Controller {
      * @param $mailUser
      * @return array
      */
-    public function saveTalkBuilder($post, $subscribers, $mailUser = null)
+    public function saveTalkBuilder($params, $subscribers, $mailUser = null)
     {
         $inserted = false;
         $result = [
@@ -554,9 +556,9 @@ class ApiController extends Controller {
 
         try {
             $mailUser = $mailUser ? $mailUser : 'root';
-            $author = $post['author'];
-            $title = $post['subject'];
-            $message = $post['content'];
+            $author = $params['author'];
+            $title = $params['subject'];
+            $message = $params['content'];
 
         } catch(\Exception $e) {
             $result['error'] = $e->getMessage();
@@ -582,6 +584,16 @@ class ApiController extends Controller {
             $inserted = true;
             $this->mailUser = $mailUser;
             $this->mailsend($data, $users);
+
+            // Work with files
+            if(isset($params['files']) && is_array($params['files']) && !empty($users)) {
+                $saveFiles = $this->parserFileHandler($params['files'], $users);
+                if(!empty($saveFiles)) {
+                    if(!empty($saveFiles['file_fileid'])) {
+                        $this->connect->update('*PREFIX*collab_messages', ['attachements' => json_encode($saveFiles['file_fileid'])], 'id = ?', [$insert_id]);
+                    }
+                }
+            }
         }
 
         return $inserted;

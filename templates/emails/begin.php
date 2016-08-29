@@ -9,7 +9,8 @@ use \OCA\Owncollab_Talks\Helper;
  *
  */
 
-$user_id = $user_name = $_['userId'];
+$user_id = $_['userId'];
+$user_name = $_['toName'];
 $mail_domain = isset($_['domain']) ? $_['domain'] : $user_id;
 $message = isset($_['talk']) && is_array($_['talk']) ? $_['talk'] : [];
 $attaches = isset($_['attachements']) && is_array($_['attachements']) ? $_['attachements'] : [];
