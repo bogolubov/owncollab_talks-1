@@ -44,10 +44,19 @@ if(App.namespace){App.namespace('Action.File', function(App){
 
         var fd = new FormData();
         var success = false;
+        var folderName = '', d = new Date();
+        var d1 = '' + d.getFullYear();
+        var d2 = '' + (d.getMonth() + 1);
+        var d3 = '' + d.getDate();
+        if(d2.length === 1) d2 = '0' + d2;
+        if(d3.length === 1) d3 = '0' + d3;
+        folderName = d1 + d2 + d3;
+
+
         fd.append('files[]', myFile);
         //fd.append('requesttoken', jQuery('head').attr('data-requesttoken'));
         fd.append('dir', '/');
-        fd.append('file_directory', 'Talks');
+        fd.append('file_directory', 'Talks/' + folderName);
 
         jQuery.ajax({
             url: "/index.php/apps/files/ajax/upload.php",

@@ -720,6 +720,7 @@ $returned['file_info'] = $saveFiles['file_info'];*/
 
                     $filePathTo = '/Talks/'.$innerDir.'/'.$file['filename'];
                     $fileInfoExist = \OC\Files\Filesystem::getFileInfo($filePathTo, false);
+
                     if($fileInfoExist){
                         $filePathTo = '/Talks/'.time().'-'.$file['filename'];
                     }
