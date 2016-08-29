@@ -722,7 +722,7 @@ $returned['file_info'] = $saveFiles['file_info'];*/
                     $fileInfoExist = \OC\Files\Filesystem::getFileInfo($filePathTo, false);
 
                     if($fileInfoExist){
-                        $filePathTo = '/Talks/'.time().'-'.$file['filename'];
+                        $filePathTo = '/Talks/'.$innerDir.'/'.time().'-'.$file['filename'];
                     }
 
                     $saved = \OC\Files\Filesystem::file_put_contents($filePathTo, file_get_contents($file['tmpfile']));
