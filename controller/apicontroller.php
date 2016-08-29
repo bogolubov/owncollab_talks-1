@@ -456,12 +456,13 @@ class ApiController extends Controller {
 
 
         //mail to
-        if (!empty($idhash[1]) && is_array($shareUIds)) {
+        if (!empty($idhash[1]) && !empty($users) && is_array($users)) {
             $message = $this->connect->messages()->getByHash($idhash[1]);
             $mailUser = $message['author'];
 
-            foreach ($shareUIds as $shareUI) {
-                $_userData = $this->connect->users()->getUserData($shareUI);
+            foreach ($users as $uId) {
+                $_userData = $this->connect->users()->getUserData($uId);
+
                 if(!empty($_userData['email'])) {
                     $subject = 'RE: ' . $message['title'];
                     $body = '<h2>Answer: </h2>' . $params['content'];
@@ -476,6 +477,7 @@ class ApiController extends Controller {
                         $subject, $body
                     );
                 }
+
             }
 
         }
