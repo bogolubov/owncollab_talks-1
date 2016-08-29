@@ -90,7 +90,7 @@ try{
                         <td><span style="font-size: 100%"><img width="92" height="42" hspace="8" vspace="1" src="https://owncloud.org/wp-content/themes/owncloudorgnew/assets/img/common/logo_owncloud.svg">ownCollab</span></td>
                     </tr>
                     <tr>
-                        <td style="padding: 10px;"><?php echo $message['text'] ?></td>
+                        <td style="padding: 10px;"><?php echo htmlspecialchars_decode($message['text']) ?></td>
                     </tr>
                     </tbody>
                 </table>

@@ -47,7 +47,7 @@ function attachCount(array $message){
             ?>
             &nbsp;<strong> <?=$parent['author']?> </strong>
         </div>
-        <div class="msg_text"><?php p(substr($parent['text'],0,50))?>...</div>
+        <div class="msg_text"><?php p(substr(strip_tags(htmlspecialchars_decode($parent['text'])), 0, 50 ))?>...</div>
         <?php if(attachCount($parent) > 0):?>
             <div class="msg_attach">
                 <strong>
@@ -68,9 +68,10 @@ function attachCount(array $message){
             <div class="item_msg linker" data-id="toreadmsg" data-link="<?=$child['id']?>">
                 <div class="msg_title"><a href="<?=Helper::linkToRoute('owncollab_talks.main.read', ['id'=>$child['id']])?>"><?php p($child['title'])?></a></div>
                 <div class="msg_desc"><?=$child['author']?> <?php p(date("d.m.Y H:i:s", strtotime($child['date'])))?></div>
-                <div class="msg_text"><?php p(substr($child['text'],0,50))?>...</div>
+                <div class="msg_text"><?php p(substr(strip_tags(htmlspecialchars_decode($child['text'])),0,50))?>...</div>
                 <?php
-                    var_dump(attachCount($child));
+                // test files
+                var_dump(attachCount($child));
                 ?>
             </div>
         <?php endforeach; ?>
