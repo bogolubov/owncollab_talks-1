@@ -70,8 +70,8 @@ function attachCount(array $message){
                 <div class="msg_desc"><?=$child['author']?> <?php p(date("d.m.Y H:i:s", strtotime($child['date'])))?></div>
                 <div class="msg_text"><?php p(substr(strip_tags(htmlspecialchars_decode($child['text'])),0,50))?>...</div>
                 <?php
-                // test files
-                var_dump(attachCount($child));
+                    // test files
+                    var_dump(attachCount($child));
                 ?>
             </div>
         <?php endforeach; ?>

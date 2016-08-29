@@ -17,7 +17,6 @@ if($message):
     $htmlGroups = (is_array($subscribers['groups'])) ? join(', ',$subscribers['groups']) : false;
     $htmlUsers = (is_array($subscribers['users'])) ? join(', ',$subscribers['users']) : '';
 
-/**/
     if ($parent) {
         $messageId = $parent['id'];
         $messageHash = $parent['hash'];
@@ -52,7 +51,9 @@ if($message):
     </ul>
 
     <div class="read_body">
-        <?php echo htmlspecialchars_decode($message['text']) ;?>
+        <?php
+            echo $message['text']; //html_entity_decode($message['text'], ENT_QUOTES) ;
+        ?>
     </div>
 
     <div class="read_reply" style="display: none">
