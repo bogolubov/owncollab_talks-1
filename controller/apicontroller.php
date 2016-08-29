@@ -256,8 +256,8 @@ class ApiController extends Controller {
 
                 $address = $_userData['email'];
                 $name = $_userData['displayname'];
-                $subject =  $talk['title'];
 
+                $subject =  $talk['title'];
                 $body = Helper::renderPartial($this->appName, 'emails/begin', [
                             'attachements' => $attachements,
                             'domain' => $this->mailDomain,
@@ -453,6 +453,33 @@ class ApiController extends Controller {
                     $returned['error'] = "User sender '{$userSender}' not find.";
             }
         }
+
+
+        //mail to
+        if (!empty($idhash[1]) && is_array($shareUIds)) {
+            $message = $this->connect->messages()->getByHash($idhash[1]);
+            $mailUser = $message['author'];
+
+            foreach ($shareUIds as $shareUI) {
+                $_userData = $this->connect->users()->getUserData($shareUI);
+                if(!empty($_userData['email'])) {
+                    $subject = 'RE: ' . $message['title'];
+                    $body = '<h2>Answer: </h2>' . $params['content'];
+                    $error = TalkMail::send(
+                        // From
+                        ['address' => $mailUser.'@'.$this->mailDomain, 'name' => $mailUser],
+                        // Reply
+                        ['address' => $mailUser.'+'.$idhash[1].'@'.$this->mailDomain, 'name' => $mailUser],
+                        // To
+                        ['address' => $_userData['email'], 'name' => $_userData['displayname']],
+                        // Title and message
+                        $subject, $body
+                    );
+                }
+            }
+
+        }
+
 
         // Work with files
         if(isset($params['files']) && is_array($params['files']) &&!empty($shareUIds) && $insertResult) {
@@ -695,9 +722,7 @@ $returned['file_info'] = $saveFiles['file_info'];*/
                         unlink($file['tmpfile']);
                         $saveFilesInfo = \OC\Files\Filesystem::getFileInfo($filePathTo);
 
-
                         Helper::mailParserLoger('FILES INFO: '.json_encode($saveFilesInfo));
-
 
                         $saveFiles['file_fileid'][] = $saveFilesInfo['fileid'];
                         $saveFiles['shared_with'][] = $this->shareFileToUsers($saveFilesInfo, $userForSharing);
