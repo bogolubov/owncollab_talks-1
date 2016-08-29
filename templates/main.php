@@ -1,4 +1,9 @@
 <?php
+/**
+ * @type OCP\Template $this
+ * @type array $_
+ *
+ */
 
 $content = isset($_['content']) ? $_['content'] : false;
 
@@ -22,8 +27,9 @@ $content = isset($_['content']) ? $_['content'] : false;
                 </div>
 			</div>
 
-			<?php if ($content)
-				print_unescaped($this->inc("content.$content")); ?>
+			<?php
+			if ($content) echo $this->inc("content.$content");
+			?>
 
 		</div>
 	</div>

@@ -218,8 +218,6 @@ class ApiController extends Controller {
             $data['status'] = TalkMail::SEND_STATUS_CREATED;
 
             if($params['insert_id'] = $this->connect->messages()->insertTask($data)) {
-                // $attachements_info
-                //$params['mail_is_send'] = $this->mailsendSwitcher($data, $all_users, $groups, $groupsusers, $attachements_info);
                 $data['id'] = $params['insert_id'];
                 $this->mailsend($data, $all_users, $attachements_info);
             }
