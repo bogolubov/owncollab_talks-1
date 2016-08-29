@@ -65,7 +65,41 @@ class TalkMail
             return true;
     }
 
+    /**
+     * <pre>
+     * TalkMail::send(
+     *     // From
+     *     ['address' => '', 'name' => ''],
+     *     // Reply
+     *     ['address' => '', 'name' => ''],
+     *     // To
+     *     ['address' => '', 'name' => ''],
+     *     $subject, $body
+     * );
+     * </pre>
+     * @param array $from
+     * @param array $reply
+     * @param array $to
+     * @param $subject
+     * @param $body
+     * @return bool|string
+     * @throws PHPMailer\phpmailerException
+     */
+    static public function send(array $from, array $reply, array $to, $subject, $body)
+    {
+        $mail = new PHPMailer();
+        $mail->CharSet = "UTF-8";
+        $mail->setFrom($from['address'], $from['name']);
+        $mail->addReplyTo($reply['address'], $reply['name']);
+        $mail->addAddress($to['address'], $to['name']);
+        $mail->Subject = $subject;
+        $mail->Body = $body;
+        $mail->isHTML();
 
+        if (!$mail->send())
+            return $mail->ErrorInfo;
+        else return true;
+    }
 
 
 

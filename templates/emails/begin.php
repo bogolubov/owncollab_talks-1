@@ -6,31 +6,20 @@ use \OCA\Owncollab_Talks\Helper;
 /**
  * @type OCP\Template $this
  * @type array $_
+ *
+'attachements' => $attachements,
+'domain' => $this->mailDomain,
+'userId' => $mailUser,
+'talk' => $talk,
  */
 
-$user_id = $_['user_id'];
-
-$user_name = isset($_['user_name'])
-    ? $_['user_name']
-    : $user_id;
-
-$mail_domain = isset($_['mail_domain'])
-    ? $_['mail_domain']
-    : $user_id;
-
-$message = isset($_['message']) && is_array($_['message'])
-    ? $_['message']
-    : [];
-
-try{ $message_subscribers = implode(', ', json_decode($message['subscribers'], true)['users']);
+$user_id = $user_name = $_['userId'];
+$mail_domain = isset($_['domain']) ? $_['domain'] : $user_id;
+$message = isset($_['talk']) && is_array($_['talk']) ? $_['talk'] : [];
+$attaches = isset($_['attachements']) && is_array($_['attachements']) ? $_['attachements'] : [];
+try{
+    $message_subscribers = implode(', ', json_decode($message['subscribers'], true)['users']);
 }catch (Exception $e) {$message_subscribers = false;}
-
-
-$attaches = isset($_['attachements_info']) && is_array($_['attachements_info'])
-    ? $_['attachements_info']
-    : [];
-
-
 
 ?>
 

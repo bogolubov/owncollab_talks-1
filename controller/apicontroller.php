@@ -183,7 +183,7 @@ class ApiController extends Controller {
                 foreach ($share_files as $_fid => $_file) {
 
                     $file = $this->connect->files()->getById($_fid);
-                    $owner = $this->userId; // \OC\Files\Filesystem::getOwner($file['path']);
+                    $owner = $this->userId;
                     $shareType = $file['mimetype'] == 2 ? 'folder' : 'file';
                     $sharedWith = \OCP\Share::getUsersItemShared($shareType, $file['fileid'], $owner, false, true);
                     $isEnabled = \OCP\Share::isEnabled();
@@ -195,30 +195,10 @@ class ApiController extends Controller {
                     ];
 
                     if($isEnabled && $isAllowed) {
-
                         $sharedUsers = is_array($sharedWith) ? array_values($sharedWith) : [];
-
                         foreach ($all_users as $_uid) {
-
-                            if ($owner == $_uid || in_array($_uid, $sharedUsers)) {
-                                continue;
-                            }
-
+                            if ($owner == $_uid || in_array($_uid, $sharedUsers)) continue;
                             $this->connect->files()->shareFile($this->userId, $_uid, $_fid);
-
-                            // \OCP\Share::SHARE_TYPE_USER - 0
-                            // \OCP\Constants::PERMISSION_READ - 1
-                            // \OCP\Constants::PERMISSION_ALL - 31
-
-//                            $itemType = $shareType;
-//                            $itemSource = $_fid;
-//                            $shareType = \OCP\Share::SHARE_TYPE_USER;
-//                            $shareWith = $_uid;
-//                            $permissions = \OCP\Constants::PERMISSION_READ;
-//
-//                            $isShared = \OC\Share\Share::shareItem($itemType, $itemSource, $shareType, $shareWith, $permissions);
-
-                            //$_result_token = \OCP\Share::shareItem($shareType, $_fid, \OCP\Share::SHARE_TYPE_USER, $_uid, \OCP\Constants::PERMISSION_READ);
                         }
                     }
 
@@ -234,11 +214,14 @@ class ApiController extends Controller {
             $data['attachements'] = json_encode((array) $attachements);
             $data['author'] = $this->userId;
             $data['subscribers'] = json_encode(['groups'=>$groups, 'users'=>$users]);
-            $data['hash'] = TalkMail::createHash($data['title']);
+            $data['hash'] = TalkMail::createHash($data['date'].$data['title']);
             $data['status'] = TalkMail::SEND_STATUS_CREATED;
 
-            if($params['insert_id'] = $data['id'] = $this->connect->messages()->insertTask($data)) {
-                $params['mail_is_send'] = $this->mailsendSwitcher($data, $all_users, $groups, $groupsusers, $attachements_info);
+            if($params['insert_id'] = $this->connect->messages()->insertTask($data)) {
+                // $attachements_info
+                //$params['mail_is_send'] = $this->mailsendSwitcher($data, $all_users, $groups, $groupsusers, $attachements_info);
+                $data['id'] = $params['insert_id'];
+                $this->mailsend($data, $all_users, $attachements_info);
             }
 
             $params['data'] = $data;
@@ -259,14 +242,11 @@ class ApiController extends Controller {
     /**
      * @param $talk
      * @param $users
-     * @param $groups
-     * @param $groupsusers
-     * @param $attaches
+     * @param $attachements
      * @return bool|int|string
      */
-    public function mailsendSwitcher($talk = [], $users = [], $groups = [], $groupsusers = [], $attaches = [])
+    public function mailsend($talk = [], $users = [], $attachements = [])
     {
-        $to = [];
         $mailUser = $this->mailUser ? $this->mailUser : $this->userId;
 
         if(!$mailUser)
@@ -274,30 +254,30 @@ class ApiController extends Controller {
 
         foreach ($users as $user) {
             $_userData = $this->connect->users()->getUserData($user);
-            if(!empty($_userData['email']))
-                $to[] = [$_userData['email'], $_userData['displayname']];
+            if(!empty($_userData['email'])) {
+
+                $address = $_userData['email'];
+                $name = $_userData['displayname'];
+                $subject =  $talk['title'];
+
+                $body = Helper::renderPartial($this->appName, 'emails/begin', [
+                            'attachements' => $attachements,
+                            'domain' => $this->mailDomain,
+                            'userId' => $mailUser,
+                            'talk' => $talk,
+                        ]);
+
+                $error = TalkMail::send(
+                    // From
+                    ['address' => $mailUser.'@'.$this->mailDomain, 'name' => $mailUser],
+                    // Reply
+                    ['address' => $mailUser.'+'.$talk['hash'].'@'.$this->mailDomain, 'name' => $mailUser],
+                    // To
+                    ['address' => $address, 'name' => $name],
+                    $subject, $body
+                );
+            }
         }
-
-        $talk['text'] = Helper::renderPartial($this->appName, 'emails/begin', [
-            'user_id' => $this->userId ? $this->userId : 'root',
-            'message' => $talk,
-            'mail_domain' => $this->mailDomain,
-            'attachements_info' => $attaches,
-        ]);
-
-        $result = TalkMail::createMail(
-            [$mailUser.'@'.$this->mailDomain, $mailUser],
-            [$mailUser.'+'.$talk['hash'].'@'.$this->mailDomain, $mailUser],
-            $to,
-            $talk['title'],
-            $talk['text']
-        );
-
-        if($result === true) {
-            return count($to);
-        }
-
-        return $result;
     }
 
     /**
@@ -397,14 +377,13 @@ class ApiController extends Controller {
                 // Static emails
                 switch ($idhash[0]) {
                     case 'team':
-                        $count_mails = $this->saveTalkTeam($params);
+                        $saved = $this->saveTalkTeam($params);
 
                         $users = $this->connect->users()->getAll();
                         $shareUIds = array_merge($shareUIds, array_map(function ($item) { return $item['uid']; }, $users));
 
-                        if(is_numeric($count_mails)) {
+                        if(!$saved) {
                             $returned['type'] = 'ok';
-                            $returned['count_mails'] = $count_mails;
                         } else
                             $returned['type'] = 'error_team';
                         break;
@@ -473,6 +452,7 @@ class ApiController extends Controller {
 
         // Work with files
         if(isset($params['files']) && is_array($params['files']) &&!empty($shareUIds) && $insertResult) {
+
             $saveFiles = $this->parserFileHandler($params['files'], $shareUIds);
 
             if(!empty($saveFiles)) {
@@ -490,6 +470,10 @@ class ApiController extends Controller {
         return new DataResponse($returned);
     }
 
+/*    public function saverTalkAttachements($post)
+    {
+
+    }*/
 
     /**
      * @param $post
@@ -528,9 +512,26 @@ class ApiController extends Controller {
 
         if($insert_id = $this->connect->messages()->insertTask($data)) {
             $this->mailUser = $author;
-            $count_mails = $this->mailsendSwitcher($data, $users);
-            return $count_mails;
+            $this->mailsend($data, $users);
+            return true;
         }
+
+/*        // Work with files
+        if(isset($params['files']) && is_array($params['files']) &&!empty($shareUIds) && $insertResult) {
+
+            $saveFiles = $this->parserFileHandler($params['files'], $shareUIds);
+
+            if(!empty($saveFiles)) {
+                $returned['shared_with'] = $saveFiles['shared_with'];
+                $returned['file_fileid'] = $saveFiles['file_fileid'];
+
+                if(!empty($saveFiles['file_fileid'])) {
+                    $this->connect->update('*PREFIX*collab_messages', ['attachements' => json_encode($saveFiles['file_fileid'])], 'id = ?', [$insertResult]);
+                }
+            } else
+                $returned['shared'] = 'failed';
+        }*/
+
         return false;
     }
 
@@ -582,7 +583,7 @@ class ApiController extends Controller {
         if($insert_id = $this->connect->messages()->insertTask($data)) {
             $inserted = true;
             $this->mailUser = $mailUser;
-            $this->mailsendSwitcher($data, $users);
+            $this->mailsend($data, $users);
         }
 
         return $inserted;
@@ -653,6 +654,7 @@ class ApiController extends Controller {
 
 /*$returned['shared_with'] = $saveFiles['shared_with'];
 $returned['file_info'] = $saveFiles['file_info'];*/
+
     private function parserFileHandler($files, $userForSharing)
     {
         $saveFiles = ['file_fileid'=>[],'shared_with'=>[]];
