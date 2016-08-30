@@ -467,7 +467,19 @@ class ApiController extends Controller {
 
                 if(!empty($_userData['email'])) {
                     $subject = 'RE: ' . $message['title'];
-                    $body = '<h2>Answer: </h2>' . $params['content'];
+                    //$body = '<h2>Answer: </h2>' . $params['content'];
+/*$userName = '';
+$messageTitle = '';
+$messageBody = '';
+$messageAuthor = '';*/
+                    $body = Helper::renderPartial($this->appName, 'emails/answer_from_post', [
+                        'userName' => $userDataFrom['userid'],
+                        'messageTitle' => 'Answer, RE: ' . $message['title'],
+                        'messageAuthor' => $params['from'],
+                        'messageBody' => $params['content'],
+                        'mailDomain' => $this->mailDomain,
+                    ]);
+
                     $error = TalkMail::send(
                         // From
                         ['address' => $mailUser.'@'.$this->mailDomain, 'name' => $mailUser],
