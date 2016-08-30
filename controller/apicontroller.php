@@ -467,15 +467,11 @@ class ApiController extends Controller {
 
                 if(!empty($_userData['email'])) {
                     $subject = 'RE: ' . $message['title'];
-                    //$body = '<h2>Answer: </h2>' . $params['content'];
-/*$userName = '';
-$messageTitle = '';
-$messageBody = '';
-$messageAuthor = '';*/
+
                     $body = Helper::renderPartial($this->appName, 'emails/answer_from_post', [
-                        'userName' => $userDataFrom['userid'],
+                        'userName' => $mailUser,
                         'messageTitle' => 'Answer, RE: ' . $message['title'],
-                        'messageAuthor' => $params['from'],
+                        'messageAuthor' => $userDataFrom['userid'],
                         'messageBody' => $params['content'],
                         'mailDomain' => $this->mailDomain,
                     ]);
