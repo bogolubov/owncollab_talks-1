@@ -204,8 +204,13 @@ class ApiController extends Controller {
                                 try{
                                     $this->connect->files()->shareFile($this->userId, $_uid, $_fid);
 
+                                    $formatFileInfo = false;
+                                    $fileInfo = \OC\Files\Filesystem::getFileInfo(substr($file['path'],6));
+                                    if($fileInfo)
+                                        $formatFileInfo = \OCA\Files\Helper::formatFileInfo($fileInfo);
+
                                     $attachements_info[] = [
-                                        'info' => \OCA\Files\Helper::formatFileInfo(\OC\Files\Filesystem::getFileInfo(substr($file['path'],6))),
+                                        'info' => $formatFileInfo,
                                         'file' => $file,
                                     ];
 
