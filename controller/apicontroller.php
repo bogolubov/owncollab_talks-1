@@ -460,8 +460,12 @@ class ApiController extends Controller {
             $message = $this->connect->messages()->getByHash($idhash[1]);
             $mailUser = $message['author'];
 
-            //array_push($shareUIds, $mailUser);
-            //$shareUIds = array_unique($shareUIds);
+            if($message['rid'] > 0) {
+                $parentMessage = $this->connect->messages()->getById($message['rid']);
+                if($parentMessage)
+                    array_push($shareUIds, $parentMessage['author']);
+            }
+            $shareUIds = array_unique($shareUIds);
 
             foreach ($shareUIds as $uId) {
                 if($userDataFrom['userid'] == $uId) continue;
