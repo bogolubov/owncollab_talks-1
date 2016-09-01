@@ -66,6 +66,7 @@ function parse_source_mail_data()
         $data['subject']     = $message->getHeaderValue('subject');
         $data['content']     = stream_get_contents($message->getHtmlStream());
         $data['files_count'] = $message->getAttachmentCount();
+
         //$data['all_attachment_parts'] = (is_numeric($data['files_count']) && $data['files_count'] > 0)
         //                        ? $message->getAllAttachmentParts()
         //                        : false;
@@ -75,6 +76,7 @@ function parse_source_mail_data()
     }
 
     fclose($resource);
+    loger('Source data: '. print_r($data, true));
     return $data;
 }
 
