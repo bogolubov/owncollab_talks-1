@@ -90,7 +90,9 @@ try{
                         <td><span style="font-size: 100%"><img width="92" height="42" hspace="8" vspace="1" src="https://owncloud.org/wp-content/themes/owncloudorgnew/assets/img/common/logo_owncloud.svg">ownCollab</span></td>
                     </tr>
                     <tr>
-                        <td style="padding: 10px;"><?php echo html_entity_decode($message['text'], ENT_QUOTES) ?></td>
+                        <td style="padding: 10px;">
+                            <pre><?php echo nl2br(html_entity_decode($message['text'], ENT_QUOTES))?></pre>
+                        </td>
                     </tr>
                     </tbody>
                 </table>

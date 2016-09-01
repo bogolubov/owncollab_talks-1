@@ -54,7 +54,7 @@ $messageAuthor = $_['messageAuthor'];
                     </tr>
                     <tr>
                         <td style="padding: 10px;">
-                            <?php echo html_entity_decode($messageBody, ENT_QUOTES) ?>
+                            <pre><?php echo nl2br(html_entity_decode($messageBody, ENT_QUOTES))?></pre>
                         </td>
                     </tr>
                     </tbody>
