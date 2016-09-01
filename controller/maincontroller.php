@@ -200,19 +200,25 @@ class MainController extends Controller
             foreach ($attach as $at) {
 
                 $file = $this->connect->files()->getInfoById($at);
-
+                $fileInfo = false;
                 $filePath = str_replace('files/', '', $file['path']);
-                $fileInfo = \OC\Files\Filesystem::getFileInfo($filePath);
 
+                try {
+                    $fileInfo = \OC\Files\Filesystem::getFileInfo($filePath);
+                } catch ( \Exception $e) {}
+
+                //var_dump($file);
                 if(!$fileInfo){
                     $itemSource = \OCP\Share::getItemSharedWithBySource('file', $at);
-                    $fileInfo = \OC\Files\Filesystem::getFileInfo($itemSource['file_target']);
-                    $filePath = $itemSource['file_target'];
+                    if(is_array($itemSource) && !empty($itemSource)){
+                        $fileInfo = \OC\Files\Filesystem::getFileInfo($itemSource['file_target']);
+                        $filePath = $itemSource['file_target'];
+
+                    }
                 }
 
                 if(!$fileInfo) continue;
-
-                $icon =  \OCA\Files\Helper::determineIcon($fileInfo);
+                $icon = '/core/img/filetypes/image.svg'; // \OCA\Files\Helper::determineIcon($fileInfo);
 
                 $attachements_info[] = [
                     'preview' => $icon,
@@ -249,8 +255,25 @@ class MainController extends Controller
     {
         $data = [];
 
+
+//        $tree = $this->createFileListTree();
+//
+//        var_dump($tree);
+//        exit;
+//
+//
+
+
+
+
+
+
+
+
+
         return new DataResponse($data);
     }
+
 
 
     /**

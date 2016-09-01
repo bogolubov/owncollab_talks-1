@@ -406,7 +406,6 @@ class ApiController extends Controller {
 
             // checked message by hash key
             if ($message = $this->connect->messages()->getByHash(trim($hash))) {
-
                 // added users for shared file
                 if (!empty($message['subscribers'])) {
                     try {
@@ -460,6 +459,9 @@ class ApiController extends Controller {
 
             $message = $this->connect->messages()->getByHash($idhash[1]);
             $mailUser = $message['author'];
+
+            //array_push($shareUIds, $mailUser);
+            //$shareUIds = array_unique($shareUIds);
 
             foreach ($shareUIds as $uId) {
                 if($userDataFrom['userid'] == $uId) continue;
@@ -651,7 +653,7 @@ class ApiController extends Controller {
             'user' => $this->userId,
         );
 
-        $fileList = $this->createFileListTree('/', '', true);
+        $fileList = $this->createFileListTree();
 
         $params['file_list'] = $fileList;
         $params['view'] = Helper::renderPartial($this->appName, 'part.userfilelist', $params);
@@ -660,46 +662,27 @@ class ApiController extends Controller {
     }
 
 
-    /**
-     * @var array
-     */
-    private $_file_list_tree = [];
-
-    /**
-     * @param string $path
-     * @param string $root_path
-     * @param bool $clean
-     * @return array
-     */
-    public function createFileListTree($path = '/', $root_path = '', $clean = false)
+    private $listtree = [];
+    public function createFileListTree($path = '/')
     {
-        if($clean) {
-            $this->_file_list_tree = [];
-        }
-
-        $_files = \OCA\Files\Helper::getFiles($path);
-
-        if (is_array($_files)) {
-            foreach($_files as $f => $file) {
-
+        $files = \OCA\Files\Helper::getFiles($path);
+        if (is_array($files)) {
+            foreach($files as $f => $file) {
                 if($file['type'] == 'dir') {
-                    $this->createFileListTree('/'.$file['name'], '/'.$file['name'], false);
-                } else {
-
-                    $_to_list = \OCA\Files\Helper::formatFileInfo($file);
-
-                    if(!$file->isShared()) {
-                        $_to_list['mtime'] = $file['mtime']/1000;
-                        $_to_list['path']  = $root_path .'/'. $file['name'];
-
-                        $this->_file_list_tree[] = $_to_list;
-                    }
+                    $this->createFileListTree(substr($file['path'],6));
+                }
+                else {
+                    $fdata = \OCA\Files\Helper::formatFileInfo($file);
+                    $fdata['mtime'] = $file['mtime']/1000;
+                    $fdata['path'] = substr($file['path'],6);
+                    array_push($this->listtree, $fdata);
                 }
             }
         }
-
-        return $this->_file_list_tree;
+        return $this->listtree;
     }
+
+
 
 /*$returned['shared_with'] = $saveFiles['shared_with'];
 $returned['file_info'] = $saveFiles['file_info'];*/

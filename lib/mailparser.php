@@ -48,12 +48,10 @@ function loger_error($data_string)
  */
 function parse_source_mail_data()
 {
-
-
     $data       = [];
     $resource   = fopen("php://stdin", "r");
     // for xDebug
-    //$resource   = fopen(__DIR__."/mails/bogdan.mail", "r");
+    // $resource   = fopen(__DIR__."/mails/bogdan.mail", "r");
     $mailParser = new ZBateson\MailMimeParser\MailMimeParser();
     $message    = $mailParser->parse($resource);
 
