@@ -51,9 +51,8 @@ if($message):
     </ul>
 
     <div class="read_body">
-        <?php
-            echo $message['text']; //html_entity_decode($message['text'], ENT_QUOTES) ;
-        ?>
+<!--        //html_entity_decode($message['text'], ENT_QUOTES);-->
+        <pre><?php echo nl2br(html_entity_decode($message['text']))?></pre>
     </div>
 
     <div class="read_reply" style="display: none">
