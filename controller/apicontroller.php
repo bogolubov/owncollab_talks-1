@@ -183,16 +183,17 @@ class ApiController extends Controller {
                 foreach ($share_files as $_fid => $_file) {
 
                     $file = $this->connect->files()->getById($_fid);
+
+                    if(!$file) {
+                        Helper::mailParserLogerError('ERROR SaveTalk - Begin, file by ID not find: '.$_fid);
+                        continue;
+                    }
+
                     $owner = $this->userId;
                     $shareType = $file['mimetype'] == 2 ? 'folder' : 'file';
                     $sharedWith = \OCP\Share::getUsersItemShared($shareType, $file['fileid'], $owner, false, true);
                     $isEnabled = \OCP\Share::isEnabled();
                     $isAllowed = \OCP\Share::isResharingAllowed();
-
-                    $attachements_info[] = [
-                        'info' => \OCA\Files\Helper::formatFileInfo(\OC\Files\Filesystem::getFileInfo(substr($file['path'],6))),
-                        'file' => $file,
-                    ];
 
                     if($isEnabled && $isAllowed) {
                         $sharedUsers = is_array($sharedWith) ? array_values($sharedWith) : [];
@@ -200,6 +201,10 @@ class ApiController extends Controller {
                             if ($owner == $_uid || in_array($_uid, $sharedUsers)) continue;
                             $this->connect->files()->shareFile($this->userId, $_uid, $_fid);
                         }
+                        $attachements_info[] = [
+                            'info' => \OCA\Files\Helper::formatFileInfo(\OC\Files\Filesystem::getFileInfo(substr($file['path'],6))),
+                            'file' => $file,
+                        ];
                     }
 
                 }
