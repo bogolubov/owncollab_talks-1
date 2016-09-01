@@ -198,13 +198,23 @@ class ApiController extends Controller {
                     if($isEnabled && $isAllowed) {
                         $sharedUsers = is_array($sharedWith) ? array_values($sharedWith) : [];
                         foreach ($all_users as $_uid) {
-                            if ($owner == $_uid || in_array($_uid, $sharedUsers)) continue;
-                            $this->connect->files()->shareFile($this->userId, $_uid, $_fid);
+                            if ($owner == $_uid || in_array($_uid, $sharedUsers)) {
+                                # disable
+                            } else {
+                                try{
+                                    $this->connect->files()->shareFile($this->userId, $_uid, $_fid);
+
+                                    $attachements_info[] = [
+                                        'info' => \OCA\Files\Helper::formatFileInfo(\OC\Files\Filesystem::getFileInfo(substr($file['path'],6))),
+                                        'file' => $file,
+                                    ];
+
+                                }catch(\Exception $e){ }
+                            }
+
                         }
-                        $attachements_info[] = [
-                            'info' => \OCA\Files\Helper::formatFileInfo(\OC\Files\Filesystem::getFileInfo(substr($file['path'],6))),
-                            'file' => $file,
-                        ];
+
+
                     }
 
                 }

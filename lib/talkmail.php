@@ -98,7 +98,8 @@ class TalkMail
 
         if (!$mail->send())
             return $mail->ErrorInfo;
-        else return true;
+        else
+            return true;
     }
 
 
