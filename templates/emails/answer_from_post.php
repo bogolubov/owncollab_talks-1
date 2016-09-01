@@ -24,7 +24,7 @@ $messageAuthor = $_['messageAuthor'];
     .file_attached_table td, .file_contains_table td { border: 1px solid #000000; padding: 1px 6px; }
     p { font-family: sans, sans-serif, "Calibri"; padding-bottom: 5px; text-indent: 10px;}
     .footer>p{font-size: 90%; text-align: center; color: #7f7f7f; padding-bottom: 1px; text-indent: 0px; }
-    .tbl_text{font-size: 11px !important; font-family: sans, sans-serif, Calibri;}
+    .tbl_text{font-size: 12px !important; font-family: sans, sans-serif, Calibri;}
 </style>
 
 <table class="main" style="margin: 25px auto 0 auto; font-size:12px; font-family:sans,sans-serif, Calibri;" cellpadding="3" cellspacing="0" width="620" border="0">

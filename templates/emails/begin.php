@@ -29,7 +29,7 @@ try{
     p { font-family: sans, sans-serif, "Calibri"; padding-bottom: 5px; text-indent: 10px;}
     .footer>p{font-size: 90%; text-align: center; color: #7f7f7f; padding-bottom: 1px; text-indent: 0px; }
     pre{font-size: 12px; font-family: sans, sans-serif, Calibri;}
-    .tbl_text{font-size: 11px !important; font-family: sans, sans-serif, Calibri;}
+    .tbl_text{font-size: 12px !important; font-family: sans, sans-serif, Calibri;}
 </style>
 
 <table class="main" style="margin: 25px auto 0 auto; font-size:12px; font-family:sans,sans-serif, Calibri;" cellpadding="3"
