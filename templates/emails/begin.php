@@ -29,6 +29,7 @@ try{
     p { font-family: sans, sans-serif, "Calibri"; padding-bottom: 5px; text-indent: 10px;}
     .footer>p{font-size: 90%; text-align: center; color: #7f7f7f; padding-bottom: 1px; text-indent: 0px; }
     pre{font-size: 12px; font-family: sans, sans-serif, Calibri;}
+    .tbl_text{font-size: 11px !important; font-family: sans, sans-serif, Calibri;}
 </style>
 
 <table class="main" style="margin: 25px auto 0 auto; font-size:12px; font-family:sans,sans-serif, Calibri;" cellpadding="3"
@@ -91,7 +92,7 @@ try{
                         <td><span style="font-size: 100%"><img width="92" height="42" hspace="8" vspace="1" src="https://owncloud.org/wp-content/themes/owncloudorgnew/assets/img/common/logo_owncloud.svg">ownCollab</span></td>
                     </tr>
                     <tr>
-                        <td style="padding: 10px;">
+                        <td style="padding: 10px;" class="tbl_text">
                             <?php echo nl2br(html_entity_decode($message['text'], ENT_QUOTES))?>
                         </td>
                     </tr>
