@@ -58,9 +58,9 @@ try{
                 <table border="0" cellspacing="0" cellpadding="2" width="615" class="file_attached_table">
                     <?php foreach ($attaches as $atc): ?>
                         <tr>
-                            <td width="18">
-                                <img src="<?php echo $mail_domain.'/'.$atc['info']['icon']?>" class="thumbnail"/>
-                            </td>
+<!--                            <td width="18">-->
+<!--                                <img src="--><?php //echo $mail_domain.'/'.$atc['info']['icon']?><!--" class="thumbnail"/>-->
+<!--                            </td>-->
                             <td style="vertical-align: top">
                                 <?php
                                     // Create link to file view
