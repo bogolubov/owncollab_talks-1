@@ -81,12 +81,16 @@ if(App.namespace){App.namespace('Action.Edit', function(App){
             if(!Util.isEmpty(formValues['hash']) && !Util.isEmpty(formValues['message'])) {
 
                 App.Action.Api.request('save_reply', function(response) {
+
+                    //console.log('save_reply >> ', response);
+
                     if(!Util.isObj(response) || response['error'] ) {
                         App.Controller.Page.errorLine(response['errorinfo']?response['errorinfo']:"Server internal error");
                     }
                     else if(response['insert_id'] && response['parent_id']) {
                         // from read page
                         if(App.uriPath.search(/\/read\/\d+/i)!==-1) {
+
                             var rid = App.query('input[name=rid]').value;
                             Util.Cookie.set('goto_message', rid, {path:'/'});
                             window.history.back();
@@ -97,9 +101,11 @@ if(App.namespace){App.namespace('Action.Edit', function(App){
                 }, formValues);
             }
             else {
+
                 jQuery('input[type=submit]', this).prop( "disabled", false );
                 jQuery('textarea[name=message]', this).prop( "disabled", false );
                 App.Controller.Page.errorLine('Пустое сообщение не может быть отправленно, введите текст.');
+
             }
         });
     };

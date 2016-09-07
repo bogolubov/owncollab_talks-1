@@ -132,6 +132,25 @@ class ApiController extends Controller {
 
             if($params['insert_id'] = $this->connect->messages()->insertTask($saveData)) {
                 $params['parent_id'] = $message['id'];
+                $subscribers = ["groups" => false, "users" => false];
+
+                try{
+                    $subscribers = json_decode($message['subscribers'], true);
+                } catch (\Exception $e) {}
+
+                $all_users = is_array($subscribers["users"]) ? $subscribers["users"] : [];
+
+                if(is_array($subscribers["groups"])) {
+                    $groupsusers = $this->connect->users()->getGroupsUsersList();
+                    foreach($subscribers["groups"] as $groupId) {
+                        $groupsData = $groupsusers[$groupId];
+                        foreach($groupsData as $groupData) {
+                            array_push($all_users, $groupData['uid']);
+                        }
+                    }
+                }
+                //$params['all_users'] = $all_users;
+                $this->mailsend($data, $all_users);
                 //$params['mail_is_send'] = $this->mailsendSwitcher($data, $all_users, $groups, $groupsusers);
             }
 
@@ -200,6 +219,7 @@ class ApiController extends Controller {
                         foreach ($all_users as $_uid) {
                             if ($owner == $_uid || in_array($_uid, $sharedUsers)) {
                                 # disable
+                                # todo loger why users not find
                             } else {
                                 try{
                                     $this->connect->files()->shareFile($this->userId, $_uid, $_fid);
@@ -216,14 +236,9 @@ class ApiController extends Controller {
 
                                 }catch(\Exception $e){ }
                             }
-
                         }
-
-
                     }
-
                 }
-
                 $attachements = $files_id_list;
             }
 

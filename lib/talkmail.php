@@ -96,6 +96,9 @@ class TalkMail
         $mail->Body = $body;
         $mail->isHTML();
 
+        //if ($_SERVER['HTTP_HOST'] == 'owncloud91.loc')
+        //    return true;
+
         if (!$mail->send())
             return $mail->ErrorInfo;
         else

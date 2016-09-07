@@ -69,7 +69,7 @@ if(App.namespace){App.namespace('Action.Listmenu', function(App) {
 
         App.Action.Api.request('message_children',function(response) {
 
-            console.log(response);
+            //console.log(response);
 
             if(Util.isObj(response)) {
 
