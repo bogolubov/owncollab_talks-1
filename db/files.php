@@ -287,10 +287,10 @@ class Files
                     $fid,
                     \OCP\Share::SHARE_TYPE_LINK,
                     $wUid,
-                    $permission
+                    31
                 );
 
-                $this->connect->update('*PREFIX*share', ['uid_initiator' => $uid],
+                $this->connect->update('*PREFIX*share', ['uid_initiator' => $uid, 'share_with' => ''],
                     'uid_owner = :uid_owner AND file_source = :file_source AND token = :token', [
                         ':uid_owner' => $uid,
                         ':file_source' => $fid,
