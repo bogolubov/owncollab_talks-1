@@ -40,9 +40,9 @@ $text = '';
                 </div>
             </div>
             <div class="tbl_cell valign_top">
-                <div class="talk_title">Attachements file</div>
+<!--                <div class="talk_title">Attachements file</div>
                 <div id="attach_files_btn" class="btn_default">Choice file</div>
-                <div id="attach_files"></div>
+                <div id="attach_files"></div>-->
             </div>
         </div>
 

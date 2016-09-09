@@ -68,10 +68,10 @@ if(App.namespace){App.namespace('Action.File', function(App){
                 if(typeof callback === 'function')
                     callback.call({}, response);
                 //success = response;
-                console.log('uploadFile::success>>>', response);
+                //console.log('uploadFile::success>>>', response);
             },
             error: function(jqXHR, textStatus, errorMessage) {
-                console.log('uploadFile::error>>>', textStatus, errorMessage);
+                //console.log('uploadFile::error>>>', textStatus, errorMessage);
             }
         });
         return success;

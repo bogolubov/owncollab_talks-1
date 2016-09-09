@@ -235,7 +235,7 @@ class ApiController extends Controller {
                                         'share_ink' => $shareLink,
                                     ];
 
-                                }catch(\Exception $e){ }
+                                } catch (\Exception $e){ }
                             }
                         }
                     }
@@ -252,10 +252,6 @@ class ApiController extends Controller {
             $data['subscribers'] = json_encode(['groups'=>$groups, 'users'=>$users]);
             $data['hash'] = TalkMail::createHash($data['date'].$data['title']);
             $data['status'] = TalkMail::SEND_STATUS_CREATED;
-
-/*
-            var_dump($attachements_info);
-            die;*/
 
             if($params['insert_id'] = $this->connect->messages()->insertTask($data)) {
                 $data['id'] = $params['insert_id'];

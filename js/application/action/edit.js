@@ -154,18 +154,39 @@ if(App.namespace){App.namespace('Action.Edit', function(App){
             };
 
         uploadConfig.onSelect = function (files) {fileList = files};
+
         uploadConfig.onSuccess = function (files, response, xhr, pd) {
+
             if(typeof fileList === 'object' && fileList.length > 0) {
                 // all files upload
                 for(i = 0; i < fileList.length; i ++) {
+
                     App.Action.File.uploadFile(fileList[i], function (response) {
-                        console.log('File upload complete! Response:', response);
+                        //http://owncloud.loc/index.php/apps/files/ajax/getstoragestats.php
+                        //console.log('File upload complete! Response:', response);
                         _._last_uploads_result[i] = response;
 
-                        //http://owncloud.loc/index.php/apps/files/ajax/getstoragestats.php
+                        //console.log('File.uploadFile >>> ', );
+
+                        // add to stack
+                        // ... ...
+                        var files = [];
+                        try {
+                            files = JSON.parse(response);
+                            files.map(function(f){
+                                var info = {};
+                                info['id']   = f['id'];
+                                info['name'] = f['name'];
+                                info['path'] = f['directory']+'/'+f['name'];
+                                info['parentid'] = f['parentId'];
+                                App.Action.File.selectFilesData[info['id']] = info;
+                            });
+                        } catch (e) {}
                     });
                 }
+                console.log('selectFilesData >>> ', App.Action.File.selectFilesData);
             }
+
         };
         jQuery("#uploadfile_plugin").uploadFile(uploadConfig);
     };
