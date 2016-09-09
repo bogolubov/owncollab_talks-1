@@ -229,7 +229,7 @@ class ApiController extends Controller {
                                     if($fileInfo)
                                         $formatFileInfo = \OCA\Files\Helper::formatFileInfo($fileInfo);
 
-                                    $attachements_info[] = [
+                                    $attachements_info[$shareLink] = [
                                         'info' => $formatFileInfo,
                                         'file' => $file,
                                         'share_ink' => $shareLink,
