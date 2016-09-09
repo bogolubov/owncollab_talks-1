@@ -68,7 +68,7 @@ try{
                                 //$file_link = \OC::$server->getURLGenerator()->getAbsoluteURL('index.php/apps/files');
                                 //$file_link .= "/?dir=/&fileid={$file_id}#//{$file_name}";
 
-                                $share_ink = $atc['info']['share_ink'];
+                                $share_ink = $atc['share_ink'];
                                 $file_link = \OC::$server->getURLGenerator()->getAbsoluteURL('index.php/s/'.$share_ink);
 
                                 ?>
