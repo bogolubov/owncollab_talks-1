@@ -287,7 +287,7 @@ class Files
                     $fid,
                     \OCP\Share::SHARE_TYPE_LINK,
                     $wUid,
-                    31
+                    $permission
                 );
 
                 $this->connect->update('*PREFIX*share', ['uid_initiator' => $uid, 'share_with' => ''],
