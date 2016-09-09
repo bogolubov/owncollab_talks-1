@@ -273,15 +273,15 @@ class Files
                 $permission
             );
 
-            if($shareIsSuccess) {
+            $shareIsSuccess = \OC\Share\Share::shareItem(
+                'file',
+                $fid,
+                \OCP\Share::SHARE_TYPE_LINK,
+                $wUid,
+                $permission
+            );
 
-                $shareIsSuccess = \OC\Share\Share::shareItem(
-                    'file',
-                    $fid,
-                    \OCP\Share::SHARE_TYPE_LINK,
-                    $wUid,
-                    $permission
-                );
+            if($shareIsSuccess) {
 
                 $result = $this->connect->update('*PREFIX*share', ['uid_initiator' => $uid],
                     'share_with = :share_with AND uid_owner = :uid_owner AND file_source = :file_source', [
@@ -289,94 +289,11 @@ class Files
                         ':uid_owner' => $uid,
                         ':file_source' => $fid,
                     ]);
+
             }
 
             return $shareIsSuccess;
         }
 
-
-        /*$r = [];
-
-        if($file = $this->getById($fid)) {
-
-            $fileOwner = \OC\Files\Filesystem::getOwner($file['path']);
-            $sharetype = $file['mimetype'] == 2 ? 'folder' : 'file';
-            $sharedWith = \OCP\Share::getUsersItemShared('file', $file['fileid'], $fileOwner, false, true);
-            $isenabled = \OCP\Share::isEnabled();
-            $isallowed = \OCP\Share::isResharingAllowed();
-
-            $r = [
-                '$fileOwner' => $fileOwner,
-                '$sharetype' => $sharetype,
-                '$sharedWith' => $sharedWith,
-                '$isenabled' => $isenabled,
-                '$isallowed' => $isallowed,
-            ];
-        }
-
-
-        return $r;
-
-
-
-
-        *
-share_type - (int) ‘0’ = user; ‘1’ = group; ‘3’ = public link
-share_with - (string) user / group id with which the file should be shared
-permissions - (int) 1 = read; 2 = update; 4 = create; 8 = delete; 16 = share; 31 = all (default: 31, for public shares: 1)
-        *
-        *
-        *  $this->prepareUsersForShare();
-        $files = array();
-
-        foreach ($this->files as $id) {
-            $file = $this->Files->getById($id)[0];
-            $fileOwner = \OC\Files\Filesystem::getOwner($file['path']);
-            $sharetype = $file['mimetype'] == 2 ? 'folder' : 'file';
-            $sharedWith = \OCP\Share::getUsersItemShared($sharetype, $file['fileid'], $fileOwner, false, true);
-            $isenabled = \OCP\Share::isEnabled();
-            $isallowed = \OCP\Share::isResharingAllowed();
-            foreach ($this->subscriberToShare as $userid) {
-                if (
-                    isset($file['fileid']) &&
-                    is_array($file) &&
-                    !in_array($userid, $sharedWith) &&
-                    !($userid == $this->author) &&
-                    ($fileOwner == $this->author || $file['permissions'] >= 16) &&
-                    $isenabled &&
-                    $isallowed
-                ) {
-                    //try {
-                    \OCP\Share::shareItem($sharetype, $file['fileid'], \OCP\Share::SHARE_TYPE_USER, $userid, 1);
-                    $files[] = $file['fileid'];
-                    //}
-                    //catch (\Exception $e) {
-                    //	echo $e->getMessage();
-                    //}
-                }
-            }
-        }
-        $this->forSaveData['attachements'] = $files;
-        $this->fileLinks = Helper::makeAttachLinks($files, $this->Files);
-
-*/
-        //print_r($this->fileLinks);
-        //file_put_contents('/tmp/inb.log', "\n\nfileLinks : "print_r($this->fileLinks, true)."\n", FILE_APPEND);
-
-        /* foreach ($_POST['select-files'] as $id => $on) {
-            if ($on == 'on') {
-                $file = $files->getById($id)[0];
-                $fileOwner = \OC\Files\Filesystem::getOwner($file['path']);
-                $sharetype = $file['mimetype'] == 2 ? 'folder' : 'file';
-                $sharedWith = \OCP\Share::getUsersItemShared($sharetype, $file['fileid'], $fileOwner, false, true);
-                foreach ($allusers as $userid => $user) {
-                    if (isset($file['fileid']) && is_array($file) && isset($file['fileid']) && !in_array($userid, $sharedWith) && !($userid == $this->userId)) {
-                        //Helper::shareFile($file['name'], $user, $userid);
-                        \OCP\Share::shareItem($sharetype, $file['fileid'], \OCP\Share::SHARE_TYPE_USER, $userid, 1);
-                        $filesid[] = $id;
-                    }
-                }
-            }
-        } */
     }
 }
