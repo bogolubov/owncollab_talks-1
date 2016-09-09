@@ -273,27 +273,40 @@ class Files
                 $permission
             );
 
-            $shareIsSuccess = \OC\Share\Share::shareItem(
-                'file',
-                $fid,
-                \OCP\Share::SHARE_TYPE_LINK,
-                $wUid,
-                $permission
-            );
-
             if($shareIsSuccess) {
 
-                $result = $this->connect->update('*PREFIX*share', ['uid_initiator' => $uid],
+                $this->connect->update('*PREFIX*share', ['uid_initiator' => $uid],
                     'share_with = :share_with AND uid_owner = :uid_owner AND file_source = :file_source', [
                         ':share_with' => $wUid,
                         ':uid_owner' => $uid,
                         ':file_source' => $fid,
                     ]);
 
+                $token = \OC\Share\Share::shareItem(
+                    'file',
+                    $fid,
+                    \OCP\Share::SHARE_TYPE_LINK,
+                    $wUid,
+                    $permission
+                );
+
+                $this->connect->update('*PREFIX*share', ['uid_initiator' => $uid],
+                    'uid_owner = :uid_owner AND file_source = :file_source AND token = :token', [
+                        ':uid_owner' => $uid,
+                        ':file_source' => $fid,
+                        ':token' => $token,
+                    ]);
+
+                return $token;
             }
 
-            return $shareIsSuccess;
         }
 
     }
+
+
+
+
+
+
 }
