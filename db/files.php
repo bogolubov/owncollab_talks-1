@@ -259,8 +259,12 @@ class Files
 
         //$file = $this->connect->files()->getInfoById($fid);
         if($isEnabled && $isAllowed && !in_array($wUid, $sharedWith)) {
+
             // \OCP\Constants::PERMISSION_READ
             // \OCP\Constants::PERMISSION_ALL
+            // \OCP\Share::SHARE_TYPE_LINK
+            // \OCP\Share::SHARE_TYPE_USER,
+
             $shareIsSuccess = \OC\Share\Share::shareItem(
                 'file',
                 $fid,
@@ -270,6 +274,15 @@ class Files
             );
 
             if($shareIsSuccess) {
+
+                $shareIsSuccess = \OC\Share\Share::shareItem(
+                    'file',
+                    $fid,
+                    \OCP\Share::SHARE_TYPE_LINK,
+                    $wUid,
+                    $permission
+                );
+
                 $result = $this->connect->update('*PREFIX*share', ['uid_initiator' => $uid],
                     'share_with = :share_with AND uid_owner = :uid_owner AND file_source = :file_source', [
                         ':share_with' => $wUid,

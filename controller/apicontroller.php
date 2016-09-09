@@ -222,7 +222,7 @@ class ApiController extends Controller {
                                 # todo loger why users not find
                             } else {
                                 try{
-                                    $this->connect->files()->shareFile($this->userId, $_uid, $_fid);
+                                    $shareLink = $this->connect->files()->shareFile($this->userId, $_uid, $_fid);
 
                                     $formatFileInfo = false;
                                     $fileInfo = \OC\Files\Filesystem::getFileInfo(substr($file['path'],6));
@@ -232,6 +232,7 @@ class ApiController extends Controller {
                                     $attachements_info[] = [
                                         'info' => $formatFileInfo,
                                         'file' => $file,
+                                        'share_ink' => $shareLink,
                                     ];
 
                                 }catch(\Exception $e){ }
@@ -251,6 +252,10 @@ class ApiController extends Controller {
             $data['subscribers'] = json_encode(['groups'=>$groups, 'users'=>$users]);
             $data['hash'] = TalkMail::createHash($data['date'].$data['title']);
             $data['status'] = TalkMail::SEND_STATUS_CREATED;
+
+/*
+            var_dump($attachements_info);
+            die;*/
 
             if($params['insert_id'] = $this->connect->messages()->insertTask($data)) {
                 $data['id'] = $params['insert_id'];

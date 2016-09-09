@@ -60,22 +60,19 @@ try{
                 <table border="0" cellspacing="0" cellpadding="2" width="615" class="file_attached_table">
                     <?php foreach ($attaches as $atc): ?>
                         <tr>
-<!--                            <td width="18">-->
-<!--                                <img src="--><?php //echo $mail_domain.'/'.$atc['info']['icon']?><!--" class="thumbnail"/>-->
-<!--                            </td>-->
                             <td style="vertical-align: top">
                                 <?php
-                                    // Create link to file view
-                                    $path = str_replace('files/', '', $atc['file']['path']);
-                                    $folder = '/';
-                                    $parts = explode('/', $path);
-                                    if(count($parts) > 1) {
-                                        $folder = '/'.$parts[0];
-                                    }
-                                    $path   = '/'.join('/', $parts);
-                                    $file_link = Helper::linkTo('files', '', ['dir'=>$folder]) . '#' .$path;
+
+                                $file_name = $atc['info']['name'];
+                                $file_id = $atc['info']['id'];
+                                //$file_link = \OC::$server->getURLGenerator()->getAbsoluteURL('index.php/apps/files');
+                                //$file_link .= "/?dir=/&fileid={$file_id}#//{$file_name}";
+
+                                $share_ink = $atc['info']['share_ink'];
+                                $file_link = \OC::$server->getURLGenerator()->getAbsoluteURL('index.php/s/'.$share_ink);
+
                                 ?>
-                                <a href="<?php echo $mail_domain.'/index.php'.$file_link ?>" class="name"><?php echo $atc['info']['name'];?></a>
+                                <a href="<?php echo $file_link ?>" class="name"><?php echo $file_name; ?></a>
                             </td>
                             <td width="150">
                                 <?php echo number_format($atc['info']['size']/1024, 3, '.', ' ');?> Kb

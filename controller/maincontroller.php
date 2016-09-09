@@ -255,20 +255,15 @@ class MainController extends Controller
     {
         $data = [];
 
-
 //        $tree = $this->createFileListTree();
 //
 //        var_dump($tree);
 //        exit;
 //
 //
-
-
-
-
-
-
-
+//
+//        $fileInfo = \OC\Files\Filesystem::getFileInfo('/ES6 Promises a Visual Guide.png');
+//        var_dump($fileInfo);
 
 
         return new DataResponse($data);
