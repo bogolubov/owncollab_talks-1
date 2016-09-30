@@ -184,7 +184,7 @@ if(App.namespace){App.namespace('Action.Edit', function(App){
                         } catch (e) {}
                     });
                 }
-                console.log('selectFilesData >>> ', App.Action.File.selectFilesData);
+                //console.log('selectFilesData >>> ', App.Action.File.selectFilesData);
             }
 
         };
@@ -209,13 +209,14 @@ if(App.namespace){App.namespace('Action.Edit', function(App){
 
                 if (typeof response === 'object') {
                     //App.requesttoken = response.requesttoken;
+                    //console.log('App.Cache', App.Cache);
+                    //App.Action.File.fileListSourceData = userfiles;
                     var userfiles = response['file_list'] ? response['file_list'] : [];
 
-                    App.inject("#attach_files", response.view);
                     jQuery('#attach_files').css('border', '1px solid #ddd');
-                    //console.log('App.Cache', App.Cache);
+                    App.inject("#attach_files", response.view);
+
                     App.Cache.put('userfiles', userfiles);
-                    //App.Action.File.fileListSourceData = userfiles;
                     App.Action.File.selectShareFiles("#attach_files");
                 }
             });
