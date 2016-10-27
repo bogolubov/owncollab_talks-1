@@ -35,7 +35,8 @@
             </field>
             <field>
                 <name>text</name>
-                <type>longtext</type>
+                <type>text</type>
+                <length>4048</length>
                 <notnull>false</notnull>
             </field>
             <field>
