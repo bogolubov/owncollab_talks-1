@@ -35,14 +35,13 @@
             </field>
             <field>
                 <name>text</name>
-                <type>text</type>
-                <length>4048</length>
+                <type>clob</type>
                 <notnull>false</notnull>
             </field>
             <field>
                 <name>attachements</name>
                 <type>text</type>
-                <length>2024</length>
+                <length>4048</length>
                 <notnull>false</notnull>
             </field>
             <field>
