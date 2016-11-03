@@ -20,7 +20,8 @@ class Helper
     {
         $requestUri = \OC::$server->getRequest()->getRequestUri();
         $uriParts = explode('/',trim($requestUri,'/'));
-        if(strtolower($appName) === strtolower($uriParts[array_search('apps',$uriParts)+1]))
+        $part = array_search('apps',$uriParts);
+        if(isset($uriParts[$part+1]) && strtolower($appName) === strtolower($uriParts[$part+1]))
             return true;
         else return false;
     }

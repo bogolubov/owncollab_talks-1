@@ -25,7 +25,6 @@ if os.path.isdir('temp'):
 
 os.mkdir(app_root + '/temp', 0o777)
 
-
 create_files = [
     'mailparser.log',
     'mailparser_error.log',
@@ -44,7 +43,7 @@ config_file = open(app_root + '/config/config.php', 'w+')
 config_data = '''<?php
 
 return [
-    'mta_connection' => 'mysql://DB_USER:DB_PASSWORD@localhost/mailserver',
+    'mta_connection' => false,
     'group_prefix' => '-group',
     'installed' => false,
     'collab_user' => 'collab_user',
