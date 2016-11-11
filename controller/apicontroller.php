@@ -30,6 +30,7 @@ class ApiController extends Controller {
     private $urlGenerator;
     private $configurator;
     private $mailDomain;
+    public $mailUser = false;
 
 
     /**
@@ -120,23 +121,23 @@ class ApiController extends Controller {
 
         if( $data['hash'] && $data['message'] && $message = $this->connect->messages()->getByHash(trim($data['hash'])) ){
 
+            $subscribers = ["groups" => false, "users" => false];
+            try{
+                $subscribers = json_decode($message['subscribers'], true);
+            } catch (\Exception $e) {}
+
             $saveData['rid'] = $message['id'];
             $saveData['date'] = date("Y-m-d H:i:s", time());
             $saveData['title'] = 'RE: '.$message['title'];
             $saveData['text'] = trim($data['message']);
             $saveData['attachements'] = '';
             $saveData['author'] = $this->userId;
-            $saveData['subscribers'] = '';
+            $saveData['subscribers'] = $message['subscribers'];
             $saveData['hash'] = '';
             $saveData['status'] = TalkMail::SEND_STATUS_REPLY;
 
             if($params['insert_id'] = $this->connect->messages()->insertTask($saveData)) {
                 $params['parent_id'] = $message['id'];
-                $subscribers = ["groups" => false, "users" => false];
-
-                try{
-                    $subscribers = json_decode($message['subscribers'], true);
-                } catch (\Exception $e) {}
 
                 $all_users = is_array($subscribers["users"]) ? $subscribers["users"] : [];
 
@@ -149,9 +150,10 @@ class ApiController extends Controller {
                         }
                     }
                 }
-                //$params['all_users'] = $all_users;
-                $this->mailsend($data, $all_users);
-                //$params['mail_is_send'] = $this->mailsendSwitcher($data, $all_users, $groups, $groupsusers);
+
+                $this->mailUser = $saveData['author'];
+                $saveData['hash'] = $data['hash'];
+                $this->mailsend($saveData, $all_users);
             }
 
             $params['data'] = $saveData;
@@ -255,6 +257,8 @@ class ApiController extends Controller {
 
             if($params['insert_id'] = $this->connect->messages()->insertTask($data)) {
                 $data['id'] = $params['insert_id'];
+
+                $this->mailUser = $this->userId;
                 $this->mailsend($data, $all_users, $attachements_info);
             }
 
@@ -271,7 +275,6 @@ class ApiController extends Controller {
     }
 
 
-    public $mailUser = false;
 
     /**
      * @param $talk
@@ -290,10 +293,9 @@ class ApiController extends Controller {
             $_userData = $this->connect->users()->getUserData($user);
             if(!empty($_userData['email'])) {
 
+                $subject =  $talk['title'];
                 $address = $_userData['email'];
                 $name = $_userData['displayname'];
-
-                $subject =  $talk['title'];
                 $body = Helper::renderPartial($this->appName, 'emails/begin', [
                             'attachements' => $attachements,
                             'domain' => $this->mailDomain,
@@ -494,7 +496,8 @@ class ApiController extends Controller {
         if (!empty($idhash[1]) && !empty($shareUIds) && is_array($shareUIds)) {
 
             $message = $this->connect->messages()->getByHash($idhash[1]);
-            $mailUser = $message['author'];
+            //$mailUser = $userDataFrom['userid']; //$message['author'];
+            $mailUser = $userDataFrom['userid'];
 
             if($message['rid'] > 0) {
                 $parentMessage = $this->connect->messages()->getById($message['rid']);
@@ -506,12 +509,11 @@ class ApiController extends Controller {
             foreach ($shareUIds as $uId) {
                 if($userDataFrom['userid'] == $uId) continue;
                 $_userData = $this->connect->users()->getUserData($uId);
-
                 if(!empty($_userData['email'])) {
                     $subject = 'RE: ' . $message['title'];
 
                     $body = Helper::renderPartial($this->appName, 'emails/answer_from_post', [
-                        'userName' => $mailUser,
+                        'userName' => $_userData['displayname'],
                         'messageTitle' => 'Answer, RE: ' . $message['title'],
                         'messageAuthor' => $userDataFrom['userid'],
                         'messageBody' => $params['content'],
@@ -636,7 +638,6 @@ class ApiController extends Controller {
         ];
 
         try {
-            $mailUser = $mailUser ? $mailUser : 'root';
             $author = $params['author'];
             $title = $params['subject'];
             $message = $params['content'];
@@ -646,7 +647,7 @@ class ApiController extends Controller {
             return $result;
         }
 
-        $users = array_values(array_unique(array_diff($subscribers['users'],[$mailUser])));
+        $users = array_values(array_unique(array_diff($subscribers['users'],[$author])));
 
         $data['rid']            = 0;
         $data['date']           = date("Y-m-d H:i:s", time());
@@ -663,7 +664,7 @@ class ApiController extends Controller {
 
         if($insert_id = $this->connect->messages()->insertTask($data)) {
             $inserted = true;
-            $this->mailUser = $mailUser;
+            $this->mailUser = $author;
             $this->mailsend($data, $users);
 
             // Work with files

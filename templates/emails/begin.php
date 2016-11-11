@@ -14,9 +14,12 @@ $user_name = $_['toName'];
 $mail_domain = isset($_['domain']) ? $_['domain'] : $user_id;
 $message = isset($_['talk']) && is_array($_['talk']) ? $_['talk'] : [];
 $attaches = isset($_['attachements']) && is_array($_['attachements']) ? $_['attachements'] : [];
+
 try{
-    $message_subscribers = implode(', ', json_decode($message['subscribers'], true)['users']);
-}catch (Exception $e) {$message_subscribers = false;}
+    $subscribers_array = json_decode($message['subscribers'], true)['users'];
+    $subscribers_array = array_diff($subscribers_array, [$user_name]);
+    $message_subscribers = implode(', ', $subscribers_array);
+}catch (Exception $e) {$message_subscribers = '';}
 
 ?>
 
@@ -51,7 +54,8 @@ try{
             <p>
                 Dear <b><?php p($user_name)?></b>,
             </p>
-            <p>The user <b><?php p($message['author'])?></b> dropped following email to you <?php print_unescaped($message_subscribers ? ' and <b>'.$message_subscribers.'</b>':'') ?>.
+            <p>The user <b><?php p($message['author'])?></b> dropped following email to you<?php
+                if (!empty($message_subscribers)) print_unescaped(' and <b>'.$message_subscribers.'</b>');?>.
                 Please answer directly using your preferred email client or login to your <a href="<?php echo $mail_domain.'/index.php/apps/owncollab_talks'?>" target="_blank">Owncollab Talk</a> instance.</p>
 
             <?php if (!empty($attaches)): ?>
