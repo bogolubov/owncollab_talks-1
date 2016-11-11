@@ -77,7 +77,8 @@ function parse_source_mail_data()
     fclose($resource);
     $_d['content'] = $data['content'];
     $_d['content_html'] = $data['content_html'];
-    loger('Source data: '. print_r($_d, true));
+
+    //loger('Source data: '. print_r($_d, true));
     return $data;
 }
 

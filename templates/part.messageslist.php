@@ -71,7 +71,7 @@ function attachCount(array $message){
                 <div class="msg_text"><?php p(substr(strip_tags(htmlspecialchars_decode($child['text'])),0,50))?>...</div>
                 <?php
                     // test files
-                    var_dump(attachCount($child));
+                    //var_dump(attachCount($child));
                 ?>
             </div>
         <?php endforeach; ?>
