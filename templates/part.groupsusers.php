@@ -14,6 +14,8 @@ $nogroup = isset($_['nogroup']) && is_array($_['nogroup'])
     ? $_['nogroup']
     : [];
 
+$deprecated_users = ['collab_user', $user_id];
+
 
 if ( $groupsusers ) :  ?>
 
@@ -27,7 +29,7 @@ if ( $groupsusers ) :  ?>
         </div>
 
         <div class="gu_line">
-            <?php foreach ($users as $user) : if($user['uid']==$user_id) continue; ?>
+            <?php foreach ($users as $user) : if(in_array($user['uid'], $deprecated_users)) continue; ?>
                 <span class="gu_item">
                     <input id="user_<?=$user['uid']?>" type="checkbox" name="users[]" value="<?=$user['uid']?>" data-group="<?=$g_name?>" data-email="<?=$user['email']?>">
                     <label for="user_<?=$user['uid']?>"> <span></span> <?=$user['displayname']?> </label>
@@ -47,7 +49,7 @@ if ( $groupsusers ) :  ?>
             </span>
     </div>
     <div class="gu_line">
-        <?php foreach ($nogroup as $ngu) : if($ngu['uid']==$user_id) continue; ?>
+        <?php foreach ($nogroup as $ngu) : if(in_array($ngu['uid'], $deprecated_users)) continue; ?>
             <span class="gu_item">
                 <input id="user_<?=$ngu['uid']?>" type="checkbox" name="nogroup_users[]" value="<?=$ngu['uid']?>" data-group="nogroup" data-email="<?=$ngu['email']?>">
                 <label for="user_<?=$ngu['uid']?>"> <span></span> <?=$ngu['displayname']?$ngu['displayname']:$ngu['uid'] ?> </label>
