@@ -13,6 +13,7 @@ namespace OCA\Owncollab_Talks\AppInfo;
 
 use OCA\Owncollab_Talks\Aliaser;
 use OCA\Owncollab_Talks\Configurator;
+use OCA\Owncollab_Talks\Db\Connect;
 use OCA\Owncollab_Talks\Helper;
 use OCA\Owncollab_Talks\MtaConnector;
 use OCP\AppFramework\App;
@@ -46,12 +47,33 @@ $container->query('OCP\INavigationManager')->add(function () use ($container, $a
  * todo: create error logs for Configurator & MtaConnector
  */
 if( Helper::isAppSettingsUsers() ) {
+
     $configurator = new Configurator();
     $mta = new MtaConnector($configurator);
+
     if($mtaErrors = $mta->getErrors()) {
         Helper::mailParserLogerError($mtaErrors);
+    } else {
+        $aliaser = new Aliaser($appName, $configurator, $mta);
+
+        // Sync MailServer virtual users with OwnCloud users
+        $connect = new Connect(\OC::$server->getDatabaseConnection());
+
+        $users = [];
+        $usersArr = $connect->users()->getAll();
+
+        foreach ($usersArr as $ua) {
+            $users[] = strtolower($ua['uid']);
+        }
+        $groups = [];
+        $groupsArr = $connect->users()->getAllGroups();
+        foreach ($groupsArr as $ga) {
+            $groups[] = strtolower($ga['gid']);
+        }
+
+        $aliaser->syncVirtualAliasesWithUsers($users, $groups);
     }
-    new Aliaser($appName, $configurator, $mta);
+
 }
 
 

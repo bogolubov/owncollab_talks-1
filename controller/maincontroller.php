@@ -177,9 +177,11 @@ class MainController extends Controller
         return new TemplateResponse($this->appName, 'main', $data);
     }
 
+
     /**
      * @NoAdminRequired
      * @NoCSRFRequired
+     * @param $id
      * @return TemplateResponse
      */
     public function read($id)
@@ -189,6 +191,7 @@ class MainController extends Controller
         $parent = $this->connect->messages()->getById((int) $message['rid']);
 
         if(!empty($message['attachements'])) {
+
             $attach = [];
 
             try{
@@ -213,7 +216,6 @@ class MainController extends Controller
                     if(is_array($itemSource) && !empty($itemSource)){
                         $fileInfo = \OC\Files\Filesystem::getFileInfo($itemSource['file_target']);
                         $filePath = $itemSource['file_target'];
-
                     }
                 }
 
@@ -254,30 +256,10 @@ class MainController extends Controller
     public function test()
     {
         $data = [];
-
-//        $tree = $this->createFileListTree();
-//
-//        var_dump($tree);
-//        exit;
-//
-//
-//
-//        $fileInfo = \OC\Files\Filesystem::getFileInfo('/ES6 Promises a Visual Guide.png');
-//        var_dump($fileInfo);
-
-
         return new DataResponse($data);
     }
 
-
-
-    /**
-     *
-     */
-    static public function getGlobalFileById(){
-
-    }
-
+    static public function getGlobalFileById(){}
 
     /**
      * Return attachements ids in array
@@ -294,9 +276,6 @@ class MainController extends Controller
         } catch ( \Exception $e) {}
         return $attach;
     }
-
-
-
 
 
 }

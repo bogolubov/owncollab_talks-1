@@ -420,7 +420,6 @@ class ApiController extends Controller {
                 switch ($idhash[0]) {
                     case 'team':
                         $saved = $this->saveTalkTeam($params);
-
                         $users = $this->connect->users()->getAll();
                         $shareUIds = array_merge($shareUIds, array_map(function ($item) { return $item['uid']; }, $users));
 
@@ -466,7 +465,6 @@ class ApiController extends Controller {
                     }
                 }
 
-
                 $userSender = $this->connect->users()->getByEmail($params['from']);
 
                 if ($userSender) {
@@ -486,7 +484,7 @@ class ApiController extends Controller {
                     if ($insertResult)
                         $returned['type'] = 'ok';
 
-                }else
+                } else
                     $returned['error'] = "User sender '{$userSender}' not find.";
             }
         }
@@ -842,6 +840,7 @@ $returned['file_info'] = $saveFiles['file_info'];*/
      */
     public static function login($loginname, $password) {
         $result = \OC_User::getUserSession()->login($loginname, $password);
+
         if ($result) {
             // Refresh the token
             \OC::$server->getCsrfTokenManager()->refreshToken();
@@ -851,6 +850,7 @@ $returned['file_info'] = $saveFiles['file_info'];*/
             //trigger creation of user home and /files folder
             \OC::$server->getUserFolder($user);
         }
+
         return $result;
     }
 

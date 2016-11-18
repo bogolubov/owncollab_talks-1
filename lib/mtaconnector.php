@@ -65,6 +65,24 @@ class MtaConnector {
     }
 
     /**
+     * @return array ['id'=>null, 'name'=>null]
+     */
+    public function getCurrentVirtualDomain() {
+        if($this->instance) {
+            $result = ['id'=>null, 'name'=>null];
+            $domain = $this->configurator->get('mail_domain');
+            $domains = $this->getVirtualDomains(false);
+            for ($i = 0; $i < count($domains); $i ++) {
+                if($domain === $domains[$i]['name']) {
+                    $result = $domains[$i];
+                    break;
+                }
+            }
+            return $result;
+        }
+    }
+
+    /**
      * Return all virtual users
      *
      * @param bool $filtering
@@ -85,6 +103,20 @@ class MtaConnector {
         }
     }
 
+    public function getCurrentVirtualUsers($filtering = true) {
+        if($this->instance) {
+            $domainId = $this->getCurrentVirtualDomain()['id'];
+            $stmt = $this->instance->prepare('SELECT * FROM `mailserver`.`virtual_users` WHERE domain_id = ?');
+            $stmt->execute([$domainId]);
+
+            if ($result = $stmt->fetchAll(\PDO::FETCH_ASSOC)) {
+                if($filtering)
+                    return array_map(function($item){ return $item['email']; }, $result);
+                else
+                    return $result;
+            }
+        }
+    }
     /**
      * Check on the existence of a domain name into table virtual_domains
      *
@@ -110,8 +142,9 @@ class MtaConnector {
      */
     public function virtualUserExist($email) {
         if($this->instance) {
-            $stmt = $this->instance->prepare('SELECT * FROM `mailserver`.`virtual_users` WHERE `email` = ?');
-            $stmt->execute([$email]);
+            $domainId = $this->getCurrentVirtualDomain()['id'];
+            $stmt = $this->instance->prepare('SELECT * FROM `mailserver`.`virtual_users` WHERE `email` = ? AND `domain_id` = ?');
+            $stmt->execute([$email, $domainId]);
             return is_array($stmt->fetch());
         }
         return false;
@@ -152,6 +185,21 @@ class MtaConnector {
 
             return $stmt->execute();
         }
+
+    }
+
+    /**
+     * @param $inIds
+     * @return bool|int
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public function deleteVirtualUserIn($inIds) {
+        if($this->instance && !empty($inIds) && is_string($inIds)) {
+            $stmt = $this->instance->prepare("DELETE FROM `mailserver`.`virtual_users` WHERE id IN ($inIds)");
+            $stmt->execute();
+            return $stmt->rowCount();
+        }
+        return false;
     }
 
 }

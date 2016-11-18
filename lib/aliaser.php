@@ -40,13 +40,13 @@ class Aliaser
         $this->configurator = $config;
         $this->mtaConnector = $mtaConnector;
 
-        $this->userManager  = \OC::$server->getUserManager();
-        $this->groupManager = \OC::$server->getGroupManager();
+//        $this->userManager  = \OC::$server->getUserManager();
+//        $this->groupManager = \OC::$server->getGroupManager();
+//
+//        $this->session      = new \OC\Session\Memory('');
+//        $this->userSession  = new \OC\User\Session($this->userManager, $this->session);
 
-        $this->session      = new \OC\Session\Memory('');
-        $this->userSession  = new \OC\User\Session($this->userManager, $this->session);
-
-        $this->initListeners($this->userSession, $this->groupManager);
+        //$this->initListeners($this->userSession, $this->groupManager);
     }
 
 
@@ -59,6 +59,7 @@ class Aliaser
     {
         if (!empty($uid) && !empty($password)) {
             $email = $this->encodeUidToEmail($uid);
+            $password = Helper::randomString(8);
             $this->mtaConnector->insertVirtualUser($email, $password);
         }
     }
@@ -76,7 +77,8 @@ class Aliaser
         if(!empty($gid)) {
             $prefix = $this->configurator->get('group_prefix');
             $email = $this->encodeUidToEmail($gid.$prefix);
-            $result = $this->mtaConnector->insertVirtualUser($email, 'pass'.strtolower($gid));
+            $password = Helper::randomString(8);
+            $result = $this->mtaConnector->insertVirtualUser($email, $password);
 
             if (!$result) {
                 $errorMessage = 'Error adding user data in the MTA database, ';
@@ -108,9 +110,65 @@ class Aliaser
     }
 
 
-    public function encodeUidToEmail($uid){
+    public function encodeUidToEmail($uid) {
         $mailDomain = $this->configurator->get('mail_domain');
         return strtolower($uid).'@'.$mailDomain;
+    }
+
+
+    public function syncVirtualAliasesWithUsers (array $users, array $groups) {
+        $deleteVirtualUsersIds = [];
+        $virtualUsers = $this->mtaConnector->getCurrentVirtualUsers(false);
+        $groupPrefix = $this->configurator->get('group_prefix');
+        $groupPrefixLength = strlen($groupPrefix);
+
+        // delete fake user
+        unset($users[array_search($this->configurator->get('collab_user'), $users)]);
+
+        foreach ($virtualUsers as $virtualUser) {
+            $vUid = explode('@',$virtualUser['email'])[0];
+
+            // -group
+            if (strlen($vUid) > $groupPrefixLength && substr($vUid, -$groupPrefixLength) === $groupPrefix) {
+                $gvUid = substr($vUid, 0, -$groupPrefixLength);
+                if (!in_array($gvUid, $groups)) {
+                    $deleteVirtualUsersIds[] = $virtualUser['id'];
+                } else {
+                    unset($groups[array_search($gvUid, $groups)]);
+                }
+            }
+            // -user
+            else {
+                if (!in_array($vUid, $users)) {
+                    $deleteVirtualUsersIds[] = $virtualUser['id'];
+                } else {
+                    unset($users[array_search($vUid, $users)]);
+                }
+            }
+        }
+
+        // Delete virtual_users . var_dump('Delete: ', $deleteVirtualUsersIds);
+        if (!empty($deleteVirtualUsersIds)) {
+            $deleteVirtualUsersIdsStr = join(',', $deleteVirtualUsersIds);
+            $result = $this->mtaConnector->deleteVirtualUserIn($deleteVirtualUsersIdsStr);
+            if ($result)
+                Helper::mailParserLoger('Deleted virtual user id: '.$deleteVirtualUsersIdsStr);
+        }
+
+        // Add new virtual_users Users . var_dump('Add users:', $users);
+        if (!empty($users)) {
+            foreach ($users as $user) {
+                $this->onPreCreateUser($user, Helper::randomString(8));
+            }
+        }
+
+        // Add new virtual_users Groups . var_dump('Add groups:', $groups);
+        if (!empty($groups)) {
+            foreach ($groups as $group) {
+                $this->onPreCreateGroup($group);
+            }
+        }
+
     }
 
 

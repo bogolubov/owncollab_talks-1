@@ -123,7 +123,7 @@ function send_to_app(array $fieldsData)
     curl_close($ch);
 
     // console info
-    print_r($result);
+    //print_r($result);
 
     if ($error) {
         loger_error("Line: " . __LINE__ . "; cURL request fail! Error: " . $error);

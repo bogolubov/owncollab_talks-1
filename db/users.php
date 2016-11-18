@@ -44,6 +44,14 @@ class Users
         return $users;
     }
 
+    /**
+     * @return mixed
+     */
+    public function getAllGroups()
+    {
+        $groups = $this->connect->queryAll("SELECT * FROM *PREFIX*groups ORDER BY gid");
+        return $groups;
+    }
 
     /**
      * @param $id
@@ -151,11 +159,6 @@ class Users
         return $usersData;
     }
 
-    public function getUngroupUsersList($refresh = false)
-    {
-
-    }
-
-
+    public function getUngroupUsersList($refresh = false){}
 
 }
