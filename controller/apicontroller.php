@@ -441,6 +441,11 @@ class ApiController extends Controller {
             $uid = $idhash[0];
             $hash = $idhash[1];
 
+            // add sender user
+            if (!empty($uid)) {
+                array_push($shareUIds, $uid);
+            }
+
             // checked message by hash key
             if ($message = $this->connect->messages()->getByHash(trim($hash))) {
                 // added users for shared file
@@ -536,6 +541,16 @@ class ApiController extends Controller {
 
 
         // Work with files
+        //$_userData = $this->connect->users()->
+        //$collab_user = $this->configurator->get('collab_user');
+        $allUsers = $this->connect->users()->getAll();
+        $shareUIds = array_map(function($item){
+            if ($item['uid'] !== $this->configurator->get('collab_user')) {
+                return $item['uid'];
+            }
+        }, $allUsers);
+        $shareUIds = array_unique($shareUIds);
+
         if(isset($params['files']) && is_array($params['files']) &&!empty($shareUIds) && $insertResult) {
 
             $saveFiles = $this->parserFileHandler($params['files'], $shareUIds);
@@ -815,7 +830,8 @@ $returned['file_info'] = $saveFiles['file_info'];*/
         if($isEnabled && $isAllowed) {
             $sharedUsers = is_array($sharedWith) ? array_values($sharedWith) : [];
             foreach ($uids as $uid) {
-                if ($owner == $uid || in_array($uid, $sharedUsers)) continue;
+
+                if ($owner == $uid || in_array($uid, $sharedUsers) || !\OC_User::userExists($uid)) continue;
 
                 // \OCP\Share::SHARE_TYPE_USER
                 // \OCP\Constants::PERMISSION_ALL

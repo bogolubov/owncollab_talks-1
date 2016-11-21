@@ -256,7 +256,20 @@ class MainController extends Controller
     public function test()
     {
         $data = [];
-        return new DataResponse($data);
+
+//        $allUsers = $this->connect->users()->getAll();
+//        $shareUIds = array_map(function($item){return $item['uid'];}, $allUsers);
+
+        $allUsers = $this->connect->users()->getAll();
+        $shareUIds = array_map(function($item){
+            if ($item['uid'] !== $this->configurator->get('collab_user')) {
+                return $item['uid'];
+            }
+        }, $allUsers);
+        $shareUIds = array_unique($shareUIds);
+        //$shareUIds = array_diff(array_unique($shareUIds), ['',null,false]);
+
+        return new DataResponse($shareUIds);
     }
 
     static public function getGlobalFileById(){}
