@@ -122,6 +122,10 @@ class Aliaser
         $groupPrefix = $this->configurator->get('group_prefix');
         $groupPrefixLength = strlen($groupPrefix);
 
+        // Added Users
+        array_push($users, 'team');
+        array_push($users, 'support');
+
         // delete fake user
         unset($users[array_search($this->configurator->get('collab_user'), $users)]);
 
