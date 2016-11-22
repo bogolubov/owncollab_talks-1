@@ -546,13 +546,11 @@ class ApiController extends Controller {
 
 
         if(isset($params['files']) && is_array($params['files']) && !empty($shareUIds) && $insertResult) {
-
             $saveFiles = $this->parserFileHandler($params['files'], $shareFilesUIds);
 
             if(!empty($saveFiles)) {
                 $returned['shared_with'] = $saveFiles['shared_with'];
                 $returned['file_fileid'] = $saveFiles['file_fileid'];
-
                 if(!empty($saveFiles['file_fileid'])) {
                     $this->connect->update('*PREFIX*collab_messages', ['attachements' => json_encode($saveFiles['file_fileid'])], 'id = ?', [$insertResult]);
                 }

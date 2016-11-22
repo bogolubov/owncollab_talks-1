@@ -256,9 +256,10 @@ class Files
         $isEnabled = \OCP\Share::isEnabled();
         $isAllowed = \OCP\Share::isResharingAllowed();
         $sharedWith = \OCP\Share::getUsersItemShared('file', $fid, $uid, false, true);
+        $sharedUsers = is_array($sharedWith) ? array_values($sharedWith) : [];
 
         //$file = $this->connect->files()->getInfoById($fid);
-        if($isEnabled && $isAllowed && !in_array($wUid, $sharedWith)) {
+        if($isEnabled && $isAllowed && !in_array($wUid, $sharedUsers)) {
 
             // \OCP\Constants::PERMISSION_READ
             // \OCP\Constants::PERMISSION_ALL
