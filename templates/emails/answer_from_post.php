@@ -13,9 +13,8 @@ $userName = $_['userName'];
 $messageTitle = $_['messageTitle'];
 $messageBody = $_['messageBody'];
 $messageAuthor = $_['messageAuthor'];
-
+$attaches = isset($_['attachements']) && is_array($_['attachements']) ? $_['attachements'] : [];
 ?>
-
 <body>
 <style>
     *{padding: 0; margin: 0; font-size: 13px;}
@@ -46,6 +45,33 @@ $messageAuthor = $_['messageAuthor'];
                 Dear <b><?php p($userName)?></b>,
             </p>
             <p>The user <b><?php p($messageAuthor)?></b> write answer.</p>
+
+            <div>
+                <?php if (!empty($attaches)): ?>
+                    <p>Following files have been attached to the email:</p>
+                    <br>
+                    <table border="0" cellspacing="0" cellpadding="2" width="615" class="file_attached_table">
+                        <?php foreach ($attaches as $atc): ?>
+                            <tr>
+                                <td style="vertical-align: top">
+                                    <?php
+
+                                    $file_id = $atc['info']['id'];
+                                    $file_name = $atc['info']['name'];
+                                    $share_ink = $atc['info']['name'];
+                                    $file_link = \OC::$server->getURLGenerator()->getAbsoluteURL('index.php/s/'.$share_ink);
+
+                                    ?>
+                                    <a href="<?php echo $file_link ?>" class="name"><?php echo $file_name; ?></a>
+                                </td>
+                                <td width="150">
+                                    <?php echo number_format($atc['info']['size']/1024, 3, '.', ' ');?> Kb
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </table>
+                <?php endif; ?>
+            </div>
 
             <br>
                 <table cellspacing="0" cellpadding="3" width="615" class="file_contains_table">

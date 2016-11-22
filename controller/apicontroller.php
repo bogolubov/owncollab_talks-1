@@ -227,7 +227,7 @@ class ApiController extends Controller {
                                     $shareLink = $this->connect->files()->shareFile($this->userId, $_uid, $_fid);
 
                                     $formatFileInfo = false;
-                                    $fileInfo = \OC\Files\Filesystem::getFileInfo(substr($file['path'],6));
+                                    $fileInfo = \OC\Files\Filesystem::getFileInfo(substr($file['path'], 6));
                                     if($fileInfo)
                                         $formatFileInfo = \OCA\Files\Helper::formatFileInfo($fileInfo);
 
@@ -275,6 +275,45 @@ class ApiController extends Controller {
     }
 
 
+
+    public function getShareFilesUsers($filesIds)
+    {
+        $attachements_info = [];
+        foreach ($filesIds as $fid) {
+            $file = $this->connect->files()->getById($fid);
+            if(!$file) {
+                Helper::mailParserLogerError('ERROR SaveTalk - Begin, file by ID not find: '.$fid);
+                continue;
+            }
+
+            $owner = $this->configurator->get('collab_user');
+            $shareType = $file['mimetype'] == 2 ? 'folder' : 'file';
+            $sharedWith = \OCP\Share::getUsersItemShared($shareType, $file['fileid'], $owner, false, true);
+            $isEnabled = \OCP\Share::isEnabled();
+            $isAllowed = \OCP\Share::isResharingAllowed();
+
+            if($isEnabled && $isAllowed) {
+                $sharedUsers = is_array($sharedWith) ? array_values($sharedWith) : [];
+                foreach ($sharedUsers as $_uid) {
+                    if ($owner == $_uid || in_array($_uid, $sharedUsers)) {
+                        try{
+                            $formatFileInfo = false;
+                            $fileInfo = \OC\Files\Filesystem::getFileInfo(substr($file['path'], 6));
+                            if($fileInfo)
+                                $formatFileInfo = \OCA\Files\Helper::formatFileInfo($fileInfo);
+
+                            $attachements_info[$shareLink] = [
+                                'info' => $formatFileInfo,
+                                'file' => $file,
+                            ];
+
+                        } catch (\Exception $e){ }
+                    }
+                }
+            }
+        }
+        return $attachements_info;
+    }
 
     /**
      * @param $talk
@@ -495,11 +534,41 @@ class ApiController extends Controller {
         }
 
 
-        //mail to
+
+        // Work with files, share for all users
+        $allUsers = $this->connect->users()->getAll();
+        $shareFilesUIds = array_map(function($item){
+            if ($item['uid'] !== $this->configurator->get('collab_user')) {
+                return $item['uid'];
+            }
+        }, $allUsers);
+        $shareFilesUIds = array_unique($shareFilesUIds);
+
+
+        if(isset($params['files']) && is_array($params['files']) && !empty($shareUIds) && $insertResult) {
+
+            $saveFiles = $this->parserFileHandler($params['files'], $shareFilesUIds);
+
+            if(!empty($saveFiles)) {
+                $returned['shared_with'] = $saveFiles['shared_with'];
+                $returned['file_fileid'] = $saveFiles['file_fileid'];
+
+                if(!empty($saveFiles['file_fileid'])) {
+                    $this->connect->update('*PREFIX*collab_messages', ['attachements' => json_encode($saveFiles['file_fileid'])], 'id = ?', [$insertResult]);
+                }
+            } else
+                $returned['shared'] = 'failed';
+
+        }
+
+
+
+
+        //mail to, answer_from_post
         if (!empty($idhash[1]) && !empty($shareUIds) && is_array($shareUIds)) {
 
+            $attachements_info = $this->getShareFilesUsers($returned['file_fileid']);
             $message = $this->connect->messages()->getByHash($idhash[1]);
-            //$mailUser = $userDataFrom['userid']; //$message['author'];
             $mailUser = $userDataFrom['userid'];
 
             if($message['rid'] > 0) {
@@ -516,6 +585,7 @@ class ApiController extends Controller {
                     $subject = 'RE: ' . $message['title'];
 
                     $body = Helper::renderPartial($this->appName, 'emails/answer_from_post', [
+                        'attachements' => $attachements_info,
                         'userName' => $_userData['displayname'],
                         'messageTitle' => 'Answer, RE: ' . $message['title'],
                         'messageAuthor' => $userDataFrom['userid'],
@@ -524,7 +594,7 @@ class ApiController extends Controller {
                     ]);
 
                     $error = TalkMail::send(
-                        // From
+                    // From
                         ['address' => $mailUser.'@'.$this->mailDomain, 'name' => $mailUser],
                         // Reply
                         ['address' => $mailUser.'+'.$idhash[1].'@'.$this->mailDomain, 'name' => $mailUser],
@@ -534,41 +604,16 @@ class ApiController extends Controller {
                         $subject, $body
                     );
                 }
-
             }
-
         }
 
-
-        // Work with files
-        //$_userData = $this->connect->users()->
-        //$collab_user = $this->configurator->get('collab_user');
-        $allUsers = $this->connect->users()->getAll();
-        $shareUIds = array_map(function($item){
-            if ($item['uid'] !== $this->configurator->get('collab_user')) {
-                return $item['uid'];
-            }
-        }, $allUsers);
-        $shareUIds = array_unique($shareUIds);
-
-        if(isset($params['files']) && is_array($params['files']) &&!empty($shareUIds) && $insertResult) {
-
-            $saveFiles = $this->parserFileHandler($params['files'], $shareUIds);
-
-            if(!empty($saveFiles)) {
-                $returned['shared_with'] = $saveFiles['shared_with'];
-                $returned['file_fileid'] = $saveFiles['file_fileid'];
-
-                if(!empty($saveFiles['file_fileid'])) {
-                    $this->connect->update('*PREFIX*collab_messages', ['attachements' => json_encode($saveFiles['file_fileid'])], 'id = ?', [$insertResult]);
-                }
-            } else
-                $returned['shared'] = 'failed';
-
-        }
 
         return new DataResponse($returned);
     }
+
+
+
+
 
 /*    public function saverTalkAttachements($post)
     {
