@@ -29,4 +29,4 @@ lib/mails
 templates/_old
 /mailparser.log
 /mailparser_error.log
-/appinfo/config.php
+/config/config.php
