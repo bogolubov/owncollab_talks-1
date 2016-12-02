@@ -6,7 +6,7 @@ return [
     'installed' => true,
     'collab_user' => 'collab_user',
     'collab_user_password' => 'oi#u78)ws@pq19ed0',
-    'mail_domain' => 'owncloud91.loc',
-    'server_host' => 'owncloud91.loc',
-    'site_url' => 'http://owncloud91.loc/',
+    'mail_domain' => 'owncloud9.loc',
+    'server_host' => 'owncloud9.loc',
+    'site_url' => 'http://owncloud9.loc/',
 ];
