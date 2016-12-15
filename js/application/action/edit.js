@@ -14,7 +14,6 @@ if(App.namespace){App.namespace('Action.Edit', function(App){
         _.checkSubscribersEvent();
         _.submitFormEvent();
 
-
         App.style('/apps/owncollab_talks/css/uploadfile.css');
 
         App.require('jq_uploadfile', [
@@ -58,7 +57,7 @@ if(App.namespace){App.namespace('Action.Edit', function(App){
                 }
 
                 _.submitFormSendNow = true;
-                //console.log(Util.formData(form, true));
+
                 this.submit();
             }else{
                 App.Controller.Page.errorLine("Не все поля заполненны!");
@@ -71,19 +70,40 @@ if(App.namespace){App.namespace('Action.Edit', function(App){
      */
     _.submitFormReplyEvent = function(){
         jQuery('form#quick-reply').submit(function(event) {
+            event.preventDefault();
+
             var formValues = Util.formData(this, true);
             App.Controller.Page.errorLineClose();
-            event.preventDefault();
 
             jQuery('input[type=submit]', this).prop( "disabled", true );
             jQuery('textarea[name=message]', this).prop( "disabled", true );
 
             if(!Util.isEmpty(formValues['hash']) && !Util.isEmpty(formValues['message'])) {
 
-                App.Action.Api.request('save_reply', function(response) {
+                // response = can have keys: error, parent_id, insert_id
+                App.Action.Api.request('insert', function(response) {
 
-                    //console.log('save_reply >> ', response);
+                    // response is object
+                    if (response && Util.isObj(response)) {
 
+                        if(response['insert_id'] && response['parent_id']) {
+                            // from read page
+                            if(App.uriPath.search(/\/read\/\d+/i)!==-1) {
+                                var rid = App.query('input[name=rid]').value;
+                                Util.Cookie.set('goto_message', rid, {path:'/'});
+                                window.history.back();
+                                // from listmenu
+                            } else
+                                jQuery("ul.listmenu>li[data-id="+response['parent_id']+"]").click();
+                        }
+
+
+                    }
+
+                    console.log('reply response >> ', response);
+
+
+/*
                     if(!Util.isObj(response) || response['error'] ) {
                         App.Controller.Page.errorLine(response['errorinfo']?response['errorinfo']:"Server internal error");
                     }
@@ -95,9 +115,10 @@ if(App.namespace){App.namespace('Action.Edit', function(App){
                             Util.Cookie.set('goto_message', rid, {path:'/'});
                             window.history.back();
                             // from listmenu
-                        }else
+                        } else
                             jQuery("ul.listmenu>li[data-id="+response['parent_id']+"]").click();
-                    }
+                    }*/
+
                 }, formValues);
             }
             else {
@@ -145,49 +166,42 @@ if(App.namespace){App.namespace('Action.Edit', function(App){
      * Uses jquery plugin - http://hayageek.com/docs/jquery-upload-file.php
      */
     _.submitFileUploadEvent = function () {
-        var
-            i = 0,
+        var i = 0,
             fileList,
-            uploadConfig = {
-                url: App.url + "/api/uploadfirst",
-                fileName:"file"
-            };
+            uploadConfig = {url: App.url + "/api/void", fileName: "file"};
 
         uploadConfig.onSelect = function (files) {fileList = files};
 
         uploadConfig.onSuccess = function (files, response, xhr, pd) {
 
             if(typeof fileList === 'object' && fileList.length > 0) {
+
                 // all files upload
                 for(i = 0; i < fileList.length; i ++) {
 
                     App.Action.File.uploadFile(fileList[i], function (response) {
-                        //http://owncloud.loc/index.php/apps/files/ajax/getstoragestats.php
-                        //console.log('File upload complete! Response:', response);
                         _._last_uploads_result[i] = response;
 
-                        //console.log('File.uploadFile >>> ', );
-
                         // add to stack
-                        // ... ...
                         var files = [];
                         try {
                             files = JSON.parse(response);
-                            files.map(function(f){
+                            files.map(function(f) {
+
                                 var info = {};
                                 info['id']   = f['id'];
                                 info['name'] = f['name'];
                                 info['path'] = f['directory']+'/'+f['name'];
                                 info['parentid'] = f['parentId'];
+
                                 App.Action.File.selectFilesData[info['id']] = info;
                             });
                         } catch (e) {}
                     });
                 }
-                //console.log('selectFilesData >>> ', App.Action.File.selectFilesData);
             }
-
         };
+
         jQuery("#uploadfile_plugin").uploadFile(uploadConfig);
     };
 

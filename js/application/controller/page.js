@@ -8,12 +8,6 @@ if(App.namespace){App.namespace('Controller.Page', function(App){
     _.construct = function () {
         App.uriPath = App.uriPath();
         App.domLoaded(afterDOMLoaded);
-
-        //var b = App.Tool.getDateDuration(new Date('2016-07-20'));
-        //console.log(b);
-        //console.log(Date.today());0
-        //console.log(Date.now());
-
     };
 
 
@@ -45,21 +39,31 @@ if(App.namespace){App.namespace('Controller.Page', function(App){
      * @namespace App.Controller.Page.readEvents
      */
     _.readEvents = function(){
-        Linker.search();
 
-        Linker.click('msg_back', function(event){
+        jQuery('#talk-massage-back').click(function(event){
             event.preventDefault();
-
-            //var rid = App.query('input[name=rid]').value;
-            //Util.Cookie.set('goto_message', rid, {path:'/'});
             window.history.back();
         });
-
-        Linker.click('msg_reply', function(event){
+        jQuery('#talk-massage-reply').click(function(event){
             event.preventDefault();
             jQuery('.read_reply').show();
             jQuery(event.target).hide();
         });
+
+/*
+        Noder.click('msg_back', function (event) {
+            console.log(this);
+            event.preventDefault();
+            window.history.back();
+        });
+
+        Noder.click('msg_reply', function (event) {
+            event.preventDefault();
+            jQuery('.read_reply').show();
+            jQuery(event.target).hide();
+        });
+*/
+
     };
 
 

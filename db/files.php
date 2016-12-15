@@ -47,7 +47,11 @@ class Files
      */
     public function getById($id) {
         $file = $this->connect->select("*", $this->tableName, "fileid = :id",[':id' => $id]);
-        return is_array($file) ? $file[0] : null;
+        if (is_array($file) && count($file)) {
+            $file = $file[0];
+            $file['id'] = $file['fileid'];
+        }
+        return is_array($file) ? $file : null;
     }
 
     public function getInfoById($id)
@@ -67,53 +71,56 @@ class Files
     }
 
 
-    public function getByUser($user) {
-        $sql = "SELECT activity_id, timestamp, priority, type, user, affecteduser, app, subject, subjectparams, message, messageparams, file, link, object_type, object_id,  fileid, storage, path, path_hash, parent, name, f.mimetype as mimeid, m.mimetype as mimetype, mimepart, size, mtime, storage_mtime, encrypted, unencrypted_size, etag, permissions " .
+
+    /*
+
+        public function getByUser($user) {
+            $sql = "SELECT activity_id, timestamp, priority, type, user, affecteduser, app, subject, subjectparams, message, messageparams, file, link, object_type, object_id,  fileid, storage, path, path_hash, parent, name, f.mimetype as mimeid, m.mimetype as mimetype, mimepart, size, mtime, storage_mtime, encrypted, unencrypted_size, etag, permissions " .
+                    " FROM oc_activity a" .
+                    " INNER JOIN oc_filecache f ON f.fileid = a.object_id" .
+                    " INNER JOIN oc_mimetypes m ON m.id = f.mimetype" .
+                    " WHERE user = '".$user."' AND f.parent <= 2" .
+                    " GROUP BY f.path";
+            $files = $this->connect->queryAll($sql);
+            $filtered = $this->filterDeleted($files, $user);
+            return $filtered;
+        }
+
+
+        public function getByFolder($folder, $user) {
+            //echo $folder;
+            $sql = "SELECT activity_id, timestamp, priority, type, user, affecteduser, app, subject, subjectparams, message, messageparams, file, link, object_type, object_id,  fileid, storage, path, path_hash, parent, name, f.mimetype as mimeid, m.mimetype as mimetype, mimepart, size, mtime, storage_mtime, encrypted, unencrypted_size, etag, permissions " .
                 " FROM oc_activity a" .
                 " INNER JOIN oc_filecache f ON f.fileid = a.object_id" .
                 " INNER JOIN oc_mimetypes m ON m.id = f.mimetype" .
-                " WHERE user = '".$user."' AND f.parent <= 2" .
+                " WHERE user = '".$user."' AND f.parent = ".substr($folder, 7) .
+                //" WHERE user = '".$user."' AND f.parent = 4" .
                 " GROUP BY f.path";
-        $files = $this->connect->queryAll($sql);
-        $filtered = $this->filterDeleted($files, $user);
-        return $filtered;
-    }
+            $files = $this->connect->queryAll($sql);
+            $filtered = $this->filterDeleted($files, $user);
+            return $filtered;
+        }
+    */
 
+    /*
+        public function getFolderPath($folderId) {
 
-    public function getByFolder($folder, $user) {
-        //echo $folder;
-        $sql = "SELECT activity_id, timestamp, priority, type, user, affecteduser, app, subject, subjectparams, message, messageparams, file, link, object_type, object_id,  fileid, storage, path, path_hash, parent, name, f.mimetype as mimeid, m.mimetype as mimetype, mimepart, size, mtime, storage_mtime, encrypted, unencrypted_size, etag, permissions " .
-            " FROM oc_activity a" .
-            " INNER JOIN oc_filecache f ON f.fileid = a.object_id" .
-            " INNER JOIN oc_mimetypes m ON m.id = f.mimetype" .
-            " WHERE user = '".$user."' AND f.parent = ".substr($folder, 7) .
-            //" WHERE user = '".$user."' AND f.parent = 4" .
-            " GROUP BY f.path";
-        $files = $this->connect->queryAll($sql);
-        $filtered = $this->filterDeleted($files, $user);
-        return $filtered;
-    }
+            $folderId = !is_numeric($folderId) ? substr($folderId, 7) : $folderId;
+            return $folrId;
 
+            /*$sql = "SELECT path FROM ".$this->tableName." WHERE fileid = ?";
+            $folder = $this->connect->query($sql, [$folderId]);
 
+            $path = explode('/', $folder['path']);
 
-    public function getFolderPath($folderId) {
-
-        $folderId = !is_numeric($folderId) ? substr($folderId, 7) : $folderId;
-        return $folderId;
-
-        /*$sql = "SELECT path FROM ".$this->tableName." WHERE fileid = ?";
-        $folder = $this->connect->query($sql, [$folderId]);
-
-        $path = explode('/', $folder['path']);
-
-        unset($path[0]);
-        return implode('/', $path);*/
-    }
+            unset($path[0]);
+            return implode('/', $path);
+        }*/
 
 
 
 
-    public function getByIdList($idlist, $user) {
+/*    public function getByIdList($idlist, $user) {
         if (is_array($idlist)) {
             $sql = "SELECT fileid, path, name, mimetype, size, storage_mtime".
                     " FROM oc_filecache fc".
@@ -137,7 +144,8 @@ class Files
         $file = $this->connect->insert($this->tableName, $data);
         return $file;
     }
-
+    */
+/*
     private function filterDeleted($files, $user) {
         $sql = "SELECT * " .
                 " FROM oc_activity " .
@@ -164,10 +172,6 @@ class Files
         return $mimetype;
     }
 
-    /**
-     * Inserts uploaded file into database
-     * @param array $file
-     */
     public function newFile($file, $path) {
         $sql = "SELECT id FROM *PREFIX*mimetypes WHERE mimetype = '".$file['mimetype']."'";
         $res = $this->connect->query($sql);
@@ -201,20 +205,7 @@ class Files
             );
         $filecache = $this->save($data);
 
-        /* file_put_contents('/tmp/inb.log', "\nPath : /\n", FILE_APPEND);
-        try { 
-		$fileInfo = \OC\Files\Filesystem::getFileInfo('/', false); 
-        } 
-        catch (\Exception $e) {
-		file_put_contents('/tmp/inb.log', "\nGet File Info error : " . $e->getMessage() . "\n", FILE_APPEND);
-	}
-        file_put_contents('/tmp/inb.log', "\nFile info : " . print_r($fileInfo, true) . "\n", FILE_APPEND);
-        try { 
-		$icon = \OCA\Files\Helper::determineIcon($fileInfo); 
-        } 
-        catch (\Exception $e) {
-		file_put_contents('/tmp/inb.log', "\nDetermine Icon error : " . $e->getMessage() . "\n", FILE_APPEND);
-	} */ 
+
 	
         $activity = array(
                     'activity_id' => NULL,
@@ -240,26 +231,26 @@ class Files
         else {
             return false;
         }
-    }
+    }*/
 
 
     /**
      * @param $fid
      * @param $uid
-     * @param $wUid
+     * @param $uidwith
+     * @param $permission
      * @return bool|string
      * @throws \Exception
      * @throws \OC\HintException
      */
-    public function shareFile($uid, $wUid, $fid, $permission = 1)
+    public function shareFile($uid, $uidwith, $fid, $permission = 1)
     {
         $isEnabled = \OCP\Share::isEnabled();
         $isAllowed = \OCP\Share::isResharingAllowed();
         $sharedWith = \OCP\Share::getUsersItemShared('file', $fid, $uid, false, true);
         $sharedUsers = is_array($sharedWith) ? array_values($sharedWith) : [];
 
-        //$file = $this->connect->files()->getInfoById($fid);
-        if($isEnabled && $isAllowed && !in_array($wUid, $sharedUsers)) {
+        if($isEnabled && $isAllowed && !in_array($uidwith, $sharedUsers)) {
 
             // \OCP\Constants::PERMISSION_READ
             // \OCP\Constants::PERMISSION_ALL
@@ -270,7 +261,7 @@ class Files
                 'file',
                 $fid,
                 \OCP\Share::SHARE_TYPE_USER,
-                $wUid,
+                $uidwith,
                 $permission
             );
 
@@ -278,7 +269,7 @@ class Files
 
                 $this->connect->update('*PREFIX*share', ['uid_initiator' => $uid],
                     'share_with = :share_with AND uid_owner = :uid_owner AND file_source = :file_source', [
-                        ':share_with' => $wUid,
+                        ':share_with' => $uidwith,
                         ':uid_owner' => $uid,
                         ':file_source' => $fid,
                     ]);
@@ -287,7 +278,7 @@ class Files
                     'file',
                     $fid,
                     \OCP\Share::SHARE_TYPE_LINK,
-                    $wUid,
+                    $uidwith,
                     $permission
                 );
 
@@ -300,10 +291,55 @@ class Files
 
                 return $token;
             }
+        }
 
+        return false;
+    }
+
+
+
+    public function insertShare(array $shareData)
+    {
+        $query = \OC_DB::prepare('INSERT INTO `*PREFIX*share` ('
+            .' `item_type`, `item_source`, `item_target`, `share_type`,'
+            .' `share_with`, `uid_owner`, `uid_initiator`, `permissions`, `stime`, `file_source`,'
+            .' `file_target`, `token`, `parent`, `expiration`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
+
+        $query->bindValue(1, $shareData['itemType']);
+        $query->bindValue(2, $shareData['itemSource']);
+        $query->bindValue(3, $shareData['itemTarget']);
+        $query->bindValue(4, $shareData['shareType']);
+        $query->bindValue(5, $shareData['shareWith']);
+        $query->bindValue(6, $shareData['uidOwner']);
+        $query->bindValue(7, $shareData['uidOwner']);
+        $query->bindValue(8, $shareData['permissions']);
+        $query->bindValue(9, $shareData['shareTime']);
+        $query->bindValue(10, $shareData['fileSource']);
+        $query->bindValue(11, $shareData['fileTarget']);
+        $query->bindValue(12, $shareData['token']);
+        $query->bindValue(13, $shareData['parent']);
+        $query->bindValue(14, $shareData['expiration'], 'datetime');
+
+        try {
+
+            $result = $query->execute();
+
+            $id = false;
+            if ($result) {
+                $id =  \OC::$server->getDatabaseConnection()->lastInsertId('*PREFIX*share');
+            }
+
+            return $id;
+
+        } catch (\Exception $e) {
+
+            return $e;
         }
 
     }
+
+
+
 
 
 

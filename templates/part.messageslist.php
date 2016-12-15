@@ -33,7 +33,7 @@ function attachCount(array $message){
 ?>
 
 <div id="message_parent">
-    <div class="item_msg linker" data-id="toreadmsg" data-link="<?=$parent['id']?>">
+    <div class="item_msg" data-link="<?=$parent['id']?>">
         <div class="msg_title"><a href="<?=Helper::linkToRoute('owncollab_talks.main.read', ['id'=>$parent['id']])?>"><?php p($parent['title'])?></a></div>
         <div class="msg_desc">
             <?php
@@ -65,7 +65,7 @@ function attachCount(array $message){
 
     <div id="messages_children">
         <?php foreach($children as $child): ?>
-            <div class="item_msg linker" data-id="toreadmsg" data-link="<?=$child['id']?>">
+            <div class="item_msg" data-link="<?=$child['id']?>">
                 <div class="msg_title"><a href="<?=Helper::linkToRoute('owncollab_talks.main.read', ['id'=>$child['id']])?>"><?php p($child['title'])?></a></div>
                 <div class="msg_desc"><?=$child['author']?> <?php p(date("d.m.Y H:i:s", strtotime($child['date'])))?></div>
                 <div class="msg_text"><?php p(substr(strip_tags(htmlspecialchars_decode($child['text'])),0,50))?>...</div>

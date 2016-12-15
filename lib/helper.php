@@ -1,5 +1,6 @@
 <?php
 
+
 namespace OCA\Owncollab_Talks;
 
 use OC\User\Session;
@@ -503,7 +504,29 @@ class Helper
         return trim($res);
     }
 
+    /**
+     * @param $login
+     * @param $password
+     * @return bool|null
+     */
+    public static function login($login, $password)
+    {
+        $result = \OC_User::getUserSession()->login($login, $password);
 
+        if ($result) {
+            // Refresh the token
+            \OC::$server->getCsrfTokenManager()->refreshToken();
+
+            //we need to pass the user name, which may differ from login name
+            $user = \OC_User::getUserSession()->getUser()->getUID();
+            \OC_Util::setupFS($user);
+
+            //trigger creation of user home and /files folder
+            \OC::$server->getUserFolder($user);
+        }
+
+        return $result;
+    }
 
 
 }

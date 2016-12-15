@@ -13,7 +13,6 @@ class Messages
 {
     /** @var  Connect */
     protected $connect;
-
     protected $tableName;
 
     public function __construct($connect, $tableName)
@@ -111,6 +110,41 @@ class Messages
         $message = $this->connect->select("*", $this->tableName, "status < 2 AND rid = :rid ", [':rid' => $id]);
         return $message;
     }
+
+
+    public function insert($data)
+    {
+        $result = $this->connect->insert($this->tableName, [
+            'rid'           => $data['rid'],
+            'date'          => $data['date'],
+            'title'	        => $data['title'],
+            'text'          => $data['text'],
+            'attachements'  => $data['attachements'],
+            'author'        => $data['author'],
+            'subscribers'   => $data['subscribers'],
+            'hash'          => $data['hash'],
+            'status'        => $data['status'],
+        ]);
+
+        $id = false;
+
+        if ($result) {
+            $id =  \OC::$server->getDatabaseConnection()->lastInsertId($this->tableName);
+        }
+
+        return $id;
+    }
+
+
+
+
+
+
+
+
+
+
+
 
 
     /**

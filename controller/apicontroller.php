@@ -3,12 +3,19 @@
 namespace OCA\Owncollab_Talks\Controller;
 
 use OC\Files\Filesystem;
-use OCA\Owncollab_Talks\AppInfo\Aliaser;
-use OCA\Owncollab_Talks\Configurator;
+use OCA\Activity\Data;
+use OCA\Activity\FilesHooksStatic;
+use OCA\Owncollab_Talks\FileManager;
+use OCA\Owncollab_Talks\MTAServer\Aliaser;
+use OCA\Owncollab_Talks\MTAServer\Configurator;
+//use OCA\Owncollab_Talks\Handler\TProcessor;
 use OCA\Owncollab_Talks\Helper;
 use OCA\Owncollab_Talks\Db\Connect;
+use OCA\Owncollab_Talks\Objects\Users;
 use OCA\Owncollab_Talks\PHPMailer\PHPMailer;
-use OCA\Owncollab_Talks\TalkMail;
+//use OCA\Owncollab_Talks\TalkMail;
+use OCA\Owncollab_Talks\TalkManager;
+use OCP\Activity\IManager;
 use OCP\AppFramework\Http\RedirectResponse;
 use OCP\Files;
 use OCP\IRequest;
@@ -29,8 +36,13 @@ class ApiController extends Controller {
     private $connect;
     private $urlGenerator;
     private $configurator;
+    /** @var \OCA\Activity\Data */
+    private $activityData;
+    /** @var IManager */
+    private $manager;
     private $mailDomain;
     public $mailUser = false;
+    private $listtree = [];
 
 
     /**
@@ -50,7 +62,9 @@ class ApiController extends Controller {
         $isAdmin,
         $l10n,
         Connect $connect,
-        Configurator $configurator
+        Configurator $configurator,
+        \OCA\Activity\Data $activityData,
+        IManager $manager
     ){
         parent::__construct($appName, $request);
         $this->userId = $userId;
@@ -58,6 +72,8 @@ class ApiController extends Controller {
         $this->l10n = $l10n;
         $this->connect = $connect;
         $this->configurator = $configurator;
+        $this->activityData = $activityData;
+        $this->manager = $manager;
         $this->mailDomain = $this->configurator->get('mail_domain');
         $this->urlGenerator = \OC::$server->getURLGenerator();
     }
@@ -66,29 +82,179 @@ class ApiController extends Controller {
      * @NoAdminRequired
      * @NoCSRFRequired
      */
-    public function index() {
+    public function index()
+    {
+        $key = Helper::post('key')
+            ? Helper::post('key')
+            : $_GET['key'];
 
-        $key = Helper::post('key');
-        $data = Helper::post('data',false);
-        $pid = Helper::post('pid');
-        $uid = Helper::post('uid');
+        $data = Helper::post('data', false)
+            ? Helper::post('data', false)
+            : $_GET['data'];
 
         if(!$this->mailDomain)
             return new DataResponse(['error'=>'Email domain is undefined']);
 
-        // added base needed params global static object
-/*        Helper::val([
-            'userId'  => $this->userId,
-            'appName' => $this->appName,
-            'mailDomain' => $this->mailDomain,
-        ]);*/
-
-        if(method_exists($this, $key)) {
-            TalkMail::registerMailDomain($this->mailDomain);
-            return $this->$key($data);
-        } else
+        if(method_exists($this, $key))
+            return call_user_func([$this, $key], $data);
+        else
             return new DataResponse(['error'=>'Api key not exist']);
     }
+
+    /**
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * @param $data
+     * @return DataResponse
+     */
+    public function test($data)
+    {
+
+        //$tManager = new TalkManager($this->userId, $this->connect, $this->configurator);
+        $fManager = new FileManager('dev1', $this->connect, $this->activityData, $this->manager);
+
+
+        //$users = $this->connect->users()->getUsersIDs();
+        $shareusers = array_diff($this->connect->users()->getUsersIDs(), ['dev1']);
+
+
+        //$insert = $fManager->shareFileWith(768, 'admin');
+        //var_dump($insert);
+
+
+//        foreach($shareusers as $u) {
+//            $insert = $fManager->shareFileWith(768, $u);
+//            var_dump($insert);
+//        }
+
+
+        die('DIE');
+        return new DataResponse($data);
+    }
+
+    /**
+     * Begin talk or Replay talk
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * @param $data
+     * @return DataResponse
+     */
+    public function insert($data)
+    {
+        $post = Helper::post();
+        $data = !empty($post["data"]) ? $post["data"] : [];
+        $hash = !empty($data["hash"]) ? $data["hash"] : false;
+        $taskParent = null;
+        $front = [];
+
+        // bad request
+        if ($post['uid'] !== $this->userId)
+            return false;
+
+        $tManager = new TalkManager($this->userId, $this->connect, $this->configurator);
+        $fManager = new FileManager($this->userId, $this->connect, $this->activityData, $this->manager);
+
+        // Replay talk
+        if ($hash && $taskParent = $this->connect->messages()->getByHash($hash)) {
+
+            // change subscribers
+            $subscribersChanged = $tManager->subscribersChange (
+                $taskParent['subscribers'],
+                ['users' => [$this->userId]],
+                ['users' => [$taskParent['author']]]
+            );
+
+            // data for db insert replay talk
+            $buildData = $tManager->build([
+                'rid'           => $taskParent['id'],
+                'title'         => 'RE: '.$taskParent['title'],
+                'text'          => $data['message'],
+                'subscribers'   => $subscribersChanged,
+                'attachements'  => [],
+                'author'        => $this->userId,
+                'hash'          => $tManager->createhash(),
+            ]);
+
+            $insertId = $this->connect->messages()->insert($buildData);
+
+            $front['insert_id'] = $insertId;
+            $front['parent_id'] = $taskParent['id'];
+
+        }
+        // Begin talk
+        else {
+
+            // ready upload and shared files
+            $postShare  = isset($post['share'])  ? array_keys($post['share']) : [];
+            $postUsers  = isset($post['users'])  ? array_values($post['users']) : [];
+            $postGroups = isset($post['groups']) ? array_values($post['groups']) : [];
+
+            $front['post'] = $post;
+
+            $buildData = $tManager->build([
+                'title'         => $post['title'],
+                'text'          => $post['message'],
+                'subscribers'   => $tManager->subscribersCreate($postGroups, $postUsers),
+                'attachements'  => json_encode($postShare),
+                'author'        => $this->userId,
+                'hash'          => $tManager->createhash(),
+            ]);
+
+            $insertId = $this->connect->messages()->insert($buildData);
+
+            $front['insert_id'] = $insertId;
+            $front['parent_id'] = $insertId;
+
+            // Share files for all users
+            $shared_for = false;
+            if ($insertId && !empty($postShare)) {
+                $usersids = array_diff($this->connect->users()->getUsersIDs(), [$this->userId]);
+                foreach($usersids as $u) {foreach($postShare as $fid) {
+                    $shared_for[] = $fManager->shareFileWith($fid, $u);
+                }}
+            }
+            $front['shared_for'] = $shared_for;
+        }
+
+        if($front['insert_id']) {
+            Helper::cookies('goto_message', $front['insert_id']);
+            header("Location: /index.php/apps/owncollab_talks/started");
+            exit;
+        }
+        return new DataResponse($front);
+    }
+
+
+    /**
+     * @PublicPage
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     *
+     * @param $data
+     * @return DataResponse
+     */
+    public function parser($data)
+    {
+        $post = Helper::post();
+
+        $to = explode('@', $post['to']);
+        $idhash = explode('+',$to[0]);
+        $userDataFrom = $this->connect->users()->getByEmail(trim($post['from']));
+
+
+
+
+
+        return new DataResponse($post);
+    }
+
+
+
+
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
 
 
     /**
@@ -100,7 +266,6 @@ class ApiController extends Controller {
     public function getproject($data) {
         return new DataResponse($data);
     }
-
 
     /**
      * Saved talk reply from inside application
@@ -161,7 +326,6 @@ class ApiController extends Controller {
 
         return new DataResponse($params);
     }
-
 
     /**
      * @NoAdminRequired
@@ -274,8 +438,6 @@ class ApiController extends Controller {
         return new DataResponse($params);
     }
 
-
-
     public function getShareFilesUsers($filesIds)
     {
         $attachements_info = [];
@@ -383,7 +545,6 @@ class ApiController extends Controller {
 
         return new DataResponse($params);
     }
-
 
     /**
      * @PublicPage
@@ -546,11 +707,13 @@ class ApiController extends Controller {
 
 
         if(isset($params['files']) && is_array($params['files']) && !empty($shareUIds) && $insertResult) {
+
             $saveFiles = $this->parserFileHandler($params['files'], $shareFilesUIds);
 
             if(!empty($saveFiles)) {
                 $returned['shared_with'] = $saveFiles['shared_with'];
                 $returned['file_fileid'] = $saveFiles['file_fileid'];
+
                 if(!empty($saveFiles['file_fileid'])) {
                     $this->connect->update('*PREFIX*collab_messages', ['attachements' => json_encode($saveFiles['file_fileid'])], 'id = ?', [$insertResult]);
                 }
@@ -612,12 +775,6 @@ class ApiController extends Controller {
 
 
 
-
-/*    public function saverTalkAttachements($post)
-    {
-
-    }*/
-
     /**
      * @param $params
      * @return bool|int|string
@@ -673,7 +830,6 @@ class ApiController extends Controller {
 
         return false;
     }
-
 
     /**
      * @param $params ['from'=>null,'subject'=>null,'content'=>null] , $users = [], 'mailUser'=>content,
@@ -737,7 +893,6 @@ class ApiController extends Controller {
         return $inserted;
     }
 
-
     /**
      * @PublicPage
      * @NoAdminRequired
@@ -758,8 +913,6 @@ class ApiController extends Controller {
         return new DataResponse($params);
     }
 
-
-    private $listtree = [];
     public function createFileListTree($path = '/')
     {
         $files = \OCA\Files\Helper::getFiles($path);
@@ -778,11 +931,6 @@ class ApiController extends Controller {
         }
         return $this->listtree;
     }
-
-
-
-/*$returned['shared_with'] = $saveFiles['shared_with'];
-$returned['file_info'] = $saveFiles['file_info'];*/
 
     private function parserFileHandler($files, $userForSharing)
     {
@@ -832,7 +980,6 @@ $returned['file_info'] = $saveFiles['file_info'];*/
         return $saveFiles;
     }
 
-
     private function loginVirtualUser()
     {
         $secureRandom = new \OC\Security\SecureRandom();
@@ -858,7 +1005,6 @@ $returned['file_info'] = $saveFiles['file_info'];*/
 
         return $granted;
     }
-
 
     private function shareFileToUsers(\OC\Files\FileInfo $file, array $uids)
     {
@@ -887,7 +1033,6 @@ $returned['file_info'] = $saveFiles['file_info'];*/
         return $result;
     }
 
-
     /**
      * Try to login a user
      *
@@ -912,6 +1057,5 @@ $returned['file_info'] = $saveFiles['file_info'];*/
 
         return $result;
     }
-
 
 }

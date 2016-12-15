@@ -1,12 +1,16 @@
 <?php
 
-namespace OCA\Owncollab_Talks;
+namespace OCA\Owncollab_Talks\MTAServer;
 
+
+use OCA\Owncollab_Talks\Helper;
 
 class Configurator
 {
     private $filePath = '';
+
     private $error = null;
+
     private $config = [
         'mta_connection' => null,
         'group_prefix' => null,

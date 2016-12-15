@@ -3,11 +3,13 @@
 
     //ini_set('display_errors', 1);
 
-use OCA\Owncollab_Talks\Configurator;
-use \OCA\Owncollab_Talks\Helper;
+
+use OCA\Owncollab_Talks\Helper;
+use OCA\Activity\Data;
 use OCA\Owncollab_Talks\Controller\ApiController;
 use OCA\Owncollab_Talks\Controller\MainController;
 use OCA\Owncollab_Talks\Db\Connect;
+use OCA\Owncollab_Talks\MTAServer\Configurator;
 use \OCP\AppFramework\App;
 use \OCP\AppFramework\IAppContainer;
 use \OCP\IContainer;
@@ -21,6 +23,16 @@ class Application extends App {
         $appName = Helper::setAppName('owncollab_talks');
         parent::__construct($appName, $urlParams);
         $container = $this->getContainer();
+
+        $container->registerService('ActivityData', function(IContainer $c) {
+            /** @var \OC\Server $server */
+            $server = $c->query('ServerContainer');
+            return new Data(
+                $server->getActivityManager(),
+                $server->getDatabaseConnection(),
+                $server->getUserSession()
+            );
+        });
 
         /**
          * Checks the configuration file, if it does not match the server parameters,
@@ -73,7 +85,8 @@ class Application extends App {
          * Controllers
          */
         $container->registerService('ApiController', function(DIContainer $c) {
-
+            /** @var \OC\Server $server */
+            $server = $c->query('ServerContainer');
             return new ApiController(
                 $c->query('AppName'),
                 $c->query('Request'),
@@ -81,7 +94,9 @@ class Application extends App {
                 $c->query('isAdmin'),
                 $c->query('L10N'),
                 $c->query('Connect'),
-                $c->query('Configurator')
+                $c->query('Configurator'),
+                $c->query('ActivityData'),
+                $server->getActivityManager()
             );
         });
 

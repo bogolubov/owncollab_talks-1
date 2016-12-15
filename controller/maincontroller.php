@@ -12,10 +12,10 @@
 namespace OCA\Owncollab_Talks\Controller;
 
 use OC\Files\Filesystem;
-use OCA\Owncollab_Talks\Configurator;
 use OCA\Owncollab_Talks\Db\Connect;
 use OCA\Owncollab_Talks\Helper;
-use OCA\Owncollab_Talks\MtaConnector;
+use OCA\Owncollab_Talks\MTAServer\MtaConnector;
+use OCA\Owncollab_Talks\MTAServer\Configurator;
 use OCP\Files;
 use OCP\IRequest;
 use OCP\AppFramework\Http\TemplateResponse;
@@ -75,13 +75,8 @@ class MainController extends Controller
      */
     public function index()
     {
-
         if (!$this->mailDomain) {
             $error = "<p>Failed to get a domain name</p>";
-
-            //if (!Aliaser::getMTAConnection())
-            //    $error .= "<p>Do not connect to an MTA database</p>";
-
             return $this->pageError($error);
         } else
             return $this->begin();
@@ -94,14 +89,12 @@ class MainController extends Controller
      */
     public function pageError($error_message)
     {
-
         $data = [
             'menu' => '',
             'content' => 'error',
             'user_id' => $this->userId,
             'error_message' => $error_message,
         ];
-
         return new TemplateResponse($this->appName, 'main', $data);
     }
 
@@ -112,7 +105,6 @@ class MainController extends Controller
      */
     public function begin()
     {
-
         $data = [
             'menu' => 'begin',
             'content' => 'begin',
@@ -132,13 +124,11 @@ class MainController extends Controller
      */
     public function started()
     {
-
         $data = [
             'menu' => 'started',
             'content' => 'list',
             'messages' => $this->connect->messages()->getStarted($this->userId),
         ];
-
         return new TemplateResponse($this->appName, 'main', $data);
     }
 
@@ -167,13 +157,11 @@ class MainController extends Controller
      */
     public function all()
     {
-
         $data = [
             'menu' => 'all',
             'content' => 'list',
             'messages' => $this->connect->messages()->getAll(),
         ];
-
         return new TemplateResponse($this->appName, 'main', $data);
     }
 
@@ -271,8 +259,6 @@ class MainController extends Controller
 
         return new DataResponse($shareUIds);
     }
-
-    static public function getGlobalFileById(){}
 
     /**
      * Return attachements ids in array

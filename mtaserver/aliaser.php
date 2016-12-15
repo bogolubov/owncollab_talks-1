@@ -1,6 +1,6 @@
 <?php
 
-namespace OCA\Owncollab_Talks;
+namespace OCA\Owncollab_Talks\MTAServer;
 
 
 use OCA\Owncollab_Talks\Helper;
@@ -97,8 +97,8 @@ class Aliaser
     public function onPreDeleteGroup($gid){}
 
     /**
-     * @param IUserManager $userSession
-     * @param IGroupManager $groupManager
+     * @param \OC\User\Manager|IUserManager $userSession
+     * @param \OC\Group\Manager|IGroupManager $groupManager
      */
     private function initListeners($userSession, $groupManager)
     {

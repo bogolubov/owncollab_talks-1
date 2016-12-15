@@ -11,11 +11,12 @@
 
 namespace OCA\Owncollab_Talks\AppInfo;
 
-use OCA\Owncollab_Talks\Aliaser;
-use OCA\Owncollab_Talks\Configurator;
+
 use OCA\Owncollab_Talks\Db\Connect;
 use OCA\Owncollab_Talks\Helper;
-use OCA\Owncollab_Talks\MtaConnector;
+use OCA\Owncollab_Talks\MTAServer\Aliaser;
+use OCA\Owncollab_Talks\MTAServer\Configurator;
+use OCA\Owncollab_Talks\MTAServer\MtaConnector;
 use OCP\AppFramework\App;
 use OCP\Util;
 
@@ -36,7 +37,7 @@ $container->query('OCP\INavigationManager')->add(function () use ($container, $a
 		'id' => $appName,
 		'order' => 10,
 		'href' => $urlGenerator->linkToRoute($appName.'.main.index'),
-		'icon' => $urlGenerator->imagePath($appName, 'app.svg'),
+		'icon' => $urlGenerator->imagePath($appName, 'app.png'),
 		'name' => $l->t('Talks')
 	];
 });

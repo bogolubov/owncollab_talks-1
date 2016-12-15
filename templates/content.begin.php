@@ -7,14 +7,13 @@ script('owncollab_talks', 'libs/trumbowyg/trumbowyg');
 $title = '';
 $text = '';
 
-
-
 ?>
 <div class="begin-talk">
 
     <form action="/index.php/apps/owncollab_talks/save_talk" method="post" id="begin-talk" enctype="multipart/form-data">
 
         <input name="id" hidden="hidden" type="text" value="">
+        <input name="uid" hidden="hidden" type="text" value="<?php p($_['user_id']); ?>">
         <div id="share_list_elements"></div>
 
         <div class="tbl">

@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: werd
- * Date: 17.02.16
- * Time: 13:22
- */
 
 namespace OCA\Owncollab_Chart;
 

@@ -44,6 +44,16 @@ class Users
         return $users;
     }
 
+    public function getUsersIDs()
+    {
+        $users = $this->connect->queryAll("SELECT * FROM " . $this->tableName . " ORDER BY displayname, uid");
+        $result = [];
+        for ($i=0; $i<count($users); $i++) {
+            $result[] = $users[$i]['uid'];
+        }
+        return $result;
+    }
+
     /**
      * @return mixed
      */

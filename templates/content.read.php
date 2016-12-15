@@ -66,8 +66,8 @@ if($message):
     </div>
 
     <div class="read_btns">
-        <button class="linker" data-id="msg_reply">Reply</button>
-        <button class="linker" data-id="msg_back">Back</button>
+        <button id="talk-massage-reply" >Reply</button>
+        <button id="talk-massage-back" >Back</button>
     </div>
 
 <?php else:?>

@@ -1,6 +1,6 @@
 <?php
 
-namespace OCA\Owncollab_Talks;
+namespace OCA\Owncollab_Talks\MTAServer;
 
 
 class MtaConnector {

@@ -26,8 +26,8 @@ function loger($data_string)
 {
     $file_path = APPROOT . "/mailparser.log";
     //chmod($file_path, 0777);
-    $data = "\n" . date("Y.m.d H:i:s") . ": " .trim($data_string);
-    print("\nloger: ".$data);
+    $data = "" . date("Y.m.d H:i:s") . ": " .trim($data_string);
+    print("\nLOGER: ".$data);
     file_put_contents($file_path, $data, FILE_APPEND);
 }
 
@@ -39,8 +39,8 @@ function loger_error($data_string)
 {
     $file_path = APPROOT . "/mailparser_error.log";
     //chmod($file_path, 0777);
-    $data = "\n" . date("Y.m.d H:i:s") . ": " .trim($data_string);
-    print("\nloger_error: ".$data);
+    $data = "" . date("Y.m.d H:i:s") . ": " .trim($data_string);
+    print("\nLOGER_ERROR: ".$data);
     file_put_contents($file_path, $data, FILE_APPEND);
 }
 
@@ -65,7 +65,7 @@ function parse_source_mail_data()
         $data['from_name']   = is_object($message->getHeader('from')) ? $message->getHeader('from')->getPersonName() : '';
         $data['subject']     = $message->getHeaderValue('subject');
         $data['content']     = stream_get_contents($message->getTextStream());
-        $data['content_html']     = stream_get_contents($message->getHtmlStream());
+        $data['content_html']= stream_get_contents($message->getHtmlStream());
         $data['files_count'] = $message->getAttachmentCount();
 
         //$data['all_attachment_parts'] = (is_numeric($data['files_count']) && $data['files_count'] > 0)
@@ -77,10 +77,9 @@ function parse_source_mail_data()
     }
 
     fclose($resource);
-    $_d['content'] = $data['content'];
-    $_d['content_html'] = $data['content_html'];
-
-    //loger('Source data: '. print_r($_d, true));
+    // $_d['content']      = $data['content'];
+    // $_d['content_html'] = $data['content_html'];
+    // loger('Source data: '. print_r($_d, true));
     return $data;
 }
 
@@ -126,6 +125,9 @@ function send_to_app(array $fieldsData)
 
     // console info
     //print_r($result);
+    print_r(json_decode($result, true));
+    exit;
+
 
     if ($error) {
         loger_error("Line: " . __LINE__ . "; cURL request fail! Error: " . $error);
@@ -134,9 +136,14 @@ function send_to_app(array $fieldsData)
     try {
         $resultData = json_decode($result, true);
 
-        if ($resultData['type'] != 'ok') {
-            loger_error("Line: " . __LINE__ . "; Result from server is bad! QueryData:" . $result);
+        if (!empty($resultData['message'])) {
+            loger_error("Line: " . __LINE__ . "; Message:" . $resultData['message']);
+
+        } else if (isset($resultData['type']) && $resultData['type'] != 'ok') {
+            loger_error("Line: " . __LINE__ . "; Bad Query Data:" . $result);
+
         } else {
+
             loger("Parse and send mail data is success! From: " .$fieldsData['from']. " To: " . $fieldsData['to'] . " Result data: " . $result);
         }
 
@@ -159,8 +166,11 @@ function files_parser($message, $messageData)
     while ($att = $message->getAttachmentPart($i)) {
 
         try{
-            //$typeHeaders = $att->getHeaders();
+            /**
+             * @type \ZBateson\MailMimeParser\Header\AbstractHeader $typeHeader
+             */
             $typeHeader     = $att->getHeader('Content-Type');
+            //$typeHeaders = $att->getHeaders();
             $filetype       = $typeHeader->getValue();
             $filename       = trim(explode('name=',$typeHeader->getRawValue())[1], "\"'");
             $filecontent    = stream_get_contents($att->getContentResourceHandle());
@@ -168,11 +178,11 @@ function files_parser($message, $messageData)
             $tmp_name = APPROOT . '/temp/' . time() . '-' . $messageData['from'] . '-' . $filename;
 
             if(file_put_contents($tmp_name, $filecontent)){
-                chmod($tmp_name, 0777);
+                //chmod($tmp_name, 0777);
                 //chown($tmp_name, 'www-data');
                 $files[$i]['filename'] = $filename;
                 $files[$i]['filetype'] = $filetype;
-                $files[$i]['tmpfile'] = $tmp_name;
+                $files[$i]['tmpfile']  = $tmp_name;
             } else
                 loger_error("Line: ".__LINE__."; Error save file part: $i; name: $filename;");
 
@@ -187,5 +197,5 @@ function files_parser($message, $messageData)
 
 loger("The script is is running...");
 
-// Realization
+// Start
 send_to_app(parse_source_mail_data());

@@ -26,14 +26,16 @@ var App = new NamespaceApplication({
  */
 
 App.require('libs', [
+
     App.urlScript + 'libs/util.js',
     App.urlScript + 'libs/date.js',
-    App.urlScript + 'libs/timer.js',
-    App.urlScript + 'libs/linker.js'
+    App.urlScript + 'libs/timer.js'
+
 ], initLibrary, initError);
 
 
 App.require('dependence', [
+
     App.urlScript + 'application/extension/tool.js',
     App.urlScript + 'application/extension/cache.js',
     App.urlScript + 'application/action/api.js',
