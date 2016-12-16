@@ -52,7 +52,8 @@ if($message):
 
     <div class="read_body">
 <!--        //html_entity_decode($message['text'], ENT_QUOTES);-->
-        <?php echo nl2br(html_entity_decode($message['text']))?>
+        <?php //echo nl2br(html_entity_decode($message['text']))?>
+        <?php echo nl2br(stripcslashes($message['text']))?>
     </div>
 
     <div class="read_reply" style="display: none">

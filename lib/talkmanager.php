@@ -140,6 +140,7 @@ class TalkManager
     }
 
 
+
 /*    public function fileinformer($fid) {
 
     }*/

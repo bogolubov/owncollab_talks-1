@@ -114,6 +114,7 @@ class Messages
 
     public function insert($data)
     {
+
         $result = $this->connect->insert($this->tableName, [
             'rid'           => $data['rid'],
             'date'          => $data['date'],

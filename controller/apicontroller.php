@@ -110,22 +110,25 @@ class ApiController extends Controller {
      */
     public function test($data)
     {
+        $UID = 'dev1';
+        $tManager = new TalkManager($UID, $this->connect, $this->configurator);
+        $fManager = new FileManager($UID, $this->connect, $this->activityData, $this->manager);
+        $mManager = new MailManager($UID, $this->connect, $this->configurator, $tManager, $fManager);
 
-        //$tManager = new TalkManager($this->userId, $this->connect, $this->configurator);
-        $fManager = new FileManager('dev1', $this->connect, $this->activityData, $this->manager);
-        $mManager = new MailManager('dev1', $this->connect, $this->activityData, $this->manager);
 
+        //73 75
+        $talk = $this->connect->messages()->getById(75);
+        $hash = $talk['hash'];
+        $talkParent = false;
+        $author = '';
 
-        $task = $this->connect->messages()->getById(73);
-        $hash = $task['hash'];
-        $taskParent = false;
-
-        if ($task['rid'] > '0') {
-            $taskParent = $this->connect->messages()->getById($task['rid']);
-            $hash = $taskParent['hash'];
+        if ($talk['rid'] > '0') {
+            $talkParent = $this->connect->messages()->getById($talk['rid']);
+            $hash = $talkParent['hash'];
+            $author = $talkParent['author'];
         }
 
-        $taskAttachements = json_decode($task['attachements']);
+        $taskAttachements = json_decode($talk['attachements']);
         $taskFiles = [];
 
         foreach ($taskAttachements as $fid) {
@@ -133,7 +136,63 @@ class ApiController extends Controller {
         }
 
 
+        $htmlBody = $mManager->createTemplate($talk, $taskFiles);
+        $usersIds = $mManager->getUsersFromSubscribers($talk['subscribers'], $author);
+        $usersData = [];
+        foreach($usersIds as $uid){
+            $usersData[] = $this->connect->users()->getUserData($uid);
+        }
 
+        var_dump($usersIds);
+        var_dump($usersData);
+
+
+/*
+        // get users for mail
+        $taskSubscribers = $tManager->subscribers2Array($talk['subscribers']);
+        $taskUsers = $taskSubscribers['users'];
+
+        if ($talkParent)
+            array_push($taskUsers, $talkParent['author']);
+
+        if (!empty($taskSubscribers['groups'])) {
+            $groupsUsers = $this->connect->users()->getGroupsUsersList();
+            foreach ($taskSubscribers['groups'] as $groupname) {
+                if (!empty($groupsUsers[$groupname])) {
+                    foreach ($groupsUsers[$groupname] as $groupdata) {
+                        array_push($taskUsers, $groupdata['uid']);
+                    }
+                }
+            }
+        }
+        // users list for mail
+        $taskUsers = array_values(array_unique(array_diff($taskUsers, [$UID])));
+
+        var_dump($taskSubscribers);
+        var_dump($taskUsers);
+*/
+
+
+        die('DIE');
+
+
+        /*
+                $data = [
+                    'uid' => $UID,
+                    'talk' => $talk,
+                    'files' => $taskFiles,
+                    'subscribers' => $tManager->subscribers2Array($talk['subscribers']),
+                    'sitehost' => $this->configurator->get('server_host'),
+                    'siteurl' => $this->configurator->get('site_url'),
+                    'logoimg' => '/apps/owncollab_talks/img/logo_oc_collab.png',
+                ];
+                $htmlBegin = Helper::renderPartial($this->appName, 'emails/email_begin', $data);*/
+
+        echo $htmlBody;
+        die('DIE');
+
+
+        return new TemplateResponse($this->appName, 'emails/email_begin', $data);
 
 
 
@@ -267,13 +326,11 @@ class ApiController extends Controller {
         if ($post['uid'] !== $UID)
             return false;
 
-
         $front['post'] = $post;
-
 
         $tManager = new TalkManager($UID, $this->connect, $this->configurator);
         $fManager = new FileManager($UID, $this->connect, $this->activityData, $this->manager);
-        $mManager = new MailManager($UID, $this->connect, $this->activityData, $this->manager);
+        $mManager = new MailManager($UID, $this->connect, $this->configurator, $tManager, $fManager);
 
         // Replay talk
         if ($hash && $taskParent = $this->connect->messages()->getByHash($hash)) {
@@ -309,20 +366,19 @@ class ApiController extends Controller {
             $postShare  = isset($post['share'])  ? array_keys($post['share']) : [];
             $postUsers  = isset($post['users'])  ? array_values($post['users']) : [];
             $postGroups = isset($post['groups']) ? array_values($post['groups']) : [];
-
+            $subscribersChanged = $tManager->subscribersCreate($postGroups, $postUsers);
             $buildData = $tManager->build([
                 'title'         => $post['title'],
-                'text'          => $post['message'],
-                'subscribers'   => $tManager->subscribersCreate($postGroups, $postUsers),
+                'text'          => strip_tags($post['message'], '<br><p><a>'),
+                'subscribers'   => $subscribersChanged,
                 'attachements'  => json_encode($postShare),
                 'author'        => $UID,
                 'hash'          => $tManager->createhash(),
             ]);
+            $buildData['text'] = addslashes($buildData['text']);
 
             $insertId = $this->connect->messages()->insert($buildData);
-
             $front['insert_id'] = $insertId;
-            $front['parent_id'] = $insertId;
 
             // Share files for all users
             $shared_for = false;
@@ -342,11 +398,18 @@ class ApiController extends Controller {
             $front['shared_for'] = $shared_for;
         }
 
+        // SEND Emails
+        // $subscribersChanged
+
+
+
+
         if($front['insert_id']) {
             Helper::cookies('goto_message', $front['insert_id']);
             header("Location: /index.php/apps/owncollab_talks/started");
             exit;
         }
+
         return new DataResponse($front);
     }
 
