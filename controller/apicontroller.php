@@ -6,6 +6,7 @@ use OC\Files\Filesystem;
 use OCA\Activity\Data;
 use OCA\Activity\FilesHooksStatic;
 use OCA\Owncollab_Talks\FileManager;
+use OCA\Owncollab_Talks\MailManager;
 use OCA\Owncollab_Talks\MTAServer\Aliaser;
 use OCA\Owncollab_Talks\MTAServer\Configurator;
 //use OCA\Owncollab_Talks\Handler\TProcessor;
@@ -112,10 +113,125 @@ class ApiController extends Controller {
 
         //$tManager = new TalkManager($this->userId, $this->connect, $this->configurator);
         $fManager = new FileManager('dev1', $this->connect, $this->activityData, $this->manager);
+        $mManager = new MailManager('dev1', $this->connect, $this->activityData, $this->manager);
+
+
+        $task = $this->connect->messages()->getById(73);
+        $hash = $task['hash'];
+        $taskParent = false;
+
+        if ($task['rid'] > '0') {
+            $taskParent = $this->connect->messages()->getById($task['rid']);
+            $hash = $taskParent['hash'];
+        }
+
+        $taskAttachements = json_decode($task['attachements']);
+        $taskFiles = [];
+
+        foreach ($taskAttachements as $fid) {
+            $taskFiles[] = $fManager->getFileInformation($fid);
+        }
+
+
+
+
+
+
+
+
+
+        var_dump($taskFiles);
+
+        //var_dump($taskParent);
+        //$files = [910, 911, 912];
+        // 914
+
+        // $itemType, $itemSource, $uidOwner, $includeCollections = false, $checkExpireDate = true
+
+        //var_dump($fManager->getFile(914));
+
+        //$mailinfo = [];
+
+
+/*
+        $fid = 914;
+        $finfo = $fManager->getFileInformation($fid);
+        $itemType = $finfo['object_type'] === 'files' ? 'file' : 'folder';
+        $itemSource = $finfo['fileid'];
+        $uidOwner = $finfo['user'];
+
+        $sharedWith = \OCP\Share::getUsersItemShared($itemType, $itemSource, $uidOwner, false, true);
+*/
+        /*if ($sharedWith) {
+            for ($ish=0; $ish<count($sharedWith); $ish++) {
+                $user = $sharedWith[$ish];
+                $shareItems = \OCP\Share::getItemSharedWithUser($itemType, $itemSource, $user, $uidOwner);
+
+                $mailinfo[$user] = [
+                    'source_type' => $itemType,
+                    'source_item' => $itemSource,
+                    'source_owner' => $uidOwner,
+                    'user' => $user,
+                    'files' => [],
+                ];
+
+                if ($shareItems) {
+                    for ($ishin=0; $ishin<count($shareItems); $ishin++) {
+                        if ( (int) $shareItems[$ishin]['file_source'] === $fid) {
+                            $mailinfo[$user]['files'][] = $shareItems[$ishin];
+                        }
+                    }
+                }
+            }
+        }*/
+
+        // http://owncloud91.loc/index.php/apps/files/?dir=/&fileid=569
+        // http://owncloud91.loc/index.php/apps/files/?dir=/&fileid=569#//BABAN-009.png
+        //var_dump($finfo);
+        //var_dump($sharedWith);
+//        var_dump($mailinfo);
+
+        //$itemType, $itemSource, $user, $owner = null
+        //$shareItem = \OCP\Share::getItemSharedWithUser();
+
+        //$itemType, $itemSource, $uidOwner, $includeCollections = false, $checkExpireDate = true
+        //$itemType, $itemSource, $user, $owner = null
+//        $user = $sharedWith[0];
+//        $shareItem = \OCP\Share::getItemSharedWithUser($itemType, $itemSource, $user, $uidOwner);
+//        var_dump($shareItem);
+
+
+        // $dirName =
+        // 910 911 912
+        //
+
+
+/*array (size=1)
+  0 =>
+    array (size=19)
+      'id' => string '847' (length=3)
+      'item_type' => string 'file' (length=4)
+      'item_source' => string '914' (length=3)
+      'item_target' => string '/914' (length=4)
+      'parent' => null
+      'share_type' => string '0' (length=1)
+      'share_with' => string 'aaam3' (length=5)
+      'uid_owner' => string 'werd' (length=4)
+      'file_source' => string '914' (length=3)
+      'path' => string 'files/BABAN-009.png' (length=19)
+      'file_target' => string '/BABAN-009.png' (length=14)
+      'permissions' => string '27' (length=2)
+      'stime' => string '1481892387' (length=10)
+      'expiration' => null
+      'token' => string '9dO6M8XnxXNoXNa' (length=15)
+      'storage' => string '13' (length=2)
+      'mail_send' => string '0' (length=1)
+      'storage_id' => string 'home::werd' (length=10)
+      'file_parent' => string '16' (length=2)*/
 
 
         //$users = $this->connect->users()->getUsersIDs();
-        $shareusers = array_diff($this->connect->users()->getUsersIDs(), ['dev1']);
+        //$shareusers = array_diff($this->connect->users()->getUsersIDs(), ['dev1']);
 
 
         //$insert = $fManager->shareFileWith(768, 'admin');
@@ -146,13 +262,18 @@ class ApiController extends Controller {
         $hash = !empty($data["hash"]) ? $data["hash"] : false;
         $taskParent = null;
         $front = [];
-
+        $UID = $this->userId;
         // bad request
-        if ($post['uid'] !== $this->userId)
+        if ($post['uid'] !== $UID)
             return false;
 
-        $tManager = new TalkManager($this->userId, $this->connect, $this->configurator);
-        $fManager = new FileManager($this->userId, $this->connect, $this->activityData, $this->manager);
+
+        $front['post'] = $post;
+
+
+        $tManager = new TalkManager($UID, $this->connect, $this->configurator);
+        $fManager = new FileManager($UID, $this->connect, $this->activityData, $this->manager);
+        $mManager = new MailManager($UID, $this->connect, $this->activityData, $this->manager);
 
         // Replay talk
         if ($hash && $taskParent = $this->connect->messages()->getByHash($hash)) {
@@ -160,7 +281,7 @@ class ApiController extends Controller {
             // change subscribers
             $subscribersChanged = $tManager->subscribersChange (
                 $taskParent['subscribers'],
-                ['users' => [$this->userId]],
+                ['users' => [$UID]],
                 ['users' => [$taskParent['author']]]
             );
 
@@ -171,7 +292,7 @@ class ApiController extends Controller {
                 'text'          => $data['message'],
                 'subscribers'   => $subscribersChanged,
                 'attachements'  => [],
-                'author'        => $this->userId,
+                'author'        => $UID,
                 'hash'          => $tManager->createhash(),
             ]);
 
@@ -189,14 +310,12 @@ class ApiController extends Controller {
             $postUsers  = isset($post['users'])  ? array_values($post['users']) : [];
             $postGroups = isset($post['groups']) ? array_values($post['groups']) : [];
 
-            $front['post'] = $post;
-
             $buildData = $tManager->build([
                 'title'         => $post['title'],
                 'text'          => $post['message'],
                 'subscribers'   => $tManager->subscribersCreate($postGroups, $postUsers),
                 'attachements'  => json_encode($postShare),
-                'author'        => $this->userId,
+                'author'        => $UID,
                 'hash'          => $tManager->createhash(),
             ]);
 
@@ -208,10 +327,17 @@ class ApiController extends Controller {
             // Share files for all users
             $shared_for = false;
             if ($insertId && !empty($postShare)) {
-                $usersids = array_diff($this->connect->users()->getUsersIDs(), [$this->userId]);
-                foreach($usersids as $u) {foreach($postShare as $fid) {
-                    $shared_for[] = $fManager->shareFileWith($fid, $u);
-                }}
+                $usersids = array_diff($this->connect->users()->getUsersIDs(), [$UID]);
+
+                foreach($usersids as $u) {
+                    foreach($postShare as $fid) {
+
+                        if (empty($fid) || empty($u))
+                            continue;
+
+                        $shared_for[] = $fManager->shareFileWith($fid, $u);
+                    }
+                }
             }
             $front['shared_for'] = $shared_for;
         }
@@ -238,29 +364,83 @@ class ApiController extends Controller {
         $result = [];
         $post = Helper::post();
         $to = explode('@', $post['to']);
-        $hash = explode('+',$to[0]);
+        //$user = explode('+',$to[0])[0];
+        $hash = explode('+',$to[0])[1];
+
+        // Key: userid
         $user = $this->connect->users()->getByEmail(trim($post['from']));
+        $messageParent = $this->connect->messages()->getByHash($hash);
 
         $subject = $post['subject'];
         $content = empty($post['content']) ? strip_tags($post['content_html']) : $post['content'];
 
-        if (!$user) {
+        if (empty($user['userid'])) {
             $result['error'] = 'User not found';
             return new DataResponse($result);
         }
 
+        $UID = $user['userid'];
+
         // save files
-        if ( (int) Helper::post('files_count') > 0 ) {
+        if ($messageParent && (int) Helper::post('files_count') > 0 && is_array($post['files']) ) {
 
-            $fManager = new FileManager($this->userId, $this->connect, $this->activityData, $this->manager);
+            $files = [];
+            $shared_for = [];
+            $tManager = new TalkManager($UID, $this->connect, $this->configurator);
+            $fManager = new FileManager($UID, $this->connect, $this->activityData, $this->manager);
 
-            
+            // Insert file to local dir and write it to database
+            foreach($post['files'] as $f) {
 
+                $tmpfileName = substr($f['tmpfile'], strrpos($f['tmpfile'], '/') + 1);
+                $insertId = $fManager->insertTpmFile( $tmpfileName, $f['filename']);
 
+                if ($insertId) {
+                    $files[$insertId] = [
+                        'fileid'=>$insertId,
+                        'filename'=>$f['filename']
+                    ];
+                } else {
+                    $result['error'] .= "upload file to user failed: $tmpfileName; ";
+                }
+            }
+
+            if ((int) Helper::post('files_count') == count($files) ) {
+
+                // Share file to all users
+                $usersids = array_diff($this->connect->users()->getUsersIDs(), [$UID]);
+                foreach($usersids as $u) {foreach($files as $fs) {
+                    $shared_for[] = $fManager->shareFileWith($fs['fileid'], $u);
+                }}
+
+            } else if ((int) Helper::post('files_count') > 0) {
+                // error with save
+                $result['error'] = "Error: Insert files to user";
+            }
+
+            // insert message
+            $buildData = $tManager->build([
+                'rid'           => $messageParent['id'],
+                'title'         => 'Re: ' . $messageParent['title'],
+                'text'          => $content,
+                'subscribers'   => $messageParent['subscribers'],
+                'attachements'  => json_encode(array_keys($files)),
+                'author'        => $UID,
+                'hash'          => $tManager->createhash(),
+            ]);
+
+            $insertId = $this->connect->messages()->insert($buildData);
+
+            if ($insertId) {
+                $result['success'] = $insertId;
+            }
+
+//            $result['user'] = $user;
+//            $result['message'] = $messageParent;
+//            $result['files'] = $post['files'];
+//            $result['files_save'] = $files;
+//            $result['shared_for'] = $shared_for;
         }
-
-
-        // create talk massage
 
 
 
@@ -279,9 +459,16 @@ class ApiController extends Controller {
             [0] => Array
                     [filename] => bananas11.png
                     [filetype] => image/png
-                    [tmpfile] => /var/www/owncloud91.loc/apps/owncollab_talks/temp/1481822045-werdffelynir@gmail.com-bananas11.png
+                    [tmpfile] => /tmp/1481884235-werdffelynir@gmail.com-bananas11.png
     [mail_domain] => owncloud91.loc
-    [site_url] => http://owncloud91.loc/*/
+    [site_url] => http://owncloud91.loc/
+
+
+
+
+
+
+*/
 
 
 

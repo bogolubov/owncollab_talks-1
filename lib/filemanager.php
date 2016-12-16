@@ -32,6 +32,8 @@ class FileManager
     private $cache;
     /** @var \OCP\IURLGenerator */
     private $urlGenerator;
+    private $tmpDir = '/tmp/';
+    private $usrDir = 'files/';
 
     /**
      * Constructor.
@@ -50,6 +52,33 @@ class FileManager
         $this->urlGenerator = \OC::$server->getURLGenerator();
     }
 
+    public function createTalkfolders()
+    {
+//        $result = false;
+//        $name = 'Talks/' . date('Y-m-d') . '/';
+//        $path = $this->usrDir.$name;
+//
+//        $created = $this->homeStorage->mkdir($path);
+//        if ($created && $id = $this->insertCacheFile($name, true)) {
+//            $result = $this->insertActivityFile($name, $id);
+//        }
+//        return $result ? $name : false;
+    }
+
+    public function setTmpDirectory($tmp)
+    {
+        return $this->tmpDir = $tmp;
+    }
+
+    /**
+     * @param $usrdir string Default "files/"
+     * @return mixed
+     */
+    public function setUserfilesDirectory($usrdir)
+    {
+        return $this->usrDir = $usrdir;
+    }
+
     public function getFile($fileid)
     {
         return  $this->connect->files()->getById($fileid);
@@ -64,8 +93,8 @@ class FileManager
     public function insertTpmFile($tmpfile, $newname = null)
     {
         $name = $newname ? $newname : $tmpfile;
-        $tmppath = "/tmp/$tmpfile";
-        $filepath = "{$this->userId}/files/$name";
+        $tmppath = $this->tmpDir . $tmpfile;
+        $filepath = "{$this->userId}/{$this->usrDir}$name";
         $isReplaced = $this->view->fromTmpFile($tmppath, $filepath);
 
         if ($isReplaced && $insertId = $this->insertCacheFile($name))
@@ -74,10 +103,19 @@ class FileManager
             return false;
     }
 
-    public function insertCacheFile($fileName)
+    public function insertCacheFile($fileName, $isfolder = false)
     {
-        $insertData = $this->homeStorage->getMetaData("files/$fileName");
-        $insertId = $this->cache->insert("files/$fileName", $insertData);
+        $filePathFiles  = $this->usrDir.$fileName;
+        $insertData = $this->homeStorage->getMetaData($filePathFiles);
+        //var_dump($insertData);
+        if ($isfolder && !$insertData) {
+            $insertData = [
+                'size' => '0',
+                'mtime' => time(),
+                'mimetype' => '1'
+            ];
+        }
+        $insertId = $this->cache->insert($filePathFiles, $insertData);
 
         return (int) $insertId;
     }
@@ -85,18 +123,21 @@ class FileManager
 
     public function insertActivityFile($fileName, $fileId)
     {
-        $filePathFiles  = "files/$fileName";
+        $filePathFiles  = $this->usrDir.$fileName;
+        $filePath =  substr($filePathFiles, strpos($filePathFiles, 'files/') + 6);
+
         $link = $this->urlGenerator->linkToRouteAbsolute('files.view.index', array(
             'dir' => dirname($filePathFiles) === 'files' ? '/' : dirname($filePathFiles),
         ));
+
         $event = $this->manager->generateEvent();
         $event->setApp('files')
             ->setType('file_created')
             ->setAffectedUser($this->userId)
             ->setAuthor($this->userId)
             ->setTimestamp(time())
-            ->setSubject('created_self', [[$fileId => '/'.$fileName]])
-            ->setObject('files', $fileId, '/'.$fileName)
+            ->setSubject('created_self', [[$fileId => '/'.$filePath]])
+            ->setObject('files', $fileId, '/'.$filePath)
             ->setLink($link);
 
         return $this->activity->send($event) ? $fileId : false;

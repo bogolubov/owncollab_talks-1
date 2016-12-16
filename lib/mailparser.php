@@ -175,14 +175,15 @@ function files_parser($message, $messageData)
             $filename       = trim(explode('name=',$typeHeader->getRawValue())[1], "\"'");
             $filecontent    = stream_get_contents($att->getContentResourceHandle());
 
-            $tmp_name = APPROOT . '/temp/' . time() . '-' . $messageData['from'] . '-' . $filename;
+            //$tmpfile = APPROOT . '/temp/' . time() . '-' . $messageData['from'] . '-' . $filename;
+            $tmpfile = '/tmp/' . time() . '-' . $messageData['from'] . '-' . $filename;
 
-            if(file_put_contents($tmp_name, $filecontent)){
-                //chmod($tmp_name, 0777);
-                //chown($tmp_name, 'www-data');
+            if(file_put_contents($tmpfile, $filecontent)){
+                //chmod($tmpfile, 0777);
+                //chown($tmpfile, 'www-data');
                 $files[$i]['filename'] = $filename;
                 $files[$i]['filetype'] = $filetype;
-                $files[$i]['tmpfile']  = $tmp_name;
+                $files[$i]['tmpfile']  = $tmpfile;
             } else
                 loger_error("Line: ".__LINE__."; Error save file part: $i; name: $filename;");
 
