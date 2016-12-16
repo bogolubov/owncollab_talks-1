@@ -235,20 +235,53 @@ class ApiController extends Controller {
      */
     public function parser($data)
     {
+        $result = [];
         $post = Helper::post();
-
         $to = explode('@', $post['to']);
-        $idhash = explode('+',$to[0]);
-        $userDataFrom = $this->connect->users()->getByEmail(trim($post['from']));
+        $hash = explode('+',$to[0]);
+        $user = $this->connect->users()->getByEmail(trim($post['from']));
+
+        $subject = $post['subject'];
+        $content = empty($post['content']) ? strip_tags($post['content_html']) : $post['content'];
+
+        if (!$user) {
+            $result['error'] = 'User not found';
+            return new DataResponse($result);
+        }
+
+        // save files
+        if ( (int) Helper::post('files_count') > 0 ) {
+
+            $fManager = new FileManager($this->userId, $this->connect, $this->activityData, $this->manager);
+
+            
+
+
+        }
+
+
+        // create talk massage
 
 
 
-
-
-        return new DataResponse($post);
+        return new DataResponse($result);
     }
 
-
+/*  [to] => werd+f363e2a084@owncloud91.loc
+    [to_name] =>
+    [from] => werdffelynir@gmail.com
+    [from_name] => Олексій Боголюбов
+    [subject] => Re: Thanks
+    [content] => Test 011
+    [content_html] => <div>Bananas!</div>
+    [files_count] => 1
+    [files] => Array
+            [0] => Array
+                    [filename] => bananas11.png
+                    [filetype] => image/png
+                    [tmpfile] => /var/www/owncloud91.loc/apps/owncollab_talks/temp/1481822045-werdffelynir@gmail.com-bananas11.png
+    [mail_domain] => owncloud91.loc
+    [site_url] => http://owncloud91.loc/*/
 
 
 
