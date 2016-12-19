@@ -490,8 +490,7 @@ class ApiController extends Controller {
 
         if ($parts = explode('+', $toPart) AND count($parts) === 2) {
             $itReplay       = true;
-            //$fromUserid     = $parts[0];
-            $hash           = $parts[1];
+            $hash           = trim($parts[1]);
             $messageParent  = $this->connect->messages()->getByHash($hash);
         }
         else if ($toGroup = substr($toPart, -5) AND $toGroup === 'group') {
@@ -627,8 +626,10 @@ class ApiController extends Controller {
 
         }
 
+//        $result['success'] = $insertId;
+//        return new DataResponse($result);
 
-        // send mail to subscribers false &&
+        // Send mail to subscribers false &&
         if ($insertId) {
             $result['success'] = $insertId;
 
@@ -668,8 +669,9 @@ class ApiController extends Controller {
             }
 
 
+        } else {
+            $result['error'] = 'Error Insert new talk is failed';
         }
-
 
         return new DataResponse($result);
     }
