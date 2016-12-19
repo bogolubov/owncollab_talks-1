@@ -60,9 +60,10 @@ class MailManager
     }
 
     // email_begin
-    public function createTemplate($talk, $files)
+    public function createTemplate($talk, $files, $uid_to = '')
     {
         $data = [
+            'uid_to'        => $uid_to,
             'uid'           => $this->userId,
             'talk'          => $talk,
             'files'         => $files,

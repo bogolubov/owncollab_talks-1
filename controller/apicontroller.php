@@ -408,7 +408,6 @@ class ApiController extends Controller {
                 $taskFiles[] = $fManager->getFileInformation($fid);
             }
         }
-        $htmlBody = $mManager->createTemplate($buildData, $taskFiles);
         $usersIds = $mManager->getUsersFromSubscribers($subscribersChanged, $UID);
 
         // форм. удобный список [['uid'=>,'email'=>,]]
@@ -416,6 +415,7 @@ class ApiController extends Controller {
         $usersEmailsData = [];
         foreach($usersIds as $uid){
             $ud = $this->connect->users()->getUserData($uid);
+            $htmlBody = $mManager->createTemplate($buildData, $taskFiles, $ud['uid']);
             //send mail
             if (!empty($ud['email'])) {
                 $mManager->send(
@@ -544,7 +544,6 @@ class ApiController extends Controller {
                     }
                 }
 
-                $htmlBody = $mManager->createTemplate($buildData, $taskFiles);
                 $usersIds = $mManager->getUsersFromSubscribers($subscribersChanged);
                 $usersEmailsData = [];
 
@@ -554,6 +553,7 @@ class ApiController extends Controller {
 
                 foreach($usersIds as $uid) {
                     $ud = $this->connect->users()->getUserData($uid);
+                    $htmlBody = $mManager->createTemplate($buildData, $taskFiles, $ud['uid']);
 
                     //send mail
                     if (!empty($ud['email'])) {

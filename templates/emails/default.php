@@ -10,6 +10,7 @@ use \OCA\Owncollab_Talks\Helper;
  */
 
 
+$uid_to     = $_['uid_to'];
 $uid        = $_['uid'];
 $talk       = $_['talk'];
 $files      = $_['files'];
@@ -21,7 +22,7 @@ $subscribersArray  = $_['subscribers'];
 $subject    = $talk['title'];
 $body       = $talk['text'];
 $author     = $talk['author'];
-$subscribers= ' and <b>' . join(', ', $subscribersArray['groups']) . join(', ', array_diff($subscribersArray['users'], [$uid, $author])) . '</b> ';
+$subscribers= ' and <b>' . join(', ', $subscribersArray['groups']) . join(', ', array_diff($subscribersArray['users'], [$uid, $uid_to])) . '</b> ';
 
 ?><!doctype html>
 <html lang="en">
@@ -111,7 +112,7 @@ $subscribers= ' and <b>' . join(', ', $subscribersArray['groups']) . join(', ', 
         </p>
 
         <p>
-            Dear <b><?php p($uid) ?></b>,
+            Dear <b><?php p($uid_to) ?></b>,
         </p>
 
         <p>
