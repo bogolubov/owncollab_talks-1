@@ -471,10 +471,10 @@ class ApiController extends Controller {
         $content = empty($post['content']) ? strip_tags($post['content_html']) : $post['content'];
 
         // Owner. Key: userid
-        $user = $this->connect->users()->getByEmail(trim($post['from']));
-        $userData = $this->connect->users()->getUserData($user['userid']);
+        $userfrom = $this->connect->users()->getByEmail(trim($post['from']));
+        $userfromData = $this->connect->users()->getUserData($userfrom['userid']);
 
-        if (!$userData) {
+        if (!$userfromData) {
             $result['error'] = 'User not found';
             return new DataResponse($result);
         }
@@ -510,7 +510,7 @@ class ApiController extends Controller {
         $shared_for = [];
 
         // Owner. Mail from user
-        $UID = $user['userid'];
+        $UID = $userfrom['userid'];
 
         // work libs
         $tManager = new TalkManager($UID, $this->connect, $this->configurator);
@@ -626,7 +626,8 @@ class ApiController extends Controller {
 
         }
 
-//        $result['success'] = $insertId;
+//        $result['insert_id'] = $insertId;
+//        $result['build_data'] = $buildData;
 //        return new DataResponse($result);
 
         // Send mail to subscribers false &&
@@ -648,7 +649,7 @@ class ApiController extends Controller {
                 $htmlBody = $mManager->createTemplate($buildData, $taskFiles, $ud['uid']);
 
                 //todo: need condition to mta virtual users
-                $ownerEmail = $userData['uid'] .'+'. $buildData['hash'] . '@' . $this->configurator->get('mail_domain');
+                $ownerEmail = $userfromData['uid'] .'+'. $buildData['hash'] . '@' . $this->configurator->get('mail_domain');
 
                 //send mail
                 if (!empty($ud['email'])) {
@@ -659,7 +660,7 @@ class ApiController extends Controller {
                         ],
                         [
                             'email' => $ownerEmail,
-                            'name' => $userData['uid'],
+                            'name' => $userfromData['uid'],
                         ],
                         $buildData['title'],
                         $htmlBody,
@@ -783,12 +784,6 @@ class ApiController extends Controller {
 
         return new DataResponse($params);
     }
-
-
-
-
-
-
 
     /**
      * @NoAdminRequired
@@ -1234,9 +1229,6 @@ class ApiController extends Controller {
 
         return new DataResponse($returned);
     }
-
-
-
 
     /**
      * @param $params
