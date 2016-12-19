@@ -649,7 +649,11 @@ class ApiController extends Controller {
                 $htmlBody = $mManager->createTemplate($buildData, $taskFiles, $ud['uid']);
 
                 //todo: need condition to mta virtual users
-                $ownerEmail = $userfromData['uid'] .'+'. $buildData['hash'] . '@' . $this->configurator->get('mail_domain');
+                if ((int) $buildData['rid'] > 0 && $messageParent) {
+                    $ownerEmail = $messageParent['author'] .'+'. $messageParent['hash'] . '@' . $this->configurator->get('mail_domain');
+                } else {
+                    $ownerEmail = $userfromData['uid'] .'+'. $buildData['hash'] . '@' . $this->configurator->get('mail_domain');
+                }
 
                 //send mail
                 if (!empty($ud['email'])) {
