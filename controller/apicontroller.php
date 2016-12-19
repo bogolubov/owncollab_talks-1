@@ -489,9 +489,10 @@ class ApiController extends Controller {
         $messageParent  = false;
 
         if ($parts = explode('+', $toPart) AND count($parts) === 2) {
-            $itReplay = $toPart[0];
-            $hash = $toPart[1];
-            $messageParent = $this->connect->messages()->getByHash($hash);
+            $itReplay       = true;
+            //$fromUserid     = $parts[0];
+            $hash           = $parts[1];
+            $messageParent  = $this->connect->messages()->getByHash($hash);
         }
         else if ($toGroup = substr($toPart, -5) AND $toGroup === 'group') {
             $groupsList = $this->connect->users()->getGroupsUsersList();
@@ -509,7 +510,7 @@ class ApiController extends Controller {
         $files = [];
         $shared_for = [];
 
-        // owner
+        // Owner. Mail from user
         $UID = $user['userid'];
 
         // work libs
@@ -640,7 +641,6 @@ class ApiController extends Controller {
             }
 
             $usersIds = $mManager->getUsersFromSubscribers($subscribers);
-            $usersEmailsData = [];
 
             foreach($usersIds as $uid) {
                 $ud = $this->connect->users()->getUserData($uid);
@@ -665,8 +665,8 @@ class ApiController extends Controller {
                         $taskFiles
                     );
                 }
-                $usersEmailsData[] = $ud;
             }
+
 
         }
 

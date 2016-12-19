@@ -25,9 +25,8 @@ function __autoload($classname)
 function loger($data_string)
 {
     $file_path = APPROOT . "/mailparser.log";
-    //chmod($file_path, 0777);
-    $data = "" . date("Y.m.d H:i:s") . ": " .trim($data_string);
-    print("\nLOGER: ".$data);
+    $data = "\n" . date("Y.m.d H:i:s") . ": " .trim($data_string);
+    print($data);
     file_put_contents($file_path, $data, FILE_APPEND);
 }
 
@@ -38,9 +37,8 @@ function loger($data_string)
 function loger_error($data_string)
 {
     $file_path = APPROOT . "/mailparser_error.log";
-    //chmod($file_path, 0777);
-    $data = "" . date("Y.m.d H:i:s") . ": " .trim($data_string);
-    print("\nLOGER_ERROR: ".$data);
+    $data = "\n" . date("Y.m.d H:i:s") . ": " .trim($data_string);
+    print($data);
     file_put_contents($file_path, $data, FILE_APPEND);
 }
 
