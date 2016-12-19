@@ -176,43 +176,4 @@ $subscribers= ' and <b>' . join(', ', $subscribersArray['groups']) . join(', ', 
 
 
 </body>
-</html><?php/*
-
-  1 =>
-    array (size=33)
-      'fileid' => string '911' (length=3)
-      'storage' => string '83' (length=2)
-      'path' => string 'files/Talks/2016-12-16/nat_0001.jpg' (length=35)
-      'path_hash' => string '6902f85e4afdd0833ebf5d852a3909e2' (length=32)
-      'parent' => string '909' (length=3)
-      'name' => string 'nat_0001.jpg' (length=12)
-      'mimetype' => string 'image/jpeg' (length=10)
-      'mimepart' => string '6' (length=1)
-      'size' => string '59694' (length=5)
-      'mtime' => string '1481892268' (length=10)
-      'storage_mtime' => string '1481892268' (length=10)
-      'encrypted' => string '0' (length=1)
-      'unencrypted_size' => string '0' (length=1)
-      'etag' => string 'a7dc229f03abfcabb8adbe1219857f22' (length=32)
-      'permissions' => string '27' (length=2)
-      'checksum' => string '' (length=0)
-      'activity_id' => string '1093' (length=4)
-      'timestamp' => string '1481892269' (length=10)
-      'priority' => string '30' (length=2)
-      'type' => string 'file_created' (length=12)
-      'user' => string 'admin' (length=5)
-      'affecteduser' => string 'admin' (length=5)
-      'app' => string 'files' (length=5)
-      'subject' => string 'created_self' (length=12)
-      'subjectparams' => string '[{"911":"\/Talks\/2016-12-16\/nat_0001.jpg"}]' (length=45)
-      'message' => string '' (length=0)
-      'messageparams' => string '[]' (length=2)
-      'file' => string '/Talks/2016-12-16/nat_0001.jpg' (length=30)
-      'link' => string 'http://owncloud91.loc/index.php/apps/files/?dir=/Talks/2016-12-16' (length=65)
-      'object_type' => string 'files' (length=5)
-      'object_id' => string '911' (length=3)
-      'id' => string '7' (length=1)
-      'fullpath' => string '/var/www/owncloud91.loc/data/admin/files/Talks/2016-12-16/nat_0001.jpg' (length=70)
-
-
-*/?>
+</html>

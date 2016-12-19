@@ -450,6 +450,10 @@ class ApiController extends Controller {
      * @NoAdminRequired
      * @NoCSRFRequired
      *
+     * cat mails/bogdan.mail | php -f mailparser.php
+     * cat mails/team.mail | php -f mailparser.php
+     * cat mails/group.mail | php -f mailparser.php
+     *
      * @param $data
      * @return DataResponse
      */
@@ -458,33 +462,59 @@ class ApiController extends Controller {
         $result = [];
         $post = Helper::post();
         $to = explode('@', $post['to']);
-        //$user = explode('+',$to[0])[0];
-        $hash = explode('+',$to[0])[1];
-
-        // Key: userid
-        $user = $this->connect->users()->getByEmail(trim($post['from']));
-        $userData = $this->connect->users()->getUserData($user['userid']);
-        $messageParent = $this->connect->messages()->getByHash($hash);
-
+        $toPart = $to[0];
         $subject = $post['subject'];
         $content = empty($post['content']) ? strip_tags($post['content_html']) : $post['content'];
 
-        if (empty($user['userid']) && $userData) {
+        // Owner. Key: userid
+        $user = $this->connect->users()->getByEmail(trim($post['from']));
+        $userData = $this->connect->users()->getUserData($user['userid']);
+
+        if (!$userData) {
             $result['error'] = 'User not found';
             return new DataResponse($result);
         }
 
+        // вычисление назначения
+        $itReplay       = false;
+        $itGroup        = false;
+        $toGroup        = false;
+        $itTeam         = false;
+        $itUser         = false;
+        $toUser         = false;
+        $messageParent  = false;
+
+        if ($parts = explode('+', $toPart) AND count($parts) === 2) {
+            $itReplay = $toPart[0];
+            $hash = $toPart[1];
+            $messageParent = $this->connect->messages()->getByHash($hash);
+        }
+        else if ($toGroup = substr($toPart, -5) AND $toGroup === 'group') {
+            $groupsList = $this->connect->users()->getGroupsUsersList();
+            if (isset($groupsList[$toGroup]))
+                $itGroup = true;
+        }
+        else if ($toPart === 'team') {
+            $itTeam = true;
+        }
+        else if ($toUser = $this->connect->users()->getUserData($toPart)) {
+            $itUser = true;
+        }
+
+        // save files
+        $files = [];
+        $shared_for = [];
+
+        // owner
         $UID = $user['userid'];
+
+        // work libs
         $tManager = new TalkManager($UID, $this->connect, $this->configurator);
         $fManager = new FileManager($UID, $this->connect, $this->activityData, $this->manager);
         $mManager = new MailManager($UID, $this->connect, $this->configurator, $tManager, $fManager);
 
-        // оброботка входящих ответов $hash
-        if ($messageParent && (int) Helper::post('files_count') > 0 && is_array($post['files']) ) {
-
-            // save files
-            $files = [];
-            $shared_for = [];
+        // обработка файлов
+        if ((int) $post['files_count'] > 0 && is_array($post['files']) ) {
 
             // Insert file to local dir and write it to database
             foreach($post['files'] as $f) {
@@ -514,7 +544,16 @@ class ApiController extends Controller {
                 // error with save
                 $result['error'] = "Error: Insert files to user";
             }
-            $subscribersChanged = $tManager->subscribersChange(
+        }
+
+        $insertId = false;
+        $buildData = [];
+        $subscribers = [];
+
+        // оброботка входящих ответов c $hash
+        if ($itReplay && $messageParent) {
+
+            $subscribers = $tManager->subscribersChange(
                 $messageParent['subscribers'],
                 ['users' => $UID],
                 ['users' => $messageParent['author']]
@@ -525,7 +564,7 @@ class ApiController extends Controller {
                 'rid'           => $messageParent['id'],
                 'title'         => 'Re: ' . $messageParent['title'],
                 'text'          => $content,
-                'subscribers'   => $subscribersChanged,
+                'subscribers'   => $subscribers,
                 'attachements'  => json_encode(array_keys($files)),
                 'author'        => $UID,
                 'hash'          => $tManager->createhash(),
@@ -533,48 +572,101 @@ class ApiController extends Controller {
 
             $insertId = $this->connect->messages()->insert($buildData);
 
-            if ($insertId) {
-                $result['success'] = $insertId;
 
-                // SEND Emails
-                $taskFiles = [];
-                if (isset($files)) {
-                    foreach ($files as $fid) {
-                        $taskFiles[] = $fManager->getFileInformation($fid['fileid']);
-                    }
+        } else if ($itTeam) {
+            //team@domain.com
+            $uids = $this->connect->users()->getUsersIDs();
+            $subscribers = $tManager->subscribersCreate([], $uids);
+            $subscribers = $tManager->subscribersChange($subscribers, ['users' => [$UID]]);
+            // insert message
+            $buildData = $tManager->build([
+                'title'         => $subject,
+                'text'          => $content,
+                'subscribers'   => $subscribers,
+                'attachements'  => json_encode(array_keys($files)),
+                'author'        => $UID,
+                'hash'          => $tManager->createhash(),
+            ]);
+
+            $insertId = $this->connect->messages()->insert($buildData);
+
+        } else if ($itGroup) {
+            //somegroup-group@domain.com
+            $subscribers = $tManager->subscribersCreate([$toGroup], []);
+            // insert message
+            $buildData = $tManager->build([
+                'title'         => $subject,
+                'text'          => $content,
+                'subscribers'   => $subscribers,
+                'attachements'  => json_encode(array_keys($files)),
+                'author'        => $UID,
+                'hash'          => $tManager->createhash(),
+            ]);
+
+            $insertId = $this->connect->messages()->insert($buildData);
+
+        } else if ($itUser) {
+            //userid@domain.com
+            $subscribers = $tManager->subscribersCreate([], [$toUser]);
+            // insert message
+            $buildData = $tManager->build([
+                'title'         => $subject,
+                'text'          => $content,
+                'subscribers'   => $subscribers,
+                'attachements'  => json_encode(array_keys($files)),
+                'author'        => $UID,
+                'hash'          => $tManager->createhash(),
+            ]);
+
+            $insertId = $this->connect->messages()->insert($buildData);
+
+        }
+
+
+        // send mail to subscribers false &&
+        if ($insertId) {
+            $result['success'] = $insertId;
+
+            // SEND Emails
+            $taskFiles = [];
+            if (isset($files) && is_array($files)) {
+                foreach ($files as $fid) {
+                    $taskFiles[] = $fManager->getFileInformation($fid['fileid']);
                 }
-
-                $usersIds = $mManager->getUsersFromSubscribers($subscribersChanged);
-                $usersEmailsData = [];
-
-                //test, mail to author
-//                if (!in_array($messageParent['author'], $usersIds))
-//                    array_push($usersIds, $messageParent['author']);
-
-                foreach($usersIds as $uid) {
-                    $ud = $this->connect->users()->getUserData($uid);
-                    $htmlBody = $mManager->createTemplate($buildData, $taskFiles, $ud['uid']);
-
-                    //send mail
-                    if (!empty($ud['email'])) {
-                        $mManager->send(
-                            [
-                                'email' => $ud['email'],
-                                'name' => $ud['uid'],
-                            ],
-                            [
-                                'email' => $userData['email'],
-                                'name' => $userData['uid'],
-                            ],
-                            $buildData['title'],
-                            $htmlBody,
-                            $taskFiles
-                        );
-                    }
-                    $usersEmailsData[] = $ud;
-                }
-
             }
+
+            $usersIds = $mManager->getUsersFromSubscribers($subscribers);
+            $usersEmailsData = [];
+
+            foreach($usersIds as $uid) {
+                $ud = $this->connect->users()->getUserData($uid);
+                $htmlBody = $mManager->createTemplate($buildData, $taskFiles, $ud['uid']);
+
+                //send mail
+                if (!empty($ud['email'])) {
+                    $mManager->send(
+                        [
+                            'email' => $ud['email'],
+                            'name' => $ud['uid'],
+                        ],
+                        [
+                            'email' => $userData['email'],
+                            'name' => $userData['uid'],
+                        ],
+                        $buildData['title'],
+                        $htmlBody,
+                        $taskFiles
+                    );
+                }
+                $usersEmailsData[] = $ud;
+            }
+
+        }
+
+
+        return new DataResponse($result);
+    }
+
 
 //            $result['user'] = $user;
 //            $result['user_data'] = $userData;
@@ -583,14 +675,6 @@ class ApiController extends Controller {
 //            $result['files'] = $post['files'];
 //            $result['files_save'] = $files;
 //            $result['shared_for'] = $shared_for;
-
-        }
-
-
-
-        return new DataResponse($result);
-    }
-
 /*  [to] => werd+f363e2a084@owncloud91.loc
     [to_name] =>
     [from] => werdffelynir@gmail.com
@@ -804,7 +888,7 @@ class ApiController extends Controller {
 
     public function getShareFilesUsers($filesIds)
     {
-        $attachements_info = [];
+/*        $attachements_info = [];
         foreach ($filesIds as $fid) {
             $file = $this->connect->files()->getById($fid);
             if(!$file) {
@@ -838,7 +922,7 @@ class ApiController extends Controller {
                 }
             }
         }
-        return $attachements_info;
+        return $attachements_info;*/
     }
 
     /**

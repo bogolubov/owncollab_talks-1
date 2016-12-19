@@ -113,8 +113,8 @@ class TalkManager
      * This example delete from json the user user_id,
      * and insert user user_id2 and group developers
      * Uses: ->subscriberChange(json,
-     *                              ['users': ['user_id']]
-     *                              ['users': ['user_id2'], 'groups': ['developers']]
+     *                              ['users' => ['user_id']]
+     *                              ['users' => ['user_id2'], 'groups' => ['developers']]
      *                          )
      * @param $json
      * @param array $toDelete
