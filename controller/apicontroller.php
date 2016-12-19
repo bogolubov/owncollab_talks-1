@@ -410,10 +410,10 @@ class ApiController extends Controller {
             }
         }
         $htmlBody = $mManager->createTemplate($buildData, $taskFiles);
-        $usersIds = $mManager->getUsersFromSubscribers($buildData['subscribers'], $UID);
+        $usersIds = $mManager->getUsersFromSubscribers($subscribersChanged, $UID);
 
         // форм. удобный список [['uid'=>,'email'=>,]]
-        $usersEData = [];
+        $usersEmailsData = [];
         foreach($usersIds as $uid){
             $ud = $this->connect->users()->getUserData($uid);
             //send mail
@@ -432,12 +432,8 @@ class ApiController extends Controller {
                     $taskFiles
                 );
             }
-            $usersEData[] = $ud;
+            $usersEmailsData[] = $ud;
         }
-
-
-
-
 
         if($front['insert_id']) {
             Helper::cookies('goto_message', $front['insert_id']);

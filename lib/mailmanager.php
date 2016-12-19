@@ -81,8 +81,9 @@ class MailManager
         $taskSubscribers = $this->talkManager->subscribers2Array($subscribers);
         $taskUsers = $taskSubscribers['users'];
 
-        if ($addUsers)
-            $taskUsers = array_merge($taskUsers, $addUsers);
+        if (!empty($addUsers) && is_array($addUsers))
+            foreach ($addUsers as $au)
+                array_push($taskUsers, trim($au));
 
         if (!empty($taskSubscribers['groups'])) {
             $groupsUsers = $this->connect->users()->getGroupsUsersList();
@@ -94,6 +95,7 @@ class MailManager
                 }
             }
         }
+
         // users list for mail
         return array_values(array_unique(
             array_diff($taskUsers, [
