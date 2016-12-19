@@ -416,6 +416,10 @@ class ApiController extends Controller {
         foreach($usersIds as $uid){
             $ud = $this->connect->users()->getUserData($uid);
             $htmlBody = $mManager->createTemplate($buildData, $taskFiles, $ud['uid']);
+
+            //todo: need condition to mta virtual users
+            $ownerEmail = $owner['uid'] .'+'. $buildData['hash'] . '@' . $this->configurator->get('mail_domain');
+
             //send mail
             if (!empty($ud['email'])) {
                 $mManager->send(
@@ -424,7 +428,7 @@ class ApiController extends Controller {
                         'name' => $ud['uid'],
                     ],
                     [
-                        'email' => $owner['email'],
+                        'email' => $ownerEmail,
                         'name' => $owner['uid'],
                     ],
                     $buildData['title'],
@@ -642,6 +646,9 @@ class ApiController extends Controller {
                 $ud = $this->connect->users()->getUserData($uid);
                 $htmlBody = $mManager->createTemplate($buildData, $taskFiles, $ud['uid']);
 
+                //todo: need condition to mta virtual users
+                $ownerEmail = $userData['uid'] .'+'. $buildData['hash'] . '@' . $this->configurator->get('mail_domain');
+
                 //send mail
                 if (!empty($ud['email'])) {
                     $mManager->send(
@@ -650,7 +657,7 @@ class ApiController extends Controller {
                             'name' => $ud['uid'],
                         ],
                         [
-                            'email' => $userData['email'],
+                            'email' => $ownerEmail,
                             'name' => $userData['uid'],
                         ],
                         $buildData['title'],
@@ -774,6 +781,12 @@ class ApiController extends Controller {
 
         return new DataResponse($params);
     }
+
+
+
+
+
+
 
     /**
      * @NoAdminRequired
