@@ -60,7 +60,7 @@ if(App.namespace){App.namespace('Action.Edit', function(App){
 
                 this.submit();
             }else{
-                App.Controller.Page.errorLine("Не все поля заполненны!");
+                App.Controller.Page.errorLine("Email message can not be empty");
             }
         });
     };
@@ -68,11 +68,13 @@ if(App.namespace){App.namespace('Action.Edit', function(App){
     /**
      *
      */
-    _.submitFormReplyEvent = function(){
+    _.submitFormReplyEvent = function () {
+
         jQuery('form#quick-reply').submit(function(event) {
             event.preventDefault();
 
             var formValues = Util.formData(this, true);
+
             App.Controller.Page.errorLineClose();
 
             jQuery('input[type=submit]', this).prop( "disabled", true );
@@ -83,12 +85,15 @@ if(App.namespace){App.namespace('Action.Edit', function(App){
                 // response = can have keys: error, parent_id, insert_id
                 App.Action.Api.request('insert', function(response) {
 
+                    console.log('reply formValues >> ', formValues);
+                    console.log('reply response >> ', response);
+
                     // response is object
-                    if (response && Util.isObj(response)) {
+                    if (Util.isObj(response)) {
 
                         if(response['insert_id'] && response['parent_id']) {
                             // from read page
-                            if(App.uriPath.search(/\/read\/\d+/i)!==-1) {
+                            if(App.uriPath.search(/\/read\/\d+/i) !== -1) {
                                 var rid = App.query('input[name=rid]').value;
                                 Util.Cookie.set('goto_message', rid, {path:'/'});
                                 window.history.back();
@@ -97,11 +102,7 @@ if(App.namespace){App.namespace('Action.Edit', function(App){
                                 jQuery("ul.listmenu>li[data-id="+response['parent_id']+"]").click();
                         }
 
-
                     }
-
-                    console.log('reply response >> ', response);
-
 
 /*
                     if(!Util.isObj(response) || response['error'] ) {
@@ -119,13 +120,14 @@ if(App.namespace){App.namespace('Action.Edit', function(App){
                             jQuery("ul.listmenu>li[data-id="+response['parent_id']+"]").click();
                     }*/
 
+
                 }, formValues);
             }
             else {
 
                 jQuery('input[type=submit]', this).prop( "disabled", false );
                 jQuery('textarea[name=message]', this).prop( "disabled", false );
-                App.Controller.Page.errorLine('Пустое сообщение не может быть отправленно, введите текст.');
+                App.Controller.Page.errorLine('Email message can not be empty');
 
             }
         });
@@ -148,7 +150,7 @@ if(App.namespace){App.namespace('Action.Edit', function(App){
             var isUser = !!target.getAttribute('data-group');
 
             if(isUser && email.length < 5 && isChecked){
-                App.Controller.Page.errorLine("Этому пользователю письо не будет доставленно. В параметрах пользователя '"+value+"' не указан email адрес, или указан не верный email");
+                App.Controller.Page.errorLine("Email is empty on user " + value);
             }
 
             if(!isUser) {

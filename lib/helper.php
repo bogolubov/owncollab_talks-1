@@ -506,6 +506,7 @@ class Helper
      * @return
      */
     static function dateDeclension($digit,$expr,$onlyword=false){
+
         if(!is_array($expr)) $expr = array_filter(explode(' ', $expr));
         if(empty($expr[2])) $expr[2]=$expr[1];
         $i=preg_replace('/[^0-9]+/s','',$digit)%100;
@@ -520,6 +521,9 @@ class Helper
         }
         return trim($res);
     }
+
+
+
 
     /**
      * @param $login

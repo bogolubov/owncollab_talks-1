@@ -53,7 +53,7 @@ class TalkManager
     {
         $default = [
             'rid' => 0,
-            'date' => date("Y-m-d h:i:s"),
+            'date' => date("Y-m-d H:i:s"),
             'status' => 0,
             'author' => $this->userId,
         ];
