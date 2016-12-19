@@ -130,13 +130,12 @@ $subscribers= ' and <b>' . join(', ', $subscribersArray['groups']) . join(', ', 
         <div class="block-table-body">
 
             <h3>Message:</h3>
-            <div><?php echo $body?></div>
 
-            <?php if(is_array($files)): ?>
-                <h3>
-                    <a href="<?php echo \OC::$server->getURLGenerator()->getAbsoluteURL('index.php/apps/owncollab_talks')?>">
-                        Attachment files:
-                    </a>
+            <div><?php echo nl2br(stripcslashes($body))?></div>
+
+            <?php if(is_array($files) && !empty($files)): ?>
+                <h3><a href="<?php echo \OC::$server->getURLGenerator()->getAbsoluteURL('index.php/apps/owncollab_talks')?>">
+                        Attachment files:</a>
                 </h3>
                 <table border="0" cellspacing="0" cellpadding="2">
                     <thead>
@@ -169,7 +168,7 @@ $subscribers= ' and <b>' . join(', ', $subscribersArray['groups']) . join(', ', 
     <div class="block-footer">
         <p>This email was created by the <a href="https://owncloud.org/">ownCloud</a> system on
             <a href="<?p($siteurl)?>"><?p($sitehost)?></a>.</p>
-        <p><?p($siteurl)?> is powered by <b>ownCloud</b></p>
+        <p><?p(trim($siteurl,'/'))?> is powered by <b>ownCloud</b></p>
     </div>
 
 </div>

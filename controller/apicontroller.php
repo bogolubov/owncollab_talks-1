@@ -117,7 +117,7 @@ class ApiController extends Controller {
 
 
         //73 75
-        $talk = $this->connect->messages()->getById(75);
+        $talk = $this->connect->messages()->getById(84);
         $hash = $talk['hash'];
         $talkParent = false;
         $author = '';
@@ -138,13 +138,16 @@ class ApiController extends Controller {
 
         $htmlBody = $mManager->createTemplate($talk, $taskFiles);
         $usersIds = $mManager->getUsersFromSubscribers($talk['subscribers'], $author);
-        $usersData = [];
+
+        // форм. удобный список [['uid'=>,'email'=>,]]
+        $usersEData = [];
         foreach($usersIds as $uid){
-            $usersData[] = $this->connect->users()->getUserData($uid);
+            $usersEData[] = $this->connect->users()->getUserData($uid);
         }
 
+        echo $htmlBody;
         var_dump($usersIds);
-        var_dump($usersData);
+        var_dump($usersEData);
 
 
 /*
@@ -400,6 +403,38 @@ class ApiController extends Controller {
 
         // SEND Emails
         // $subscribersChanged
+        $taskFiles = [];
+        if (isset($postShare)) {
+            foreach ($postShare as $fid) {
+                $taskFiles[] = $fManager->getFileInformation($fid);
+            }
+        }
+        $htmlBody = $mManager->createTemplate($buildData, $taskFiles);
+        $usersIds = $mManager->getUsersFromSubscribers($buildData['subscribers'], $UID);
+
+        // форм. удобный список [['uid'=>,'email'=>,]]
+        $usersEData = [];
+        foreach($usersIds as $uid){
+            $ud = $this->connect->users()->getUserData($uid);
+            //send mail
+            if (!empty($ud['email'])) {
+                $mManager->send(
+                    [
+                        'email' => $ud['email'],
+                        'name' => $ud['uid'],
+                    ],
+                    [
+                        'email' => $ud['email'],
+                        'name' => $ud['uid'],
+                    ],
+                    $buildData['title'],
+                    $htmlBody,
+                    $taskFiles
+                );
+            }
+            $usersEData[] = $ud;
+        }
+
 
 
 
