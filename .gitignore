@@ -27,8 +27,6 @@ temp/*
 lib/_old
 lib/mails
 templates/_old
-/mailparser.log
-/mailparser_error.log
 /config/config.php
 
 

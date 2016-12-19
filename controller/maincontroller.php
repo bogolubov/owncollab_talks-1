@@ -11,6 +11,7 @@
 
 namespace OCA\Owncollab_Talks\Controller;
 
+
 use OC\Files\Filesystem;
 use OCA\Owncollab_Talks\Db\Connect;
 use OCA\Owncollab_Talks\Helper;
@@ -236,29 +237,6 @@ class MainController extends Controller
     }
 
 
-    /**
-     * @NoAdminRequired
-     * @NoCSRFRequired
-     * @return TemplateResponse
-     */
-    public function test()
-    {
-        $data = [];
-
-//        $allUsers = $this->connect->users()->getAll();
-//        $shareUIds = array_map(function($item){return $item['uid'];}, $allUsers);
-
-        $allUsers = $this->connect->users()->getAll();
-        $shareUIds = array_map(function($item){
-            if ($item['uid'] !== $this->configurator->get('collab_user')) {
-                return $item['uid'];
-            }
-        }, $allUsers);
-        $shareUIds = array_unique($shareUIds);
-        //$shareUIds = array_diff(array_unique($shareUIds), ['',null,false]);
-
-        return new DataResponse($shareUIds);
-    }
 
     /**
      * Return attachements ids in array

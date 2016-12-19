@@ -7,9 +7,12 @@ if(App.namespace){App.namespace('Action.Edit', function(App){
     /**
      * @namespace App.Action.Edit.init
      */
-    _.init = function(){
+    _.init = function () {
 
-        jQuery("textarea[name=message]").show().trumbowyg();
+        if (!App.query('textarea[name=message]'))
+            return;
+
+        jQuery('textarea[name=message]').show().trumbowyg();
 
         _.checkSubscribersEvent();
         _.submitFormEvent();

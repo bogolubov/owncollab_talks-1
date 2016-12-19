@@ -83,27 +83,13 @@ class ApiController extends Controller {
             ? Helper::post('data', false)
             : $_GET['data'];
 
-        if(!$this->mailDomain)
+        if(!$this->mailDomain && !in_array($key, ['parserlog']))
             return new DataResponse(['error'=>'Email domain is undefined']);
 
         if(method_exists($this, $key))
             return call_user_func([$this, $key], $data);
         else
             return new DataResponse(['error'=>'Api key not exist']);
-    }
-
-    /**
-     * @NoAdminRequired
-     * @NoCSRFRequired
-     * @param $data
-     * @return DataResponse
-     */
-    public function test($data)
-    {
-
-
-        die('DIE');
-        return new DataResponse($data);
     }
 
     /**
@@ -427,10 +413,6 @@ class ApiController extends Controller {
 
         }
 
-//        $result['insert_id'] = $insertId;
-//        $result['build_data'] = $buildData;
-//        return new DataResponse($result);
-
         // Send mail to subscribers false &&
         if ($insertId) {
             $result['success'] = $insertId;
@@ -546,6 +528,36 @@ class ApiController extends Controller {
         return $this->listtree;
     }
 
+    /**
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * @param $data
+     * @return DataResponse
+     */
+    public function parserlog($data)
+    {
+        $post = Helper::post();
+        $file = $post['data']['file'];
+        $data['log'] = 'Error. can`t read log file';
+        $path = dirname(__DIR__) .'/'. $file;
+        if (is_file($path) && $fileContent = file_get_contents($path))
+            $data['log'] = str_replace("\n", "\n\n", $fileContent);
 
+            //$data['log'] = '<pre style="background-color: #0a2231; color: #fff">' . $fileContent . '</pre>';
+            //$fileContent
+
+        return new DataResponse($data);
+    }
+
+    /**
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * @param $data
+     * @return DataResponse
+     */
+    public function test($data)
+    {
+        return new DataResponse($data);
+    }
 
 }
