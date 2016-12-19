@@ -30,3 +30,7 @@ templates/_old
 /mailparser.log
 /mailparser_error.log
 /config/config.php
+
+
+mailparser.log
+mailparser_error.log
