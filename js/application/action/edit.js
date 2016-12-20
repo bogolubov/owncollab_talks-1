@@ -63,7 +63,7 @@ if(App.namespace){App.namespace('Action.Edit', function(App){
 
                 this.submit();
             }else{
-                App.Controller.Page.errorLine("Email message can not be empty");
+                App.Controller.Page.errorLine("Email message can`t be empty");
             }
         });
     };
@@ -152,8 +152,8 @@ if(App.namespace){App.namespace('Action.Edit', function(App){
             var isChecked = event.target.checked;
             var isUser = !!target.getAttribute('data-group');
 
-            if(isUser && email.length < 5 && isChecked){
-                App.Controller.Page.errorLine("Email is empty on user " + value);
+            if (isUser && email.length < 5 && isChecked) {
+                App.Controller.Page.errorLine("User <b>"+ value +"</b>, email is empty");
             }
 
             if(!isUser) {

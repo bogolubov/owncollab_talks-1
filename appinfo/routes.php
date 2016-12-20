@@ -32,5 +32,6 @@ $application->registerRoutes($this, ['routes' => [
     ['name' => 'api#insert',    'url' => '/save_talk',          'verb' => 'POST'],
     ['name' => 'api#parser',    'url' => '/parse_manager',      'verb' => 'POST'],
     ['name' => 'api#parserlog', 'url' => '/parserlog',          'verb' => 'POST'],
+    //['name' => 'api#test',      'url' => '/test',               'verb' => 'GET'],
 
 ]]);

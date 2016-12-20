@@ -346,8 +346,8 @@ class ApiController extends Controller {
 
             $subscribers = $tManager->subscribersChange(
                 $messageParent['subscribers'],
-                ['users' => $UID],
-                ['users' => $messageParent['author']]
+                ['users' => [$UID]],
+                ['users' => [$messageParent['author']]]
             );
 
             // insert message
@@ -432,7 +432,7 @@ class ApiController extends Controller {
                 $htmlBody = $mManager->createTemplate($buildData, $taskFiles, $ud['uid']);
 
                 //todo: need condition to mta virtual users
-                if ((int) $buildData['rid'] > 0 && $messageParent) {
+                if ($messageParent) {
                     $ownerEmail = $messageParent['author'] .'+'. $messageParent['hash'] . '@' . $this->configurator->get('mail_domain');
                 } else {
                     $ownerEmail = $userfromData['uid'] .'+'. $buildData['hash'] . '@' . $this->configurator->get('mail_domain');
@@ -556,6 +556,24 @@ class ApiController extends Controller {
      */
     public function test($data)
     {
+
+        $UID = 'bogdan';
+        $messageParent = $this->connect->messages()->getById(1);
+
+        // work libs
+        $tManager = new TalkManager($UID, $this->connect, $this->configurator);
+        //$fManager = new FileManager($UID, $this->connect, $this->activityData, $this->manager);
+        //$mManager = new MailManager($UID, $this->connect, $this->configurator, $tManager, $fManager);
+
+        $subscribers = $tManager->subscribersChange(
+            $messageParent['subscribers'],
+            ['users' => [$UID]],
+            ['users' => [$messageParent['author']]]
+        );
+
+        var_dump($subscribers);
+
+        die;
         return new DataResponse($data);
     }
 
