@@ -540,11 +540,10 @@ class ApiController extends Controller {
         $file = $post['data']['file'];
         $data['log'] = 'Error. can`t read log file';
         $path = dirname(__DIR__) .'/'. $file;
-        if (is_file($path) && $fileContent = file_get_contents($path))
-            $data['log'] = str_replace("\n", "\n\n", $fileContent);
 
-            //$data['log'] = '<pre style="background-color: #0a2231; color: #fff">' . $fileContent . '</pre>';
-            //$fileContent
+        if (is_file($path) && is_readable($path)) {
+            $data['log'] = file_get_contents($path);
+        }
 
         return new DataResponse($data);
     }

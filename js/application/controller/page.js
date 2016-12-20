@@ -122,8 +122,7 @@ if(App.namespace){App.namespace('Controller.Page', function(App){
         App.on(_.node['button_show_parse_log'], 'click', function(event){
 
             App.Action.Api.request('parserlog', function(response) {
-                var log = response && response['log'] ? response['log'] : 'can not read log file';
-
+                var log = response['log'];
                 OC.dialogs.info(log, 'Parse Log', false, true);
             }, {
                 'file':'mailparser.log'
@@ -133,8 +132,7 @@ if(App.namespace){App.namespace('Controller.Page', function(App){
 
         App.on(_.node['button_show_error_log'], 'click', function(event){
             App.Action.Api.request('parserlog', function(response) {
-                var log = response && response['log'] ? response['log'] : 'can not read log file';
-
+                var log = response['log'];
                 OC.dialogs.info(log, 'Error Log', false, true);
             }, {
                 'file':'mailparser_error.log'
