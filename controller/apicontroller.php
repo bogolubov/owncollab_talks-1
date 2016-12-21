@@ -482,9 +482,10 @@ class ApiController extends Controller {
     public function message_children($data)
     {
         $params = [
-            'error'     => null,
-            'errorinfo'     => '',
-            'lastlinkid'    => null
+            'error'             => null,
+            'errorinfo'         => '',
+            'lastlinkid'        => null,
+            'attachedfiles'     => null,
         ];
 
         if(isset($data['parent_id'])) {
@@ -495,6 +496,34 @@ class ApiController extends Controller {
                 'parent'    =>  $params['parent'],
                 'children'  =>  $params['children'],
             ]);
+
+            // Add Attached files
+            $allfilesids = [];
+
+            try {
+                $allfilesids = json_decode($params['parent']['attachements'], true);
+            }catch (\Exception $e){}
+
+            if (!empty($params['children'])) {
+                foreach ($params['children'] as $child) {
+                    if(!empty($child['attachements'])) {
+                        try {
+                            $childfilesids = json_decode($child['attachements'], true);
+                            $allfilesids = array_merge($childfilesids, $allfilesids);
+                        }catch (\Exception $e){}
+                    }
+                }
+            }
+            if (!empty($allfilesids)) {
+                //$fManager = new FileManager($this->userId, $this->connect, $this->activityData, $this->manager);
+                //$attachfilesInfo = $fManager->getFilesDataInfo($allfilesids);
+                $attachfilesInfo = $this->connect->files()->getInfoByIds($allfilesids);
+                $params['attachedfiles'] = Helper::renderPartial($this->appName,'part.attachlist',[
+                    'attachfiles' => $attachfilesInfo
+                ]);
+            }
+            //$params['attachedfilesids'] = $allfilesids;
+            $params['attachedids'] = $allfilesids;
         }
 
         return new DataResponse($params);

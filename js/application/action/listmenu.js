@@ -70,10 +70,14 @@ if(App.namespace){App.namespace('Action.Listmenu', function(App) {
         App.Action.Api.request('message_children',function(response) {
 
             //console.log(response);
-
             if(Util.isObj(response)) {
 
                 //App.requesttoken = response.requesttoken;
+                //console.log(response);
+                if(response['attachedfiles'])
+                    App.inject('#dynamic-attachedfiles', response['attachedfiles']);
+                else
+                    App.inject('#dynamic-attachedfiles', '');
 
                 if(response.error){
                     return;

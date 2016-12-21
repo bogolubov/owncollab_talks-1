@@ -407,7 +407,6 @@ if (!empty($_['subscribers']) && is_array($_['subscribers'])) {
                     <!-- This is preheader text. Some clients will show this text as a preview.-->
                     <?php p(Helper::cutStringPreview($talkmessage['text'], 50))?>
                 </span>
-                <?php p(Helper::cutStringPreview($talkmessage['text'], 50))?>
                 <table class="main">
 
                     <!-- START MAIN CONTENT AREA -->

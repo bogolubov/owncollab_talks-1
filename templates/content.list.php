@@ -16,6 +16,10 @@ if($messages):
         <div class="loader_min" style="display: none"></div>
         <div id="r_messages" class="tbl_cell valign_top" style="display: none"></div>
 
+        <div id="talk-attach-files" class="tbl_cell valign_top">
+            <?php print_unescaped($this->inc("part.listattachfiles")); ?>
+        </div>
+
     </div>
 
 <?php else:?>
