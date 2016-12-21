@@ -467,7 +467,7 @@ if (!empty($_['subscribers']) && is_array($_['subscribers'])) {
                                             </tr>
                                             <tr>
                                                 <td id="talk-text" align="left">
-                                                    <?php echo nl2br(stripcslashes($talkmessage['text']))?>
+                                                    <?php echo stripcslashes($talkmessage['text'])?>
                                                 </td>
                                             </tr>
                                             </tbody>
