@@ -589,8 +589,7 @@ input[type="text"], input[type="password"], input[type="search"], input[type="nu
     font-weight: bold;
 }
 #r_messages{
-    padding: 5px 10px;
-	max-width: 500px;
+    padding: 5px 10px
 }
 #talk-attach-files{
 

@@ -86,7 +86,10 @@ function attachCount(array $message){
 <form id="quick-reply">
     <input type="text" hidden="hidden" name="hash" value="<?=$parent['hash']?>">
     <div class="tbl">
-        <div class="tbl_cell valign_top width70"><textarea name="message" class="width100" placeholder="Answer directly"></textarea></div>
+        <div class="tbl_cell valign_top width70">
+<!--            <textarea name="message" class="width100" placeholder="Answer directly"></textarea>-->
+            <input name="message" type="text" placeholder="Answer directly" style="width:100%">
+        </div>
         <div class="tbl_cell valign_top">&nbsp;&nbsp;<input type="submit" value="Reply now"></div>
     </div>
 </form>
