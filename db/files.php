@@ -72,6 +72,11 @@ class Files
 
     public function getInfoByIds($ids)
     {
+        $ids = is_array($ids) ? $ids : (is_numeric($ids) ? [$ids] : false );
+
+        if (!is_array($ids))
+            return [];
+
         $sql = "SELECT * FROM oc_filecache f
                 LEFT JOIN *PREFIX*activity a ON (a.object_id = f.fileid)
                 LEFT JOIN *PREFIX*mimetypes m ON (m.id = f.mimetype)

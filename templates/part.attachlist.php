@@ -13,7 +13,9 @@ $attachfiles = $_['attachfiles'];
 <?php foreach($attachfiles as $attach):?>
     <tr>
         <td style="width: 36px"><img src="<?php p($attach['icon'])?>" alt="icon"></td>
-        <td><?php p($attach['name'])?></td>
+        <td>
+            <a href="/remote.php/webdav<?php p($attach['file'])?>"><?php p($attach['name'])?></a>
+        </td>
     </tr>
 <?php endforeach;?>
 </table>

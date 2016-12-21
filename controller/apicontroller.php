@@ -642,25 +642,34 @@ class ApiController extends Controller {
         $attachfilesInfo = $fManager->getFilesDataInfo($attachementsFilesIds);
         $userDataTo = $this->connect->users()->getUserData($UIDTO);
 
-        //$email  = $mManager->createTemplateStart($userDataTo, $talkmessage, $attachfilesInfo);
+        $email  = $mManager->createTemplateStart($userDataTo, $talkmessage, $attachfilesInfo);
 
-        //exit($email);
-        //var_dump($attachfilesInfo);*/
+        exit($email);*/
 
+        //var_dump($attachfilesInfo);
+
+        /*
         // Parse mail content
         $groupPrefix = $this->configurator->get('group_prefix');
         $toPart = 'developers-group';
         $itGroup = false;
         if ($toGroup = substr($toPart, -strlen($groupPrefix)) AND $toGroup === $groupPrefix) {
             $toGroup = substr($toPart, 0, -(strlen($groupPrefix)));
-            //var_dump($toGroup);
             $groupsList = $this->connect->users()->getGroupsUsersList();
-            //var_dump($toGroup);
             if (isset($groupsList[$toGroup]))
                 $itGroup = true;
         }
+        var_dump($toGroup);
+        var_dump($itGroup);*/
 
-        var_dump($itGroup);
+
+/*
+        // Link
+        $siteurl = $this->configurator->get('site_url');
+        $file = $this->connect->files()->getInfoByIds(27)[0];
+        $filelink = $siteurl . 'remote.php/webdav' . $file['file'];
+        var_dump($file);
+        var_dump($filelink);*/
         die;
         //$htmlBody = $mManager->createTemplate($buildData, $taskFiles, $ud['uid']);
         //$data = [ ];
