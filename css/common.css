@@ -655,8 +655,21 @@ input[type="text"], input[type="password"], input[type="search"], input[type="nu
 }
 .read_attachements li>.tbl>.tbl_cell:first-child{}
 
-.read_body{
-
+/*Text read formating*/
+.read_body ul, .read_body ol{
+    margin-left: 25px;
+}
+.read_body h1, .read_body h2, .read_body h3, .read_body h4{
+    margin: 12px 0;
+    font-weight: 600;
+}
+.read_body h1{
+    font-size: 24px;
+}
+.read_body blockquote{
+    color: #6e6e6e;
+    font-style: italic;
+    padding: 10px;
 }
 
 .gu_line_group{

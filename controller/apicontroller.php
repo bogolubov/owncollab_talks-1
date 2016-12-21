@@ -151,13 +151,15 @@ class ApiController extends Controller {
         else {
 
             // ready upload and shared files
+            // text tags
+            $textTags = '<br><p><blockquote><h1><h2><h3><h4><strong><em><del><a><ul><ol><li><hr>';
             $postShare  = isset($post['share'])  ? array_keys($post['share']) : [];
             $postUsers  = isset($post['users'])  ? array_values($post['users']) : [];
             $postGroups = isset($post['groups']) ? array_values($post['groups']) : [];
             $subscribersChanged = $tManager->subscribersCreate($postGroups, $postUsers);
             $buildData = $tManager->build([
                 'title'         => $post['title'],
-                'text'          => strip_tags($post['message'], '<br><p><a>'),
+                'text'          => strip_tags($post['message'], $textTags),
                 'subscribers'   => $subscribersChanged,
                 'attachements'  => json_encode($postShare),
                 'author'        => $UID,

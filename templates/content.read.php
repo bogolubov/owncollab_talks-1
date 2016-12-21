@@ -35,7 +35,7 @@ if($message):
                     <?php foreach ($attaches as $atc): ?>
                         <li>
                             <div class="tbl">
-                                <div class="tbl_cell" style="width: 20px"><img src="<?php echo $atc['preview'];?>" alt=""></div>
+                                <div class="tbl_cell" style="width:20px;"><img style="float: left" src="<?php echo $atc['preview'];?>" alt=""></div>
                                 <div class="tbl_cell">
                                     <a href="<?php echo $atc['link'];?>">
                                         <?php echo $atc['info']['name'];?>
@@ -53,7 +53,7 @@ if($message):
     <div class="read_body">
 <!--        //html_entity_decode($message['text'], ENT_QUOTES);-->
         <?php //echo nl2br(html_entity_decode($message['text']))?>
-        <?php echo nl2br(stripcslashes($message['text']))?>
+        <?php echo stripcslashes($message['text'])?>
     </div>
 
     <div class="read_reply" style="display: none">
