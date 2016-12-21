@@ -216,7 +216,7 @@ class ApiController extends Controller {
             }
 
             //send mail
-            if (false && !empty($ud['email'])) {
+            if (!empty($ud['email'])) {
                 $mManager->send(
                     [
                         'email' => $ud['email'],
