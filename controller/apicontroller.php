@@ -205,8 +205,8 @@ class ApiController extends Controller {
         foreach($usersIds as $uid){
             //$ud = $this->connect->users()->getUserData($uid);
             //$htmlBody = $mManager->createTemplate($buildData, $taskFiles, $ud['uid']);
-            $userDataTo = $this->connect->users()->getUserData($uid);
-            $htmlBody = $mManager->createTemplateStart($userDataTo, $buildData, $attachfilesInfo);
+            $ud = $this->connect->users()->getUserData($uid);
+            $htmlBody = $mManager->createTemplateStart($ud, $buildData, $attachfilesInfo);
 
             //todo: need condition to mta virtual users
             if (isset($buildData['rid']) && $taskParent) {
@@ -231,7 +231,7 @@ class ApiController extends Controller {
                     $attachfilesInfo
                 );
             }
-            $usersEmailsData[] = $userDataTo;
+            $usersEmailsData[] = $ud;
         }
 
         if($front['insert_id'] && !$taskParent) {
