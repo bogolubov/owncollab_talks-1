@@ -216,7 +216,7 @@ class ApiController extends Controller {
             }
 
             //send mail
-            if (!empty($ud['email'])) {
+            if (false && !empty($ud['email'])) {
                 $mManager->send(
                     [
                         'email' => $ud['email'],
@@ -231,7 +231,7 @@ class ApiController extends Controller {
                     $attachfilesInfo
                 );
             }
-            $usersEmailsData[] = $ud;
+            $usersEmailsData[] = $userDataTo;
         }
 
         if($front['insert_id'] && !$taskParent) {
