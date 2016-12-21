@@ -275,6 +275,7 @@ class ApiController extends Controller {
         $toPart = $to[0];
         $subject = $post['subject'];
         $content = empty($post['content']) ? strip_tags($post['content_html']) : $post['content'];
+        $groupPrefix = $this->configurator->get('group_prefix');
 
         // Owner. Key: userid
         $userfrom = $this->connect->users()->getByEmail(trim($post['from']));
@@ -299,7 +300,8 @@ class ApiController extends Controller {
             $hash           = trim($parts[1]);
             $messageParent  = $this->connect->messages()->getByHash($hash);
         }
-        else if ($toGroup = substr($toPart, -5) AND $toGroup === 'group') {
+        else if ($toGroup = substr($toPart, -strlen($groupPrefix)) AND $toGroup === $groupPrefix) {
+            $toGroup = substr($toPart, 0, -(strlen($groupPrefix)));
             $groupsList = $this->connect->users()->getGroupsUsersList();
             if (isset($groupsList[$toGroup]))
                 $itGroup = true;
@@ -626,7 +628,7 @@ class ApiController extends Controller {
         return new DataResponse($data);*/
 
 
-
+/*
         // Testing email template
         $UID = 'admin';
         $UIDTO = 'bogdan';
@@ -643,7 +645,22 @@ class ApiController extends Controller {
         //$email  = $mManager->createTemplateStart($userDataTo, $talkmessage, $attachfilesInfo);
 
         //exit($email);
-        var_dump($attachfilesInfo);
+        //var_dump($attachfilesInfo);*/
+
+        // Parse mail content
+        $groupPrefix = $this->configurator->get('group_prefix');
+        $toPart = 'developers-group';
+        $itGroup = false;
+        if ($toGroup = substr($toPart, -strlen($groupPrefix)) AND $toGroup === $groupPrefix) {
+            $toGroup = substr($toPart, 0, -(strlen($groupPrefix)));
+            //var_dump($toGroup);
+            $groupsList = $this->connect->users()->getGroupsUsersList();
+            //var_dump($toGroup);
+            if (isset($groupsList[$toGroup]))
+                $itGroup = true;
+        }
+
+        var_dump($itGroup);
         die;
         //$htmlBody = $mManager->createTemplate($buildData, $taskFiles, $ud['uid']);
         //$data = [ ];
