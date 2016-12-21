@@ -152,7 +152,7 @@ class ApiController extends Controller {
 
             // ready upload and shared files
             // text tags
-            $textTags = '<br><p><blockquote><h1><h2><h3><h4><strong><em><del><a><ul><ol><li><hr>';
+            $textTags = '<br><p><blockquote><h1><h2><h3><h4><strong><em><del><a><ul><ol><li><hr><img>';
             $postShare  = isset($post['share'])  ? array_keys($post['share']) : [];
             $postUsers  = isset($post['users'])  ? array_values($post['users']) : [];
             $postGroups = isset($post['groups']) ? array_values($post['groups']) : [];
