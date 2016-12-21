@@ -10,7 +10,7 @@ use \OCA\Owncollab_Talks\Helper;
  */
 
 ?>
-<div class="msg_title">Attached Files</div>
+<div class="msg_list_title">Attached Files</div>
 
 
 <div id="dynamic-attachedfiles" style="/*display: none*/">

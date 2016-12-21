@@ -594,6 +594,14 @@ input[type="text"], input[type="password"], input[type="search"], input[type="nu
 #talk-attachfiles{
     width: 100%;
 }
+#talk-attachfiles img{
+    float: left;
+}
+.msg_list_title {
+    opacity: .57;
+    font-weight: bold;
+    font-size: 110%;
+}
 .msg_title {
     opacity: .57;
     font-weight: bold;

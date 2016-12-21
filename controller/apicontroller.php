@@ -424,18 +424,23 @@ class ApiController extends Controller {
         // Send mail to subscribers false &&
         if ($insertId) {
             $result['success'] = $insertId;
-            $taskFiles = [];
-            if (isset($files) && is_array($files)) {
-                foreach ($files as $fid) {
-                    $taskFiles[] = $fManager->getFileInformation($fid['fileid']);
-                }
-            }
+//            $taskFiles = [];
+//            if (isset($files) && is_array($files)) {
+//                foreach ($files as $fid) {
+//                    $taskFiles[] = $fManager->getFileInformation($fid['fileid']);
+//                }
+//            }
+
+            $attachfilesInfo = [];
+            if (!empty($files))
+                $attachfilesInfo = $fManager->getFilesDataInfo(array_keys($files));
 
             $usersIds = $mManager->getUsersFromSubscribers($subscribers);
 
             foreach($usersIds as $uid) {
                 $ud = $this->connect->users()->getUserData($uid);
-                $htmlBody = $mManager->createTemplate($buildData, $taskFiles, $ud['uid']);
+                //$htmlBody = $mManager->createTemplate($buildData, $taskFiles, $ud['uid']);
+                $htmlBody = $mManager->createTemplateStart($ud, $buildData, $attachfilesInfo);
 
                 //todo: need condition to mta virtual users
                 if ($messageParent) {
@@ -457,7 +462,7 @@ class ApiController extends Controller {
                         ],
                         $buildData['title'],
                         $htmlBody,
-                        $taskFiles
+                        $attachfilesInfo
                     );
                 }
             }
@@ -515,15 +520,11 @@ class ApiController extends Controller {
                 }
             }
             if (!empty($allfilesids)) {
-                //$fManager = new FileManager($this->userId, $this->connect, $this->activityData, $this->manager);
-                //$attachfilesInfo = $fManager->getFilesDataInfo($allfilesids);
                 $attachfilesInfo = $this->connect->files()->getInfoByIds($allfilesids);
                 $params['attachedfiles'] = Helper::renderPartial($this->appName,'part.attachlist',[
                     'attachfiles' => $attachfilesInfo
                 ]);
             }
-            //$params['attachedfilesids'] = $allfilesids;
-            $params['attachedids'] = $allfilesids;
         }
 
         return new DataResponse($params);
@@ -626,11 +627,11 @@ class ApiController extends Controller {
         $attachfilesInfo = $fManager->getFilesDataInfo($attachementsFilesIds);
         $userDataTo = $this->connect->users()->getUserData($UIDTO);
 
-        $email  = $mManager->createTemplateStart($userDataTo, $talkmessage, $attachfilesInfo);
+        //$email  = $mManager->createTemplateStart($userDataTo, $talkmessage, $attachfilesInfo);
 
-        exit($email);
-
-
+        //exit($email);
+        var_dump($attachfilesInfo);
+        die;
         //$htmlBody = $mManager->createTemplate($buildData, $taskFiles, $ud['uid']);
         //$data = [ ];
         //$email = Helper::renderPartial($this->appName, 'emails/start', $data);
