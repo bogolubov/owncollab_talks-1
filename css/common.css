@@ -591,8 +591,8 @@ input[type="text"], input[type="password"], input[type="search"], input[type="nu
 #r_messages{
     padding: 5px 10px
 }
-#talk-attach-files{
-
+#talk-attachfiles{
+    width: 100%;
 }
 .msg_title {
     opacity: .57;

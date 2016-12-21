@@ -9,10 +9,10 @@ $attachfiles = $_['attachfiles'];
 
 ?>
 
-<table>
+<table id="talk-attachfiles">
 <?php foreach($attachfiles as $attach):?>
     <tr>
-        <td><img src="<?php p($attach['icon'])?>" alt="icon"></td>
+        <td style="width: 36px"><img src="<?php p($attach['icon'])?>" alt="icon"></td>
         <td><?php p($attach['name'])?></td>
     </tr>
 <?php endforeach;?>
