@@ -76,6 +76,29 @@ class MailManager
         return Helper::renderPartial('owncollab_talks', 'emails/default', $data);
     }
 
+
+    public function createTemplateStart($userDataTo, array $talkmessage, array $attachfilesInfo = [])
+    {
+        $subscribersData = [];
+        $subscribers = $this->talkManager->subscribers2Array($talkmessage['subscribers']);
+        if (!empty($subscribers['users']))
+            foreach ($subscribers['users'] as $su)
+                $subscribersData[] = $this->connect->users()->getUserData(trim($su));
+
+        $renderData = [
+            'user_to'       => $userDataTo,
+            'user_from'     => $this->connect->users()->getUserData($talkmessage['author']),
+            'talkmessage'   => $talkmessage,
+            'attachfiles'   => $attachfilesInfo,
+            'subscribers'   => $subscribersData,
+            'sitehost'      => $this->configurator->get('server_host'),
+            'siteurl'       => $this->configurator->get('site_url'),
+            'logoimg'       => '/apps/owncollab_talks/img/logo.jpg',
+        ];
+
+        return Helper::renderPartial('owncollab_talks', 'emails/start', $renderData);
+    }
+
     public function getUsersFromSubscribers($subscribers, $addUsers = [])
     {
         // get users for mail

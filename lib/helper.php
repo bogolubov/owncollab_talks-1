@@ -45,6 +45,18 @@ class Helper
         }
     }
 
+
+    static public function cutStringPreview($string, $length = 25, $end = '...')
+    {
+        $string = strip_tags(htmlspecialchars_decode(stripcslashes($string)));
+        $stringLength = strlen($string);
+        if ($stringLength > $length)
+            $string = substr($string, 0, $length) . $end;
+
+        return $string;
+    }
+
+
     /**
      * Check URI address path
      * @param $appName

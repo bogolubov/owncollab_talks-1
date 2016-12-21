@@ -9,7 +9,9 @@ use OCA\Owncollab_Talks\MTAServer\Configurator;
 use OCA\Owncollab_Talks\Helper;
 use OCA\Owncollab_Talks\Db\Connect;
 use OCA\Owncollab_Talks\TalkManager;
+use OCA\TemplateEditor\Http\MailTemplateResponse;
 use OCP\Activity\IManager;
+use OCP\AppFramework\Http\TemplateResponse;
 use OCP\Files;
 use OCP\IRequest;
 use OCP\AppFramework\Http\DataResponse;
@@ -185,20 +187,26 @@ class ApiController extends Controller {
         }
 
         // SEND Emails
-        $taskFiles = [];
-        if (isset($postShare)) {
-            foreach ($postShare as $fid) {
-                $taskFiles[] = $fManager->getFileInformation($fid);
-            }
-        }
+//        $taskFiles = [];
+//        if (isset($postShare)) {
+//            foreach ($postShare as $fid) {
+//                $taskFiles[] = $fManager->getFileInformation($fid);
+//            }
+//        }
+        $attachfilesInfo = [];
+        if (isset($postShare))
+            $attachfilesInfo = $fManager->getFilesDataInfo($postShare);
+
         $usersIds = $mManager->getUsersFromSubscribers($subscribersChanged, $UID);
 
         // форм. удобный список [['uid'=>,'email'=>,]]
         $owner = $this->connect->users()->getUserData($UID);
         $usersEmailsData = [];
         foreach($usersIds as $uid){
-            $ud = $this->connect->users()->getUserData($uid);
-            $htmlBody = $mManager->createTemplate($buildData, $taskFiles, $ud['uid']);
+            //$ud = $this->connect->users()->getUserData($uid);
+            //$htmlBody = $mManager->createTemplate($buildData, $taskFiles, $ud['uid']);
+            $userDataTo = $this->connect->users()->getUserData($uid);
+            $htmlBody = $mManager->createTemplateStart($userDataTo, $buildData, $attachfilesInfo);
 
             //todo: need condition to mta virtual users
             if (isset($buildData['rid']) && $taskParent) {
@@ -220,7 +228,7 @@ class ApiController extends Controller {
                     ],
                     $buildData['title'],
                     $htmlBody,
-                    $taskFiles
+                    $attachfilesInfo
                 );
             }
             $usersEmailsData[] = $ud;
@@ -416,8 +424,6 @@ class ApiController extends Controller {
         // Send mail to subscribers false &&
         if ($insertId) {
             $result['success'] = $insertId;
-
-            // SEND Emails
             $taskFiles = [];
             if (isset($files) && is_array($files)) {
                 foreach ($files as $fid) {
@@ -557,7 +563,7 @@ class ApiController extends Controller {
     public function test($data)
     {
 
-        $UID = 'bogdan';
+/*        $UID = 'bogdan';
         $messageParent = $this->connect->messages()->getById(1);
 
         // work libs
@@ -574,7 +580,33 @@ class ApiController extends Controller {
         var_dump($subscribers);
 
         die;
-        return new DataResponse($data);
+        return new DataResponse($data);*/
+
+
+
+        // Testing email template
+        $UID = 'admin';
+        $UIDTO = 'bogdan';
+
+        $tManager = new TalkManager($UID, $this->connect, $this->configurator);
+        $fManager = new FileManager($UID, $this->connect, $this->activityData, $this->manager);
+        $mManager = new MailManager($UID, $this->connect, $this->configurator, $tManager, $fManager);
+
+        $talkmessage = $this->connect->messages()->getById(2);
+        $attachementsFilesIds = json_decode($talkmessage['attachements'], true);
+        $attachfilesInfo = $fManager->getFilesDataInfo($attachementsFilesIds);
+        $userDataTo = $this->connect->users()->getUserData($UIDTO);
+
+        $email  = $mManager->createTemplateStart($userDataTo, $talkmessage, $attachfilesInfo);
+
+        exit($email);
+
+
+        //$htmlBody = $mManager->createTemplate($buildData, $taskFiles, $ud['uid']);
+        //$data = [ ];
+        //$email = Helper::renderPartial($this->appName, 'emails/start', $data);
+        //return new TemplateResponse($this->appName, 'emails/start', $data);
+        //return new MailTemplateResponse($this->appName, 'emails/start', $data);
     }
 
 }
