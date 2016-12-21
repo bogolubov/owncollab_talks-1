@@ -201,7 +201,10 @@ class ApiController extends Controller {
 
         // форм. удобный список [['uid'=>,'email'=>,]]
         $owner = $this->connect->users()->getUserData($UID);
-        $usersEmailsData = [];
+        //$usersEmailsData = [];
+        $userDataEmptyEmails = [];
+        $server_host = $this->configurator->get('server_host');
+        $mail_domain = $this->configurator->get('mail_domain');
         foreach($usersIds as $uid){
             //$ud = $this->connect->users()->getUserData($uid);
             //$htmlBody = $mManager->createTemplate($buildData, $taskFiles, $ud['uid']);
@@ -210,9 +213,9 @@ class ApiController extends Controller {
 
             //todo: need condition to mta virtual users
             if (isset($buildData['rid']) && $taskParent) {
-                $ownerEmail = $taskParent['author'] .'+'. $taskParent['hash'] . '@' . $this->configurator->get('mail_domain');
+                $ownerEmail = $taskParent['author'] .'+'. $taskParent['hash'] . '@' . $mail_domain;
             } else {
-                $ownerEmail = $buildData['author'] .'+'. $buildData['hash'] . '@' . $this->configurator->get('mail_domain');
+                $ownerEmail = $buildData['author'] .'+'. $buildData['hash'] . '@' . $mail_domain;
             }
 
             //send mail
@@ -226,12 +229,20 @@ class ApiController extends Controller {
                         'email' => $ownerEmail,
                         'name' => $owner['uid'],
                     ],
-                    $buildData['title'],
+                    $server_host . ' // ' . $buildData['title'],
                     $htmlBody,
                     $attachfilesInfo
                 );
+            } else {
+                $userDataEmptyEmails[] = $ud;
             }
-            $usersEmailsData[] = $ud;
+            //$usersEmailsData[] = $ud;
+        }
+
+        // UsersData with empty emails
+        // Create email to ???
+        if (!empty($userDataEmptyEmails)) {
+
         }
 
         if($front['insert_id'] && !$taskParent) {
@@ -436,6 +447,8 @@ class ApiController extends Controller {
                 $attachfilesInfo = $fManager->getFilesDataInfo(array_keys($files));
 
             $usersIds = $mManager->getUsersFromSubscribers($subscribers);
+            $server_host = $this->configurator->get('server_host');
+            $mail_domain = $this->configurator->get('mail_domain');
 
             foreach($usersIds as $uid) {
                 $ud = $this->connect->users()->getUserData($uid);
@@ -444,9 +457,9 @@ class ApiController extends Controller {
 
                 //todo: need condition to mta virtual users
                 if ($messageParent) {
-                    $ownerEmail = $messageParent['author'] .'+'. $messageParent['hash'] . '@' . $this->configurator->get('mail_domain');
+                    $ownerEmail = $messageParent['author'] .'+'. $messageParent['hash'] . '@' . $mail_domain;
                 } else {
-                    $ownerEmail = $userfromData['uid'] .'+'. $buildData['hash'] . '@' . $this->configurator->get('mail_domain');
+                    $ownerEmail = $userfromData['uid'] .'+'. $buildData['hash'] . '@' . $mail_domain;
                 }
 
                 //send mail
@@ -460,7 +473,7 @@ class ApiController extends Controller {
                             'email' => $ownerEmail,
                             'name' => $userfromData['uid'],
                         ],
-                        $buildData['title'],
+                        $server_host . ' // ' . $buildData['title'],
                         $htmlBody,
                         $attachfilesInfo
                     );
