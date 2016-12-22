@@ -551,10 +551,13 @@ class ApiController extends Controller {
                 }
             }
             if (!empty($allfilesids)) {
+
                 $attachfilesInfo = $this->connect->files()->getInfoByIds($allfilesids);
-                if (!empty($attachfilesInfo))
-                    for ($iau=0;$iau<count($attachfilesInfo);$iau++)
+                if (!empty($attachfilesInfo)) {
+                    for ($iau=0;$iau<count($attachfilesInfo); $iau++) {
                         $attachfilesInfo[$iau]['webdav'] = $this->connect->files()->getFileLink($attachfilesInfo[$iau]['fileid'], $this->userId);
+                    }
+                }
 
                 $params['attachedfiles'] = Helper::renderPartial($this->appName,'part.attachlist',[
                     'attachfiles' => $attachfilesInfo
