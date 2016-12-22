@@ -375,7 +375,7 @@ class Files
         $file = $this->getInfoById($fid);
         if ($file['user'] != $uid) {
             $sql = "SELECT *
-                FROM owncloud91.oc_share s
+                FROM *PREFIX*share s
                 WHERE s.item_type = 'file' AND s.item_source = ? AND s.share_with = ?";
             $file = $this->connect->query($sql, [$fid, $uid]);
             if ($file)
