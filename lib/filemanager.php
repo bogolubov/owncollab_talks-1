@@ -119,27 +119,30 @@ class FileManager
         $insertId = null;
         $filePathFiles  = $this->usrDir.$fileName;
         $insertData = $this->homeStorage->getMetaData($filePathFiles);
-
+/*
         // todo: не костыль
         if ($insertData) {
             $insertId = $this->cache->insert($filePathFiles, $insertData);
         }
         return (int) $insertId;
-
+*/
         // todo: костыль незаработал
         if ($isfolder) {
             if(!$this->homeStorage->is_dir('files/'.$fileName)) {
                 $this->homeStorage->mkdir('files/'.$fileName);
+                $path = 'files';
+            } else {
+                $path = 'files/Talks';
             }
-            $params = $this->connect->files()->_parent_storage($this->userId);
-            $parent = $parent ? $parent : $params['parent'];
+            $parentstorage = $this->connect->files()->_parent_storage($this->userId, $path);
+            $parent = $parent ? $parent : $parentstorage['parent'];
             $mimetype = $this->connect->files()->_directory_mimetypes_id();
             $insertData = [
                 'size' => '0',
                 'mtime' => time(),
                 'mimetype' => $mimetype,
                 'mimepart' => '1',
-                'storage' => $params['storage'],
+                'storage' => $parentstorage['storage'],
                 'parent' => $parent,
                 'permissions' => '31',
             ];

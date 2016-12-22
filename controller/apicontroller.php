@@ -650,174 +650,19 @@ class ApiController extends Controller {
      */
     public function test($data)
     {
-
-/*        $UID = 'bogdan';
-        $messageParent = $this->connect->messages()->getById(1);
-
-        // work libs
-        $tManager = new TalkManager($UID, $this->connect, $this->configurator);
-        //$fManager = new FileManager($UID, $this->connect, $this->activityData, $this->manager);
-        //$mManager = new MailManager($UID, $this->connect, $this->configurator, $tManager, $fManager);
-
-        $subscribers = $tManager->subscribersChange(
-            $messageParent['subscribers'],
-            ['users' => [$UID]],
-            ['users' => [$messageParent['author']]]
-        );
-
-        var_dump($subscribers);
-
-        die;
-        return new DataResponse($data);*/
-
-
-/*
-        // Testing email template
-        $UID = 'admin';
-        $UIDTO = 'bogdan';
-
-        $tManager = new TalkManager($UID, $this->connect, $this->configurator);
-        $fManager = new FileManager($UID, $this->connect, $this->activityData, $this->manager);
-        $mManager = new MailManager($UID, $this->connect, $this->configurator, $tManager, $fManager);
-
-        $talkmessage = $this->connect->messages()->getById(2);
-        $attachementsFilesIds = json_decode($talkmessage['attachements'], true);
-        $attachfilesInfo = $fManager->getFilesDataInfo($attachementsFilesIds);
-        $userDataTo = $this->connect->users()->getUserData($UIDTO);
-
-        $email  = $mManager->createTemplateStart($userDataTo, $talkmessage, $attachfilesInfo);
-
-        exit($email);*/
-
-        //var_dump($attachfilesInfo);
-
-        /*
-        // Parse mail content
-        $groupPrefix = $this->configurator->get('group_prefix');
-        $toPart = 'developers-group';
-        $itGroup = false;
-        if ($toGroup = substr($toPart, -strlen($groupPrefix)) AND $toGroup === $groupPrefix) {
-            $toGroup = substr($toPart, 0, -(strlen($groupPrefix)));
-            $groupsList = $this->connect->users()->getGroupsUsersList();
-            if (isset($groupsList[$toGroup]))
-                $itGroup = true;
-        }
-        var_dump($toGroup);
-        var_dump($itGroup);*/
-/*
-        // Link
-        $siteurl = $this->configurator->get('site_url');
-        $file = $this->connect->files()->getInfoByIds(27)[0];
-        $filelink = $siteurl . 'remote.php/webdav' . $file['file'];
-        var_dump($file);
-        var_dump($filelink);*/
-
-        // Link TRUE FUCK!!!! HUINA
-        /*
-        $fown = $this->connect->files()->getFileLink(973, 'werd');
-        $fshr = $this->connect->files()->getFileLink(973, 'dev1');
-
-        var_dump($fown);
-        var_dump($fshr);
-
-        */
-/*
-        $body = Helper::renderPartial($this->appName, 'email_template');
-        $bodyArr = explode("\n", $body);
-
-        $markIndex = null;
-        $bodyRebuild = '';
-        $bodyRebuildArr = [];
-
-        $bodyLength = count($bodyArr);
-        for ($i=0; $i < $bodyLength; $i++) {
-            if ($bodyArr[$i][0] != '>') {
-                $bodyRebuildArr[$i] = $bodyArr[$i];
-            } else if ($markIndex == null) {
-                $markIndex = $i;
-            }
-        }
-        if ($markIndex) {
-            unset($bodyRebuildArr[$markIndex-1]);
-        }
-        $bodyRebuild = join("\n", $bodyRebuildArr);
-
-        var_dump($bodyRebuildArr);
-        var_dump($bodyRebuild);
-
-*/
-
-        /**/
-        // Testing email error template
-/*        $UID = 'werd';
-        $userDataEmptyEmails = [];
-
-        $tManager = new TalkManager($UID, $this->connect, $this->configurator);
-        $fManager = new FileManager($UID, $this->connect, $this->activityData, $this->manager);
-        $mManager = new MailManager($UID, $this->connect, $this->configurator, $tManager, $fManager);
-
-
-        $maila = \OCP\Config::getSystemValue('mail_from_address', false);
-        $maild = \OCP\Config::getSystemValue('mail_domain', false);
-        if ($maila && $maild) {
-            $userAdminData = ['displayname' =>'Administrator', 'email'=> $maila.'@'.$maild];
-        } else {
-            $userAdminData = $this->connect->users()->getUserData('admin');
-        }
-
-
-        $userOwnerData = $this->connect->users()->getUserData($UID);
-        $talkmessage = $this->connect->messages()->getById(2);
-        $userDataEmptyEmails[] = $this->connect->users()->getUserData('devpro');
-        $userDataEmptyEmails[] = $this->connect->users()->getUserData('devpro2');
-        $userDataEmptyEmails[] = $this->connect->users()->getUserData('devpro3');
-        $userDataEmptyEmails[] = $this->connect->users()->getUserData('devpro4');
-
-        $email  = $mManager->createTemplateError($userAdminData, $userOwnerData, $talkmessage, $userDataEmptyEmails);
-        echo ($email);*/
-
-        //\OCP\IConfig getSystemValue
-//        $maila = \OCP\Config::getSystemValue('mail_from_address', false);
-//        $maild = \OCP\Config::getSystemValue('mail_domain', false);
-//
-//        var_dump($maila);
-//        var_dump($maild);
-//        var_dump($userAdminData);
-//        $htmlBody = $mManager->createTemplate($buildData, $taskFiles, $ud['uid']);
-//        $data = [ ];
-        //$email = Helper::renderPartial($this->appName, 'emails/start', $data);
-        //return new TemplateResponse($this->appName, 'emails/start', $data);
-        //return new MailTemplateResponse($this->appName, 'emails/start', $data);
-
-/*        $maila = \OCP\Config::getSystemValue('mail_from_address', false);
-        $maild = \OCP\Config::getSystemValue('mail_domain', false);
-        if ($maila && $maild) {
-            $userAdminData = ['displayname' =>'Administrator', 'email'=> $maila.'@'.$maild];
-        } else {
-            $userAdminData = $this->connect->users()->getUserData('admin');
-        }
-
-        var_dump($userAdminData);*/
-
-
-        /*
         $UID = 'admin';
 
         $tManager = new TalkManager($UID, $this->connect, $this->configurator);
         $fManager = new FileManager($UID, $this->connect, $this->activityData, $this->manager);
         $mManager = new MailManager($UID, $this->connect, $this->configurator, $tManager, $fManager);
 
-        $folderId = $fManager->insertCacheFile('First', true);
-        var_dump($folderId);
 
-        $folderId = $fManager->insertCacheFile('First/'.date('Y-d-m'), true, $folderId);
-        var_dump($folderId);*/
+        $_parent_storage = $this->connect->files()->_parent_storage($UID);
+        var_dump($_parent_storage);
 
-        //$_parent_storage = $this->connect->files()->_parent_storage($UID);
-        //var_dump($_parent_storage);
-        //
-        //$mimetypes_id = $this->connect->files()->_directory_mimetypes_id();
-        //var_dump($mimetypes_id);
+        $_parent_storage = $this->connect->files()->_parent_storage($UID, 'files/First');
+        var_dump($_parent_storage);
+
         exit;
     }
 

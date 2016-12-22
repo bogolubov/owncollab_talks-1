@@ -389,7 +389,7 @@ class Files
         return '/remote.php/webdav' . $link;
     }
 
-    public function _parent_storage($uid)
+    public function _parent_storage($uid, $path = 'files')
     {
         $sql = "SELECT f.fileid, f.storage
                 FROM *PREFIX*filecache f
@@ -397,8 +397,8 @@ class Files
                     SELECT s.numeric_id
                     FROM *PREFIX*storages s
                     WHERE s.id = ?
-                ) AND f.path = 'files'";
-        $res = $this->connect->query($sql, ['home::'.$uid]);
+                ) AND f.path = ?";
+        $res = $this->connect->query($sql, ['home::'.$uid, $path]);
         if ($res)
             return ['parent'=>$res['fileid'], 'storage'=>$res['storage']];
         return false;
