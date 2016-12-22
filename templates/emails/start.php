@@ -423,7 +423,10 @@ if (!empty($_['subscribers']) && is_array($_['subscribers'])) {
                                             <tr>
                                                 <td align="left">
 
-                                                    <p>Following <a href="<?php p($siteurl)?>/index.php/apps/files/">files</a> have been attached to the email:</p>
+                                                    <p>
+                                                        <a href="<?php p($siteurl .'/index.php/apps/owncollab_talks/read/'.$talkmessage['id'])?>">Following files</a>
+                                                        have been attached to the email:
+                                                    </p>
 
                                                     <table id="files-list" border="0" cellspacing="0" cellpadding="2">
                                                         <thead></thead>
@@ -432,9 +435,9 @@ if (!empty($_['subscribers']) && is_array($_['subscribers'])) {
                                                             <tr>
                                                                 <td style="width: 20px"><img src="<?php p($siteurl.$file['icon'])?>" alt="file ico" ></td>
                                                                 <td>
-                                                                    <a href="<?php p($siteurl . $file['name'])?>"></a>
+                                                                    <a href="<?php p($siteurl .'/index.php/apps/owncollab_talks/read/'.$talkmessage['id'])?>">
                                                                         <?php p($file['name'])?>
-
+                                                                    </a>
                                                                 </td>
                                                                 <td><?php p(Helper::formatBytes($file['size'])) ?></td>
                                                             </tr>
