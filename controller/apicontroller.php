@@ -189,12 +189,6 @@ class ApiController extends Controller {
         }
 
         // SEND Emails
-//        $taskFiles = [];
-//        if (isset($postShare)) {
-//            foreach ($postShare as $fid) {
-//                $taskFiles[] = $fManager->getFileInformation($fid);
-//            }
-//        }
         $attachfilesInfo = [];
         if (isset($postShare)) {
             $attachfilesInfo = $fManager->getFilesDataInfo($postShare);
@@ -204,34 +198,17 @@ class ApiController extends Controller {
 
         // форм. удобный список [['uid'=>,'email'=>,]]
         $owner = $this->connect->users()->getUserData($UID);
-        //$usersEmailsData = [];
         $userDataEmptyEmails = [];
         $server_host = $this->configurator->get('server_host');
         $mail_domain = $this->configurator->get('mail_domain');
         foreach ($usersIds as $uid) {
             $ud = $this->connect->users()->getUserData($uid);
-            //$htmlBody = $mManager->createTemplate($buildData, $taskFiles, $ud['uid']);
 
-/*            $attachfilesInfoRebuild = [];
             if (!empty($attachfilesInfo)) {
                 for ($iau=0; $iau<count($attachfilesInfo); $iau++) {
-                    $attachfilesInfoRebuild[$iau] = $attachfilesInfo[$iau];
-                    $attachfilesInfoRebuild[$iau]['webdav'] = $this->connect->files()->getFileLink($attachfilesInfo[$iau]['fileid'], $uid);
-                }
-            }*/
-            $links = [];
-            if (!empty($attachfilesInfo)) {
-                for ($iau=0; $iau<count($attachfilesInfo); $iau++) {
-                    $link = $this->connect->files()->getFileLink($attachfilesInfo[$iau]['fileid'], $uid);
-                    $attachfilesInfo[$iau]['webdav'] = $link;
-
-                    $links[$attachfilesInfo[$iau]['fileid']] = $uid;
+                    $attachfilesInfo[$iau]['webdav'] = $this->connect->files()->getFileLink($attachfilesInfo[$iau]['fileid'], $uid);
                 }
             }
-
-            var_dump($uid);
-            var_dump($links);
-            var_dump($attachfilesInfo);
 
             $htmlBody = $mManager->createTemplateStart($ud, $buildData, $attachfilesInfo);
 
@@ -244,7 +221,7 @@ class ApiController extends Controller {
 
 
             //send mail
-            if (false && !empty($ud['email'])) {
+            if (!empty($ud['email'])) {
                 $mManager->send(
                     [
                         'email' => $ud['email'],
@@ -261,7 +238,6 @@ class ApiController extends Controller {
             } else {
                 $userDataEmptyEmails[] = $ud;
             }
-            //$usersEmailsData[] = $ud;
         }
 
         // UsersData with empty emails
@@ -269,8 +245,6 @@ class ApiController extends Controller {
         if (!empty($userDataEmptyEmails)) {
 
         }
-
-        die;
 
         if($front['insert_id'] && !$taskParent) {
             Helper::cookies('goto_message', $front['insert_id']);
@@ -464,12 +438,6 @@ class ApiController extends Controller {
         // Send mail to subscribers false &&
         if ($insertId) {
             $result['success'] = $insertId;
-//            $taskFiles = [];
-//            if (isset($files) && is_array($files)) {
-//                foreach ($files as $fid) {
-//                    $taskFiles[] = $fManager->getFileInformation($fid['fileid']);
-//                }
-//            }
 
             $attachfilesInfo = [];
             if (!empty($files))
@@ -488,7 +456,6 @@ class ApiController extends Controller {
                     }
                 }
 
-                //$htmlBody = $mManager->createTemplate($buildData, $taskFiles, $ud['uid']);
                 $htmlBody = $mManager->createTemplateStart($ud, $buildData, $attachfilesInfo);
 
                 //todo: need condition to mta virtual users
