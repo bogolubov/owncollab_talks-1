@@ -209,7 +209,7 @@ class ApiController extends Controller {
         $server_host = $this->configurator->get('server_host');
         $mail_domain = $this->configurator->get('mail_domain');
         foreach ($usersIds as $uid) {
-            //$ud = $this->connect->users()->getUserData($uid);
+            $ud = $this->connect->users()->getUserData($uid);
             //$htmlBody = $mManager->createTemplate($buildData, $taskFiles, $ud['uid']);
 
 /*            $attachfilesInfoRebuild = [];
@@ -219,14 +219,20 @@ class ApiController extends Controller {
                     $attachfilesInfoRebuild[$iau]['webdav'] = $this->connect->files()->getFileLink($attachfilesInfo[$iau]['fileid'], $uid);
                 }
             }*/
-
+            $links = [];
             if (!empty($attachfilesInfo)) {
                 for ($iau=0; $iau<count($attachfilesInfo); $iau++) {
-                    $attachfilesInfo[$iau]['webdav'] = $this->connect->files()->getFileLink($attachfilesInfo[$iau]['fileid'], $uid);
+                    $link = $this->connect->files()->getFileLink($attachfilesInfo[$iau]['fileid'], $uid);
+                    $attachfilesInfo[$iau]['webdav'] = $link;
+
+                    $links[$attachfilesInfo[$iau]['fileid']] = $uid;
                 }
             }
 
-            $ud = $this->connect->users()->getUserData($uid);
+            var_dump($uid);
+            var_dump($links);
+            var_dump($attachfilesInfo);
+
             $htmlBody = $mManager->createTemplateStart($ud, $buildData, $attachfilesInfo);
 
             //todo: need condition to mta virtual users
@@ -236,8 +242,9 @@ class ApiController extends Controller {
                 $ownerEmail = $buildData['author'] .'+'. $buildData['hash'] . '@' . $mail_domain;
             }
 
+
             //send mail
-            if (!empty($ud['email'])) {
+            if (false && !empty($ud['email'])) {
                 $mManager->send(
                     [
                         'email' => $ud['email'],
@@ -262,6 +269,8 @@ class ApiController extends Controller {
         if (!empty($userDataEmptyEmails)) {
 
         }
+
+        die;
 
         if($front['insert_id'] && !$taskParent) {
             Helper::cookies('goto_message', $front['insert_id']);
@@ -563,9 +572,8 @@ class ApiController extends Controller {
 
                 $attachfilesInfo = $this->connect->files()->getInfoByIds($allfilesids);
 
-                $params['f'] = $attachfilesInfo[0];
-                $params['flink'] = $this->connect->files()->getFileLink($attachfilesInfo[0]['fileid'], $this->userId);
-
+                //$params['f'] = $attachfilesInfo[0];
+                //$params['flink'] = $this->connect->files()->getFileLink($attachfilesInfo[0]['fileid'], $this->userId);
 
                 if (!empty($attachfilesInfo)) {
                     for ($iau=0;$iau<count($attachfilesInfo); $iau++) {

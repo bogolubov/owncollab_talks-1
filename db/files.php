@@ -373,13 +373,16 @@ class Files
     {
         $link = '';
         $file = $this->getInfoById($fid);
+
         if ($file['user'] != $uid) {
-            $sql = "SELECT *
+            $link = '/'.$file['name'];
+            /*$sql = "SELECT *
                 FROM *PREFIX*share s
                 WHERE s.item_type = 'file' AND s.item_source = ? AND s.share_with = ?";
             $file = $this->connect->query($sql, [$fid, $uid]);
+
             if ($file)
-                $link = $file['file_target'];
+                $link = $file['file_target'];*/
         } else
             $link = $file['file'];
 
