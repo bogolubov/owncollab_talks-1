@@ -189,28 +189,27 @@ class ApiController extends Controller {
         }
 
         // SEND Emails
-//        $taskFiles = [];
-//        if (isset($postShare)) {
-//            foreach ($postShare as $fid) {
-//                $taskFiles[] = $fManager->getFileInformation($fid);
-//            }
-//        }
         $attachfilesInfo = [];
-        if (isset($postShare))
+        if (isset($postShare)) {
             $attachfilesInfo = $fManager->getFilesDataInfo($postShare);
+        }
 
         $usersIds = $mManager->getUsersFromSubscribers($subscribersChanged, $UID);
 
         // форм. удобный список [['uid'=>,'email'=>,]]
         $owner = $this->connect->users()->getUserData($UID);
-        //$usersEmailsData = [];
         $userDataEmptyEmails = [];
         $server_host = $this->configurator->get('server_host');
         $mail_domain = $this->configurator->get('mail_domain');
-        foreach($usersIds as $uid){
-            //$ud = $this->connect->users()->getUserData($uid);
-            //$htmlBody = $mManager->createTemplate($buildData, $taskFiles, $ud['uid']);
+        foreach ($usersIds as $uid) {
             $ud = $this->connect->users()->getUserData($uid);
+
+/*            if (!empty($attachfilesInfo)) {
+                for ($iau=0; $iau<count($attachfilesInfo); $iau++) {
+                    $attachfilesInfo[$iau]['webdav'] = $this->connect->files()->getFileLink($attachfilesInfo[$iau]['fileid'], $uid);
+                }
+            }*/
+
             $htmlBody = $mManager->createTemplateStart($ud, $buildData, $attachfilesInfo);
 
             //todo: need condition to mta virtual users
@@ -219,6 +218,7 @@ class ApiController extends Controller {
             } else {
                 $ownerEmail = $buildData['author'] .'+'. $buildData['hash'] . '@' . $mail_domain;
             }
+
 
             //send mail
             if (!empty($ud['email'])) {
@@ -238,7 +238,6 @@ class ApiController extends Controller {
             } else {
                 $userDataEmptyEmails[] = $ud;
             }
-            //$usersEmailsData[] = $ud;
         }
 
         // UsersData with empty emails
@@ -277,6 +276,7 @@ class ApiController extends Controller {
         $toPart = $to[0];
         $subject = $post['subject'];
         $content = empty($post['content']) ? strip_tags($post['content_html']) : $post['content'];
+        $content = $this->cleanBody($content);
         $groupPrefix = $this->configurator->get('group_prefix');
 
         // Owner. Key: userid
@@ -439,12 +439,6 @@ class ApiController extends Controller {
         // Send mail to subscribers false &&
         if ($insertId) {
             $result['success'] = $insertId;
-//            $taskFiles = [];
-//            if (isset($files) && is_array($files)) {
-//                foreach ($files as $fid) {
-//                    $taskFiles[] = $fManager->getFileInformation($fid['fileid']);
-//                }
-//            }
 
             $attachfilesInfo = [];
             if (!empty($files))
@@ -456,7 +450,13 @@ class ApiController extends Controller {
 
             foreach($usersIds as $uid) {
                 $ud = $this->connect->users()->getUserData($uid);
-                //$htmlBody = $mManager->createTemplate($buildData, $taskFiles, $ud['uid']);
+
+/*                if (!empty($attachfilesInfo)) {
+                    for ($iau=0;$iau<count($attachfilesInfo);$iau++) {
+                        $attachfilesInfo[$iau]['webdav'] = $this->connect->files()->getFileLink($attachfilesInfo[$iau]['fileid'], $uid);
+                    }
+                }*/
+
                 $htmlBody = $mManager->createTemplateStart($ud, $buildData, $attachfilesInfo);
 
                 //todo: need condition to mta virtual users
@@ -537,7 +537,18 @@ class ApiController extends Controller {
                 }
             }
             if (!empty($allfilesids)) {
+
                 $attachfilesInfo = $this->connect->files()->getInfoByIds($allfilesids);
+
+                //$params['f'] = $attachfilesInfo[0];
+                //$params['flink'] = $this->connect->files()->getFileLink($attachfilesInfo[0]['fileid'], $this->userId);
+
+                if (!empty($attachfilesInfo)) {
+                    for ($iau=0;$iau<count($attachfilesInfo); $iau++) {
+                        $attachfilesInfo[$iau]['webdav'] = $this->connect->files()->getFileLink($attachfilesInfo[$iau]['fileid'], $this->userId);
+                    }
+                }
+
                 $params['attachedfiles'] = Helper::renderPartial($this->appName,'part.attachlist',[
                     'attachfiles' => $attachfilesInfo
                 ]);
@@ -672,12 +683,67 @@ class ApiController extends Controller {
         $filelink = $siteurl . 'remote.php/webdav' . $file['file'];
         var_dump($file);
         var_dump($filelink);*/
+
+        // Link TRUE FUCK!!!! HUINA
+        /*
+        $fown = $this->connect->files()->getFileLink(973, 'werd');
+        $fshr = $this->connect->files()->getFileLink(973, 'dev1');
+
+        var_dump($fown);
+        var_dump($fshr);
+
+        */
+
+        $body = Helper::renderPartial($this->appName, 'email_template');
+        $bodyArr = explode("\n", $body);
+
+        $markIndex = null;
+        $bodyRebuild = '';
+        $bodyRebuildArr = [];
+
+        $bodyLength = count($bodyArr);
+        for ($i=0; $i < $bodyLength; $i++) {
+            if ($bodyArr[$i][0] != '>') {
+                $bodyRebuildArr[$i] = $bodyArr[$i];
+            } else if ($markIndex == null) {
+                $markIndex = $i;
+            }
+        }
+        if ($markIndex) {
+            unset($bodyRebuildArr[$markIndex-1]);
+        }
+        $bodyRebuild = join("\n", $bodyRebuildArr);
+
+        var_dump($bodyRebuildArr);
+        var_dump($bodyRebuild);
+
         die;
+
+
         //$htmlBody = $mManager->createTemplate($buildData, $taskFiles, $ud['uid']);
         //$data = [ ];
         //$email = Helper::renderPartial($this->appName, 'emails/start', $data);
         //return new TemplateResponse($this->appName, 'emails/start', $data);
         //return new MailTemplateResponse($this->appName, 'emails/start', $data);
+    }
+
+    public function cleanBody($body)
+    {
+        $bodyArr = explode("\n", $body);
+        $markIndex = null;
+        $bodyRebuildArr = [];
+        $bodyLength = count($bodyArr);
+        for ($i=0; $i < $bodyLength; $i++) {
+            if ($bodyArr[$i][0] != '>') {
+                $bodyRebuildArr[$i] = $bodyArr[$i];
+            } else if ($markIndex == null) {
+                $markIndex = $i;
+            }
+        }
+        if ($markIndex) {
+            unset($bodyRebuildArr[$markIndex-1]);
+        }
+        return join("\n", $bodyRebuildArr);
     }
 
 }

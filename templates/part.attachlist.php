@@ -14,7 +14,7 @@ $attachfiles = $_['attachfiles'];
     <tr>
         <td style="width: 36px"><img src="<?php p($attach['icon'])?>" alt="icon"></td>
         <td>
-            <a href="/remote.php/webdav<?php p($attach['file'])?>"><?php p($attach['name'])?></a>
+            <a href="<?php p($attach['webdav'])?>"><?php p($attach['name'])?></a>
         </td>
     </tr>
 <?php endforeach;?>
