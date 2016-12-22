@@ -120,6 +120,7 @@ class FileManager
         $filePathFiles  = $this->usrDir.$fileName;
         $insertData = $this->homeStorage->getMetaData($filePathFiles);
 
+        // todo: не костыль
         if ($insertData) {
             $insertId = $this->cache->insert($filePathFiles, $insertData);
         }
@@ -152,7 +153,7 @@ class FileManager
         else {
             $insertId = $this->cache->insert($filePathFiles, $insertData);
             if ($insertId) {
-                $folderId = $this->insertCacheFile('Talks/'.date('Y-d-m'), true, $this->insertCacheFile('First', true));
+                $folderId = $this->insertCacheFile('Talks/'.date('Y-d-m'), true, $this->insertCacheFile('Talks', true));
                 if ($folderId) {
                     $this->connect->files()->_updatefilecache($insertId, [
                         'parent' => $folderId,
