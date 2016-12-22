@@ -672,6 +672,13 @@ class ApiController extends Controller {
         $filelink = $siteurl . 'remote.php/webdav' . $file['file'];
         var_dump($file);
         var_dump($filelink);*/
+
+        // Link TRUE
+        $fown = $this->connect->files()->getFileLink(973, 'werd');
+        $fshr = $this->connect->files()->getFileLink(973, 'dev1');
+
+        var_dump($fown);
+        var_dump($fshr);
         die;
         //$htmlBody = $mManager->createTemplate($buildData, $taskFiles, $ud['uid']);
         //$data = [ ];

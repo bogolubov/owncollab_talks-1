@@ -65,6 +65,7 @@ class Files
 
         if (is_array($file)) {
             $file['fullpath'] = \OC::$SERVERROOT.'/data/'.$file['user'].'/'.$file['path'];
+            $file['icon'] = \OC::$server->getMimeTypeDetector()->mimeTypeIcon($file['mimetype']);
         }
 
         return  $file;
@@ -361,7 +362,23 @@ class Files
 
     }
 
+    public function getFileLink($fid, $uid)
+    {
+        $link = '';
+        $file = $this->getInfoById($fid);
+        if ($file['user'] == $uid) {
+            $sql = "SELECT *
+                FROM owncloud91.oc_share s
+                WHERE s.item_type = 'file' AND s.item_source = ? AND s.uid_owner = ?";
 
+            $file = $this->connect->query($sql, [$fid, $uid]);
+            if ($file)
+                $link = $file['file_target'];
+        } else
+            $link = $file['file'];
+
+        return 'remote.php/webdav' . $link;
+    }
 
 
 
