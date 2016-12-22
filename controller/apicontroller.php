@@ -208,11 +208,20 @@ class ApiController extends Controller {
         $userDataEmptyEmails = [];
         $server_host = $this->configurator->get('server_host');
         $mail_domain = $this->configurator->get('mail_domain');
-        foreach($usersIds as $uid){
+        foreach ($usersIds as $uid) {
             //$ud = $this->connect->users()->getUserData($uid);
             //$htmlBody = $mManager->createTemplate($buildData, $taskFiles, $ud['uid']);
+
+/*            $attachfilesInfoRebuild = [];
             if (!empty($attachfilesInfo)) {
-                for ($iau=0;$iau<count($attachfilesInfo);$iau++) {
+                for ($iau=0; $iau<count($attachfilesInfo); $iau++) {
+                    $attachfilesInfoRebuild[$iau] = $attachfilesInfo[$iau];
+                    $attachfilesInfoRebuild[$iau]['webdav'] = $this->connect->files()->getFileLink($attachfilesInfo[$iau]['fileid'], $uid);
+                }
+            }*/
+
+            if (!empty($attachfilesInfo)) {
+                for ($iau=0; $iau<count($attachfilesInfo); $iau++) {
                     $attachfilesInfo[$iau]['webdav'] = $this->connect->files()->getFileLink($attachfilesInfo[$iau]['fileid'], $uid);
                 }
             }
