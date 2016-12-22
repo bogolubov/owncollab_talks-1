@@ -119,13 +119,13 @@ class FileManager
         $insertId = null;
         $filePathFiles  = $this->usrDir.$fileName;
         $insertData = $this->homeStorage->getMetaData($filePathFiles);
-/*
+/**/
         // todo: не костыль
         if ($insertData) {
             $insertId = $this->cache->insert($filePathFiles, $insertData);
         }
         return (int) $insertId;
-*/
+
         // todo: костыль незаработал
         if ($isfolder) {
             if(!$this->homeStorage->is_dir('files/'.$fileName)) {
