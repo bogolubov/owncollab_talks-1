@@ -463,10 +463,8 @@ for ($isc=0; $isc < count($usersempty); $isc ++)
                                                         please use the email address used for registration.</p>
                                                     <p>
                                                         In other cases please ask the
-                                                        <a href="mailto:<?php p($useradmin['email'])?>?subject=Important information&body=<?php p($useradmin['displayname'])?>">administrator</a>
+                                                        <a href="mailto:<?php p($useradmin['email'])?>">administrator</a>
                                                         of the server.
-                                                        <!--–“administrator” is a mailto-link to the email address of the
-                                                        domain’s admin.-->
                                                     </p>
 
 
