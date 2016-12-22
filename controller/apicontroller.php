@@ -242,24 +242,36 @@ class ApiController extends Controller {
         }
 
         // UsersData with empty emails
-        // Create email to ???
+        // Create error email
         if (!empty($userDataEmptyEmails)) {
-            $userAdminData = $this->connect->users()->getUserData('admin');
-            $htmlBody = $mManager->createTemplateError($userAdminData, $owner, $buildData, $userDataEmptyEmails);
+            $maila = \OCP\Config::getSystemValue('mail_from_address', false);
+            $maild = \OCP\Config::getSystemValue('mail_domain', false);
+            if ($maila && $maild) {
+                $userAdminData = ['displayname' =>'Administrator', 'email'=> $maila.'@'.$maild];
+            } else {
+                $userAdminData = $this->connect->users()->getUserData('admin');
+            }
 
-            $mManager->send(
-                [
-                    'email' => $owner['email'],
-                    'name' => $owner['displayname'],
-                ],
-                [
-                    'email' => $userAdminData['email'],
-                    'name' => $userAdminData['displayname'],
-                ],
-                $server_host . ' // Receiving email error',
-                $htmlBody,
-                $attachfilesInfo
-            );
+            if (!empty($userAdminData)) {
+                $htmlBody = $mManager->createTemplateError($userAdminData, $owner, $buildData, $userDataEmptyEmails);
+
+                $mManager->send(
+                    [
+                        'email' => $owner['email'],
+                        'name' => $owner['displayname'],
+                    ],
+                    [
+                        'email' => $userAdminData['email'],
+                        'name' => $userAdminData['displayname'],
+                    ],
+                    $server_host . ' // Receiving email error',
+                    $htmlBody,
+                    $attachfilesInfo
+                );
+
+            } else {
+                // todo: а если нет админа ?
+            }
         }
 
         if($front['insert_id'] && !$taskParent) {
@@ -735,17 +747,26 @@ class ApiController extends Controller {
 
 */
 
-        /*
+        /**/
         // Testing email error template
-        $UID = 'admin';
+/*        $UID = 'werd';
         $userDataEmptyEmails = [];
 
         $tManager = new TalkManager($UID, $this->connect, $this->configurator);
         $fManager = new FileManager($UID, $this->connect, $this->activityData, $this->manager);
         $mManager = new MailManager($UID, $this->connect, $this->configurator, $tManager, $fManager);
 
-        $userAdminData = $this->connect->users()->getUserData('admin');
-        $userOwnerData = $this->connect->users()->getUserData('werd');
+
+        $maila = \OCP\Config::getSystemValue('mail_from_address', false);
+        $maild = \OCP\Config::getSystemValue('mail_domain', false);
+        if ($maila && $maild) {
+            $userAdminData = ['displayname' =>'Administrator', 'email'=> $maila.'@'.$maild];
+        } else {
+            $userAdminData = $this->connect->users()->getUserData('admin');
+        }
+
+
+        $userOwnerData = $this->connect->users()->getUserData($UID);
         $talkmessage = $this->connect->messages()->getById(2);
         $userDataEmptyEmails[] = $this->connect->users()->getUserData('devpro');
         $userDataEmptyEmails[] = $this->connect->users()->getUserData('devpro2');
@@ -753,11 +774,17 @@ class ApiController extends Controller {
         $userDataEmptyEmails[] = $this->connect->users()->getUserData('devpro4');
 
         $email  = $mManager->createTemplateError($userAdminData, $userOwnerData, $talkmessage, $userDataEmptyEmails);
+        echo ($email);*/
 
-        exit($email);*/
-
-        //$htmlBody = $mManager->createTemplate($buildData, $taskFiles, $ud['uid']);
-        //$data = [ ];
+        //\OCP\IConfig getSystemValue
+//        $maila = \OCP\Config::getSystemValue('mail_from_address', false);
+//        $maild = \OCP\Config::getSystemValue('mail_domain', false);
+//
+//        var_dump($maila);
+//        var_dump($maild);
+//        var_dump($userAdminData);
+//        $htmlBody = $mManager->createTemplate($buildData, $taskFiles, $ud['uid']);
+//        $data = [ ];
         //$email = Helper::renderPartial($this->appName, 'emails/start', $data);
         //return new TemplateResponse($this->appName, 'emails/start', $data);
         //return new MailTemplateResponse($this->appName, 'emails/start', $data);
