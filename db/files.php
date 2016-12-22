@@ -389,10 +389,35 @@ class Files
         return '/remote.php/webdav' . $link;
     }
 
+    public function _parent_storage($uid)
+    {
+        $sql = "SELECT f.fileid, f.storage
+                FROM *PREFIX*filecache f
+                WHERE f.storage = (
+                    SELECT s.numeric_id
+                    FROM *PREFIX*storages s
+                    WHERE s.id = ?
+                ) AND f.path = 'files'";
+        $res = $this->connect->query($sql, ['home::'.$uid]);
+        if ($res)
+            return ['parent'=>$res['fileid'], 'storage'=>$res['storage']];
+        return false;
+    }
 
+    public function _directory_mimetypes_id()
+    {
+        $sql = "SELECT id FROM *PREFIX*mimetypes WHERE mimetype = 'httpd/unix-directory'";
+        $res = $this->connect->query($sql);
+        if ($res)
+            return $res['id'];
 
+        return null;
+    }
 
-
+    public function _updatefilecache($fileid, $data)
+    {
+        return $this->connect->update($this->tableName, $data, 'fileid = ?', [$fileid]);
+    }
 
 
 }

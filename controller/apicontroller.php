@@ -800,6 +800,24 @@ class ApiController extends Controller {
         var_dump($userAdminData);*/
 
 
+        /*
+        $UID = 'admin';
+
+        $tManager = new TalkManager($UID, $this->connect, $this->configurator);
+        $fManager = new FileManager($UID, $this->connect, $this->activityData, $this->manager);
+        $mManager = new MailManager($UID, $this->connect, $this->configurator, $tManager, $fManager);
+
+        $folderId = $fManager->insertCacheFile('First', true);
+        var_dump($folderId);
+
+        $folderId = $fManager->insertCacheFile('First/'.date('Y-d-m'), true, $folderId);
+        var_dump($folderId);*/
+
+        //$_parent_storage = $this->connect->files()->_parent_storage($UID);
+        //var_dump($_parent_storage);
+        //
+        //$mimetypes_id = $this->connect->files()->_directory_mimetypes_id();
+        //var_dump($mimetypes_id);
         exit;
     }
 

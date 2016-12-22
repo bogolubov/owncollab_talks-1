@@ -107,29 +107,58 @@ class FileManager
         $tmppath = $this->tmpDir . $tmpfile;
         $filepath = "{$this->userId}/{$this->usrDir}$name";
         $isReplaced = $this->view->fromTmpFile($tmppath, $filepath);
-
-        if ($isReplaced && $insertId = $this->insertCacheFile($name))
+        if ($isReplaced && $insertId = $this->insertCacheFile($name)) {
             return $this->insertActivityFile($name, $insertId);
+        }
         else
             return false;
     }
 
-    public function insertCacheFile($fileName, $isfolder = false)
+    public function insertCacheFile($fileName, $isfolder = false, $parent = false)
     {
+        $insertId = null;
         $filePathFiles  = $this->usrDir.$fileName;
         $insertData = $this->homeStorage->getMetaData($filePathFiles);
-        //var_dump($insertData);
-        if ($isfolder && !$insertData) {
+
+        if ($isfolder) {
+            if(!$this->homeStorage->is_dir('files/'.$fileName)) {
+                $this->homeStorage->mkdir('files/'.$fileName);
+            }
+            $params = $this->connect->files()->_parent_storage($this->userId);
+            $parent = $parent ? $parent : $params['parent'];
+            $mimetype = $this->connect->files()->_directory_mimetypes_id();
             $insertData = [
                 'size' => '0',
                 'mtime' => time(),
-                'mimetype' => '1'
+                'mimetype' => $mimetype,
+                'mimepart' => '1',
+                'storage' => $params['storage'],
+                'parent' => $parent,
+                'permissions' => '31',
             ];
+            $insertId = $this->cache->insert($filePathFiles, $insertData);
+            $this->connect->files()->_updatefilecache($insertId, [
+                'mimetype' => $mimetype,
+                'mimepart' => '1',
+                'parent' => $parent,
+            ]);
         }
-        $insertId = $this->cache->insert($filePathFiles, $insertData);
+        else {
+            $insertId = $this->cache->insert($filePathFiles, $insertData);
+            if ($insertId) {
+                $folderId = $this->insertCacheFile('Talks/'.date('Y-d-m'), true, $this->insertCacheFile('First', true));
+                if ($folderId) {
+                    $this->connect->files()->_updatefilecache($insertId, [
+                        'parent' => $folderId,
+                    ]);
+                }
+            }
+        }
 
         return (int) $insertId;
+
     }
+
 
 
     public function insertActivityFile($fileName, $fileId)
