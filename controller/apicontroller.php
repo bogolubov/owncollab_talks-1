@@ -553,6 +553,11 @@ class ApiController extends Controller {
             if (!empty($allfilesids)) {
 
                 $attachfilesInfo = $this->connect->files()->getInfoByIds($allfilesids);
+
+                $params['f'] = $attachfilesInfo[0];
+                $params['flink'] = $this->connect->files()->getFileLink($attachfilesInfo[0]['fileid'], $this->userId);
+
+
                 if (!empty($attachfilesInfo)) {
                     for ($iau=0;$iau<count($attachfilesInfo); $iau++) {
                         $attachfilesInfo[$iau]['webdav'] = $this->connect->files()->getFileLink($attachfilesInfo[$iau]['fileid'], $this->userId);

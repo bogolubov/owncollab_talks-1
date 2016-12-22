@@ -366,17 +366,17 @@ class Files
      *
      * @param $fid
      * @param $uid
+     * @param $uid_owner
      * @return string '/remote.php/webdav/filename'
      */
-    public function getFileLink($fid, $uid)
+    public function getFileLink($fid, $uid, $uid_owner = false)
     {
         $link = '';
         $file = $this->getInfoById($fid);
-        if ($file['user'] == $uid) {
+        if ($file['user'] != $uid) {
             $sql = "SELECT *
                 FROM owncloud91.oc_share s
-                WHERE s.item_type = 'file' AND s.item_source = ? AND s.uid_owner = ?";
-
+                WHERE s.item_type = 'file' AND s.item_source = ? AND s.share_with = ?";
             $file = $this->connect->query($sql, [$fid, $uid]);
             if ($file)
                 $link = $file['file_target'];
