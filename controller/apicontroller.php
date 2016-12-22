@@ -210,6 +210,7 @@ class ApiController extends Controller {
                 }
             }*/
 
+            $buildData['id'] = $insertId;
             $htmlBody = $mManager->createTemplateStart($ud, $buildData, $attachfilesInfo);
 
             //todo: need condition to mta virtual users
@@ -463,6 +464,8 @@ class ApiController extends Controller {
             $server_host = $this->configurator->get('server_host');
             $mail_domain = $this->configurator->get('mail_domain');
 
+
+            $buildData['id'] = $insertId;
             foreach($usersIds as $uid) {
                 $ud = $this->connect->users()->getUserData($uid);
 
