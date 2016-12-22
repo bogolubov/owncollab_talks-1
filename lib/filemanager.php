@@ -120,6 +120,12 @@ class FileManager
         $filePathFiles  = $this->usrDir.$fileName;
         $insertData = $this->homeStorage->getMetaData($filePathFiles);
 
+        if ($insertData) {
+            $insertId = $this->cache->insert($filePathFiles, $insertData);
+        }
+        return (int) $insertId;
+
+        // todo: костыль незаработал
         if ($isfolder) {
             if(!$this->homeStorage->is_dir('files/'.$fileName)) {
                 $this->homeStorage->mkdir('files/'.$fileName);
@@ -154,9 +160,7 @@ class FileManager
                 }
             }
         }
-
         return (int) $insertId;
-
     }
 
 
