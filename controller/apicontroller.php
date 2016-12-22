@@ -788,6 +788,18 @@ class ApiController extends Controller {
         //$email = Helper::renderPartial($this->appName, 'emails/start', $data);
         //return new TemplateResponse($this->appName, 'emails/start', $data);
         //return new MailTemplateResponse($this->appName, 'emails/start', $data);
+
+/*        $maila = \OCP\Config::getSystemValue('mail_from_address', false);
+        $maild = \OCP\Config::getSystemValue('mail_domain', false);
+        if ($maila && $maild) {
+            $userAdminData = ['displayname' =>'Administrator', 'email'=> $maila.'@'.$maild];
+        } else {
+            $userAdminData = $this->connect->users()->getUserData('admin');
+        }
+
+        var_dump($userAdminData);*/
+
+
         exit;
     }
 
