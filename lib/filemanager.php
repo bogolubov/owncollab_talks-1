@@ -89,6 +89,17 @@ class FileManager
         return $this->connect->files()->getInfoById($fileid);
     }
 
+    public function getFilesDataInfo($fileids)
+    {
+        $fileids = is_array($fileids) ? $fileids : (is_numeric($fileids) ? [$fileids] : false);
+        if ($fileids) {
+            $files = $this->connect->files()->getInfoByIds($fileids);
+
+
+            return $files;
+        }
+        return false;
+    }
 
     public function insertTpmFile($tmpfile, $newname = null)
     {

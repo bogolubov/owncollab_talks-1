@@ -15,6 +15,8 @@ if(App.namespace){App.namespace('Controller.Page', function(App){
 
         _.node['contentError'] = App.query('#app-content-error');
         _.node['contentInlineError'] = App.query('#app-content-inline-error');
+
+        _.sidebarSettings();
         _.errorLineCloseButtonInit();
 
         if(['/','/begin'].indexOf(App.uriPath)!==-1) {
@@ -106,6 +108,37 @@ if(App.namespace){App.namespace('Controller.Page', function(App){
      * @param text
      */
     _.errorPage = function (title, text) {
+
+    };
+
+    /**
+     * @namespace App.Controller.Page.sidebarSettings
+     */
+    _.sidebarSettings = function () {
+
+        _.node['button_show_parse_log'] = App.query('#show_parse_log');
+        _.node['button_show_error_log'] = App.query('#show_error_log');
+
+        App.on(_.node['button_show_parse_log'], 'click', function(event){
+
+            App.Action.Api.request('parserlog', function(response) {
+                var log = response['log'];
+                OC.dialogs.info(log, 'Parse Log', false, true);
+            }, {
+                'file':'mailparser.log'
+            });
+
+        });
+
+        App.on(_.node['button_show_error_log'], 'click', function(event){
+            App.Action.Api.request('parserlog', function(response) {
+                var log = response['log'];
+                OC.dialogs.info(log, 'Error Log', false, true);
+            }, {
+                'file':'mailparser_error.log'
+            });
+
+        });
 
     };
 

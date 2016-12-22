@@ -70,6 +70,29 @@ class Files
         return  $file;
     }
 
+    public function getInfoByIds($ids)
+    {
+        $ids = is_array($ids) ? $ids : (is_numeric($ids) ? [$ids] : false );
+
+        if (!is_array($ids))
+            return [];
+
+        $sql = "SELECT * FROM oc_filecache f
+                LEFT JOIN *PREFIX*activity a ON (a.object_id = f.fileid)
+                LEFT JOIN *PREFIX*mimetypes m ON (m.id = f.mimetype)
+                WHERE f.fileid IN (". join(',',array_fill(0, count($ids), '?')) .")";
+
+        $files = $this->connect->queryAll($sql, $ids);
+
+        if ($files)
+            for ($i=0; $i < count($files); $i ++)
+                if (is_array($files[$i])) {
+                    $files[$i]['fullpath'] = \OC::$SERVERROOT.'/data/'.$files[$i]['user'].'/'.$files[$i]['path'];
+                    $files[$i]['icon'] = \OC::$server->getMimeTypeDetector()->mimeTypeIcon($files[$i]['mimetype']);
+                }
+
+        return  $files;
+    }
 
 
     /*

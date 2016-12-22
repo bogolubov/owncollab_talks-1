@@ -9,7 +9,9 @@ use OCA\Owncollab_Talks\MTAServer\Configurator;
 use OCA\Owncollab_Talks\Helper;
 use OCA\Owncollab_Talks\Db\Connect;
 use OCA\Owncollab_Talks\TalkManager;
+use OCA\TemplateEditor\Http\MailTemplateResponse;
 use OCP\Activity\IManager;
+use OCP\AppFramework\Http\TemplateResponse;
 use OCP\Files;
 use OCP\IRequest;
 use OCP\AppFramework\Http\DataResponse;
@@ -83,27 +85,13 @@ class ApiController extends Controller {
             ? Helper::post('data', false)
             : $_GET['data'];
 
-        if(!$this->mailDomain)
+        if(!$this->mailDomain && !in_array($key, ['parserlog']))
             return new DataResponse(['error'=>'Email domain is undefined']);
 
         if(method_exists($this, $key))
             return call_user_func([$this, $key], $data);
         else
             return new DataResponse(['error'=>'Api key not exist']);
-    }
-
-    /**
-     * @NoAdminRequired
-     * @NoCSRFRequired
-     * @param $data
-     * @return DataResponse
-     */
-    public function test($data)
-    {
-
-
-        die('DIE');
-        return new DataResponse($data);
     }
 
     /**
@@ -163,13 +151,15 @@ class ApiController extends Controller {
         else {
 
             // ready upload and shared files
+            // text tags
+            $textTags = '<br><p><blockquote><h1><h2><h3><h4><strong><em><del><a><ul><ol><li><hr><img>';
             $postShare  = isset($post['share'])  ? array_keys($post['share']) : [];
             $postUsers  = isset($post['users'])  ? array_values($post['users']) : [];
             $postGroups = isset($post['groups']) ? array_values($post['groups']) : [];
             $subscribersChanged = $tManager->subscribersCreate($postGroups, $postUsers);
             $buildData = $tManager->build([
                 'title'         => $post['title'],
-                'text'          => strip_tags($post['message'], '<br><p><a>'),
+                'text'          => strip_tags($post['message'], $textTags),
                 'subscribers'   => $subscribersChanged,
                 'attachements'  => json_encode($postShare),
                 'author'        => $UID,
@@ -199,26 +189,35 @@ class ApiController extends Controller {
         }
 
         // SEND Emails
-        $taskFiles = [];
-        if (isset($postShare)) {
-            foreach ($postShare as $fid) {
-                $taskFiles[] = $fManager->getFileInformation($fid);
-            }
-        }
+//        $taskFiles = [];
+//        if (isset($postShare)) {
+//            foreach ($postShare as $fid) {
+//                $taskFiles[] = $fManager->getFileInformation($fid);
+//            }
+//        }
+        $attachfilesInfo = [];
+        if (isset($postShare))
+            $attachfilesInfo = $fManager->getFilesDataInfo($postShare);
+
         $usersIds = $mManager->getUsersFromSubscribers($subscribersChanged, $UID);
 
         // форм. удобный список [['uid'=>,'email'=>,]]
         $owner = $this->connect->users()->getUserData($UID);
-        $usersEmailsData = [];
+        //$usersEmailsData = [];
+        $userDataEmptyEmails = [];
+        $server_host = $this->configurator->get('server_host');
+        $mail_domain = $this->configurator->get('mail_domain');
         foreach($usersIds as $uid){
+            //$ud = $this->connect->users()->getUserData($uid);
+            //$htmlBody = $mManager->createTemplate($buildData, $taskFiles, $ud['uid']);
             $ud = $this->connect->users()->getUserData($uid);
-            $htmlBody = $mManager->createTemplate($buildData, $taskFiles, $ud['uid']);
+            $htmlBody = $mManager->createTemplateStart($ud, $buildData, $attachfilesInfo);
 
             //todo: need condition to mta virtual users
             if (isset($buildData['rid']) && $taskParent) {
-                $ownerEmail = $taskParent['author'] .'+'. $taskParent['hash'] . '@' . $this->configurator->get('mail_domain');
+                $ownerEmail = $taskParent['author'] .'+'. $taskParent['hash'] . '@' . $mail_domain;
             } else {
-                $ownerEmail = $buildData['author'] .'+'. $buildData['hash'] . '@' . $this->configurator->get('mail_domain');
+                $ownerEmail = $buildData['author'] .'+'. $buildData['hash'] . '@' . $mail_domain;
             }
 
             //send mail
@@ -232,12 +231,20 @@ class ApiController extends Controller {
                         'email' => $ownerEmail,
                         'name' => $owner['uid'],
                     ],
-                    $buildData['title'],
+                    $server_host . ' // ' . $buildData['title'],
                     $htmlBody,
-                    $taskFiles
+                    $attachfilesInfo
                 );
+            } else {
+                $userDataEmptyEmails[] = $ud;
             }
-            $usersEmailsData[] = $ud;
+            //$usersEmailsData[] = $ud;
+        }
+
+        // UsersData with empty emails
+        // Create email to ???
+        if (!empty($userDataEmptyEmails)) {
+
         }
 
         if($front['insert_id'] && !$taskParent) {
@@ -270,6 +277,7 @@ class ApiController extends Controller {
         $toPart = $to[0];
         $subject = $post['subject'];
         $content = empty($post['content']) ? strip_tags($post['content_html']) : $post['content'];
+        $groupPrefix = $this->configurator->get('group_prefix');
 
         // Owner. Key: userid
         $userfrom = $this->connect->users()->getByEmail(trim($post['from']));
@@ -294,7 +302,8 @@ class ApiController extends Controller {
             $hash           = trim($parts[1]);
             $messageParent  = $this->connect->messages()->getByHash($hash);
         }
-        else if ($toGroup = substr($toPart, -5) AND $toGroup === 'group') {
+        else if ($toGroup = substr($toPart, -strlen($groupPrefix)) AND $toGroup === $groupPrefix) {
+            $toGroup = substr($toPart, 0, -(strlen($groupPrefix)));
             $groupsList = $this->connect->users()->getGroupsUsersList();
             if (isset($groupsList[$toGroup]))
                 $itGroup = true;
@@ -360,8 +369,8 @@ class ApiController extends Controller {
 
             $subscribers = $tManager->subscribersChange(
                 $messageParent['subscribers'],
-                ['users' => $UID],
-                ['users' => $messageParent['author']]
+                ['users' => [$UID]],
+                ['users' => [$messageParent['author']]]
             );
 
             // insert message
@@ -427,33 +436,34 @@ class ApiController extends Controller {
 
         }
 
-//        $result['insert_id'] = $insertId;
-//        $result['build_data'] = $buildData;
-//        return new DataResponse($result);
-
         // Send mail to subscribers false &&
         if ($insertId) {
             $result['success'] = $insertId;
+//            $taskFiles = [];
+//            if (isset($files) && is_array($files)) {
+//                foreach ($files as $fid) {
+//                    $taskFiles[] = $fManager->getFileInformation($fid['fileid']);
+//                }
+//            }
 
-            // SEND Emails
-            $taskFiles = [];
-            if (isset($files) && is_array($files)) {
-                foreach ($files as $fid) {
-                    $taskFiles[] = $fManager->getFileInformation($fid['fileid']);
-                }
-            }
+            $attachfilesInfo = [];
+            if (!empty($files))
+                $attachfilesInfo = $fManager->getFilesDataInfo(array_keys($files));
 
             $usersIds = $mManager->getUsersFromSubscribers($subscribers);
+            $server_host = $this->configurator->get('server_host');
+            $mail_domain = $this->configurator->get('mail_domain');
 
             foreach($usersIds as $uid) {
                 $ud = $this->connect->users()->getUserData($uid);
-                $htmlBody = $mManager->createTemplate($buildData, $taskFiles, $ud['uid']);
+                //$htmlBody = $mManager->createTemplate($buildData, $taskFiles, $ud['uid']);
+                $htmlBody = $mManager->createTemplateStart($ud, $buildData, $attachfilesInfo);
 
                 //todo: need condition to mta virtual users
-                if ((int) $buildData['rid'] > 0 && $messageParent) {
-                    $ownerEmail = $messageParent['author'] .'+'. $messageParent['hash'] . '@' . $this->configurator->get('mail_domain');
+                if ($messageParent) {
+                    $ownerEmail = $messageParent['author'] .'+'. $messageParent['hash'] . '@' . $mail_domain;
                 } else {
-                    $ownerEmail = $userfromData['uid'] .'+'. $buildData['hash'] . '@' . $this->configurator->get('mail_domain');
+                    $ownerEmail = $userfromData['uid'] .'+'. $buildData['hash'] . '@' . $mail_domain;
                 }
 
                 //send mail
@@ -467,9 +477,9 @@ class ApiController extends Controller {
                             'email' => $ownerEmail,
                             'name' => $userfromData['uid'],
                         ],
-                        $buildData['title'],
+                        $server_host . ' // ' . $buildData['title'],
                         $htmlBody,
-                        $taskFiles
+                        $attachfilesInfo
                     );
                 }
             }
@@ -494,9 +504,10 @@ class ApiController extends Controller {
     public function message_children($data)
     {
         $params = [
-            'error'     => null,
-            'errorinfo'     => '',
-            'lastlinkid'    => null
+            'error'             => null,
+            'errorinfo'         => '',
+            'lastlinkid'        => null,
+            'attachedfiles'     => null,
         ];
 
         if(isset($data['parent_id'])) {
@@ -507,6 +518,30 @@ class ApiController extends Controller {
                 'parent'    =>  $params['parent'],
                 'children'  =>  $params['children'],
             ]);
+
+            // Add Attached files
+            $allfilesids = [];
+
+            try {
+                $allfilesids = json_decode($params['parent']['attachements'], true);
+            }catch (\Exception $e){}
+
+            if (!empty($params['children'])) {
+                foreach ($params['children'] as $child) {
+                    if(!empty($child['attachements'])) {
+                        try {
+                            $childfilesids = json_decode($child['attachements'], true);
+                            $allfilesids = array_merge($childfilesids, $allfilesids);
+                        }catch (\Exception $e){}
+                    }
+                }
+            }
+            if (!empty($allfilesids)) {
+                $attachfilesInfo = $this->connect->files()->getInfoByIds($allfilesids);
+                $params['attachedfiles'] = Helper::renderPartial($this->appName,'part.attachlist',[
+                    'attachfiles' => $attachfilesInfo
+                ]);
+            }
         }
 
         return new DataResponse($params);
@@ -546,6 +581,103 @@ class ApiController extends Controller {
         return $this->listtree;
     }
 
+    /**
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * @param $data
+     * @return DataResponse
+     */
+    public function parserlog($data)
+    {
+        $post = Helper::post();
+        $file = $post['data']['file'];
+        $data['log'] = 'Error. can`t read log file';
+        $path = dirname(__DIR__) .'/'. $file;
 
+        if (is_file($path) && is_readable($path)) {
+            $data['log'] = file_get_contents($path);
+        }
+
+        return new DataResponse($data);
+    }
+
+    /**
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * @param $data
+     * @return DataResponse
+     */
+    public function test($data)
+    {
+
+/*        $UID = 'bogdan';
+        $messageParent = $this->connect->messages()->getById(1);
+
+        // work libs
+        $tManager = new TalkManager($UID, $this->connect, $this->configurator);
+        //$fManager = new FileManager($UID, $this->connect, $this->activityData, $this->manager);
+        //$mManager = new MailManager($UID, $this->connect, $this->configurator, $tManager, $fManager);
+
+        $subscribers = $tManager->subscribersChange(
+            $messageParent['subscribers'],
+            ['users' => [$UID]],
+            ['users' => [$messageParent['author']]]
+        );
+
+        var_dump($subscribers);
+
+        die;
+        return new DataResponse($data);*/
+
+
+/*
+        // Testing email template
+        $UID = 'admin';
+        $UIDTO = 'bogdan';
+
+        $tManager = new TalkManager($UID, $this->connect, $this->configurator);
+        $fManager = new FileManager($UID, $this->connect, $this->activityData, $this->manager);
+        $mManager = new MailManager($UID, $this->connect, $this->configurator, $tManager, $fManager);
+
+        $talkmessage = $this->connect->messages()->getById(2);
+        $attachementsFilesIds = json_decode($talkmessage['attachements'], true);
+        $attachfilesInfo = $fManager->getFilesDataInfo($attachementsFilesIds);
+        $userDataTo = $this->connect->users()->getUserData($UIDTO);
+
+        $email  = $mManager->createTemplateStart($userDataTo, $talkmessage, $attachfilesInfo);
+
+        exit($email);*/
+
+        //var_dump($attachfilesInfo);
+
+        /*
+        // Parse mail content
+        $groupPrefix = $this->configurator->get('group_prefix');
+        $toPart = 'developers-group';
+        $itGroup = false;
+        if ($toGroup = substr($toPart, -strlen($groupPrefix)) AND $toGroup === $groupPrefix) {
+            $toGroup = substr($toPart, 0, -(strlen($groupPrefix)));
+            $groupsList = $this->connect->users()->getGroupsUsersList();
+            if (isset($groupsList[$toGroup]))
+                $itGroup = true;
+        }
+        var_dump($toGroup);
+        var_dump($itGroup);*/
+
+
+/*
+        // Link
+        $siteurl = $this->configurator->get('site_url');
+        $file = $this->connect->files()->getInfoByIds(27)[0];
+        $filelink = $siteurl . 'remote.php/webdav' . $file['file'];
+        var_dump($file);
+        var_dump($filelink);*/
+        die;
+        //$htmlBody = $mManager->createTemplate($buildData, $taskFiles, $ud['uid']);
+        //$data = [ ];
+        //$email = Helper::renderPartial($this->appName, 'emails/start', $data);
+        //return new TemplateResponse($this->appName, 'emails/start', $data);
+        //return new MailTemplateResponse($this->appName, 'emails/start', $data);
+    }
 
 }

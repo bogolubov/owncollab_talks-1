@@ -29,6 +29,7 @@
         this.query = app.query;
         this.queryAll = app.queryAll;
         this.each = app.each;
+        this.on = app.on;
         this.setProperties(properties);
 
     };
@@ -325,6 +326,29 @@
             for (i in list) callback.call({}, list[i], i, tmp);
     };
 
+
+    /**
+     * Simple add event listener
+     * @param selector
+     * @param eventName
+     * @param callback
+     * @param bubble
+     */
+    app.on = function (selector, eventName, callback, bubble) {
+        var elements = null;
+
+        if (typeof selector === 'string')
+            elements = app.queryAll(selector);
+        else if (typeof selector === 'object' && selector.nodeType == Node.ELEMENT_NODE)
+            elements = [selector];
+
+        if(elements) {
+            app.each(elements, function (item) {
+                if(typeof item === 'object')
+                    item.addEventListener(eventName, callback, !!bubble);
+            });
+        }
+    };
 
     /**
      *

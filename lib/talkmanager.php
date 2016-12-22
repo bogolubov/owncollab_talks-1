@@ -141,42 +141,8 @@ class TalkManager
 
 
 
-/*    public function fileinformer($fid) {
-
-    }*/
 
 
-    public function fileinformer($fid) {
-
-        $file = $this->connect->files()->getById($fid);
-        $owner = 'admin';//$this->userId;
-
-
-        //$sharedWith = \OCP\Share::getUsersItemShared('file', $file['fileid'], $owner, false, true);
-        //\OCP\Share::isEnabled()
-        //\OCP\Share::isResharingAllowed()
-
-        $fileInfo = \OC\Files\Filesystem::getFileInfo(substr($file['path'], 6));
-
-        if($fileInfo)
-            $formatFileInfo = \OCA\Files\Helper::formatFileInfo($fileInfo);
-
-        $shareItem = \OCP\Share::getItemShared('file', $file['fileid']);
-
-
-        //
-        //...//...//...//
-        //...//...//...//
-        //...//...//...//
-
-//        var_dump($file);
-//        var_dump($sharedWith);
-//        var_dump($fileInfo);
-//        var_dump($formatFileInfo);
-//        var_dump($shareItem);
-        //var_dump();
-        return $file;
-    }
 
 
 

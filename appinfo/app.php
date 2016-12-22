@@ -54,7 +54,8 @@ if( Helper::isAppSettingsUsers() ) {
 
     if($mtaErrors = $mta->getErrors()) {
         Helper::mailParserLogerError($mtaErrors);
-    } else {
+    }
+    else if ($mta->getConnection()) {
         $aliaser = new Aliaser($appName, $configurator, $mta);
 
         // Sync MailServer virtual users with OwnCloud users

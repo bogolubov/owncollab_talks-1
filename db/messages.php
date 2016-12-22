@@ -32,6 +32,10 @@ class Messages
     }
 
 
+    /**
+     * @param $id
+     * @return bool|array
+     */
     public function getById($id)
     {
         $message = $this->connect->select("*", $this->tableName, "id = :id", [':id' => $id]);

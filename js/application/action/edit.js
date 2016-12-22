@@ -7,9 +7,12 @@ if(App.namespace){App.namespace('Action.Edit', function(App){
     /**
      * @namespace App.Action.Edit.init
      */
-    _.init = function(){
+    _.init = function () {
 
-        jQuery("textarea[name=message]").show().trumbowyg();
+        if (!App.query('textarea[name=message]'))
+            return;
+
+        jQuery('textarea[name=message]').show().trumbowyg();
 
         _.checkSubscribersEvent();
         _.submitFormEvent();
@@ -60,7 +63,7 @@ if(App.namespace){App.namespace('Action.Edit', function(App){
 
                 this.submit();
             }else{
-                App.Controller.Page.errorLine("Email message can not be empty");
+                App.Controller.Page.errorLine("Email message can`t be empty");
             }
         });
     };
@@ -149,8 +152,8 @@ if(App.namespace){App.namespace('Action.Edit', function(App){
             var isChecked = event.target.checked;
             var isUser = !!target.getAttribute('data-group');
 
-            if(isUser && email.length < 5 && isChecked){
-                App.Controller.Page.errorLine("Email is empty on user " + value);
+            if (isUser && email.length < 5 && isChecked) {
+                App.Controller.Page.errorLine("User <b>"+ value +"</b>, email is empty");
             }
 
             if(!isUser) {
