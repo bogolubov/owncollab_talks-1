@@ -190,13 +190,4 @@ class FileManager
     }
 
 
-    //$fileid, $uidowner, $uidwith
-    public function getAttachfilelink()
-    {
-        $sql = "SELECT *
-                FROM owncloud91.oc_share s
-                WHERE s.item_source = 973 AND share_with = 'dev1';";
-
-
-    }
 }

@@ -196,8 +196,9 @@ class ApiController extends Controller {
 //            }
 //        }
         $attachfilesInfo = [];
-        if (isset($postShare))
+        if (isset($postShare)) {
             $attachfilesInfo = $fManager->getFilesDataInfo($postShare);
+        }
 
         $usersIds = $mManager->getUsersFromSubscribers($subscribersChanged, $UID);
 
@@ -210,6 +211,12 @@ class ApiController extends Controller {
         foreach($usersIds as $uid){
             //$ud = $this->connect->users()->getUserData($uid);
             //$htmlBody = $mManager->createTemplate($buildData, $taskFiles, $ud['uid']);
+            if (!empty($attachfilesInfo)) {
+                for ($iau=0;$iau<count($attachfilesInfo);$iau++) {
+                    $attachfilesInfo[$iau]['webdav'] = $this->connect->files()->getFileLink($attachfilesInfo[$iau]['fileid'], $uid);
+                }
+            }
+
             $ud = $this->connect->users()->getUserData($uid);
             $htmlBody = $mManager->createTemplateStart($ud, $buildData, $attachfilesInfo);
 
@@ -456,6 +463,13 @@ class ApiController extends Controller {
 
             foreach($usersIds as $uid) {
                 $ud = $this->connect->users()->getUserData($uid);
+
+                if (!empty($attachfilesInfo)) {
+                    for ($iau=0;$iau<count($attachfilesInfo);$iau++) {
+                        $attachfilesInfo[$iau]['webdav'] = $this->connect->files()->getFileLink($attachfilesInfo[$iau]['fileid'], $uid);
+                    }
+                }
+
                 //$htmlBody = $mManager->createTemplate($buildData, $taskFiles, $ud['uid']);
                 $htmlBody = $mManager->createTemplateStart($ud, $buildData, $attachfilesInfo);
 
@@ -538,6 +552,10 @@ class ApiController extends Controller {
             }
             if (!empty($allfilesids)) {
                 $attachfilesInfo = $this->connect->files()->getInfoByIds($allfilesids);
+                if (!empty($attachfilesInfo))
+                    for ($iau=0;$iau<count($attachfilesInfo);$iau++)
+                        $attachfilesInfo[$iau]['webdav'] = $this->connect->files()->getFileLink($attachfilesInfo[$iau]['fileid'], $this->userId);
+
                 $params['attachedfiles'] = Helper::renderPartial($this->appName,'part.attachlist',[
                     'attachfiles' => $attachfilesInfo
                 ]);

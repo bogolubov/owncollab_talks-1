@@ -362,6 +362,12 @@ class Files
 
     }
 
+    /**
+     *
+     * @param $fid
+     * @param $uid
+     * @return string '/remote.php/webdav/filename'
+     */
     public function getFileLink($fid, $uid)
     {
         $link = '';
@@ -377,7 +383,7 @@ class Files
         } else
             $link = $file['file'];
 
-        return 'remote.php/webdav' . $link;
+        return '/remote.php/webdav' . $link;
     }
 
 

@@ -432,7 +432,7 @@ if (!empty($_['subscribers']) && is_array($_['subscribers'])) {
                                                             <tr>
                                                                 <td><img src="<?php p($siteurl.$file['icon'])?>" alt="file ico"></td>
                                                                 <td>
-                                                                    <a href="<?php p($siteurl . '/remote.php/webdav' . $file['file'])?>">
+                                                                    <a href="<?php p($siteurl . $file['webdav'])?>">
                                                                         <?php p($file['name'])?>
                                                                     </a>
                                                                 </td>
