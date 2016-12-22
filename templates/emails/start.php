@@ -430,7 +430,7 @@ if (!empty($_['subscribers']) && is_array($_['subscribers'])) {
                                                         <tbody>
                                                         <?php foreach($attachfiles as $file):?>
                                                             <tr>
-                                                                <td><img src="<?php p($siteurl.$file['icon'])?>" alt="file ico"></td>
+                                                                <td style="width: 20px"><img src="<?php p($siteurl.$file['icon'])?>" alt="file ico" ></td>
                                                                 <td>
                                                                     <a href="<?php p($siteurl . $file['name'])?>"></a>
                                                                         <?php p($file['name'])?>

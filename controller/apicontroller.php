@@ -276,6 +276,7 @@ class ApiController extends Controller {
         $toPart = $to[0];
         $subject = $post['subject'];
         $content = empty($post['content']) ? strip_tags($post['content_html']) : $post['content'];
+        $content = $this->cleanBody($content);
         $groupPrefix = $this->configurator->get('group_prefix');
 
         // Owner. Key: userid
@@ -683,18 +684,66 @@ class ApiController extends Controller {
         var_dump($file);
         var_dump($filelink);*/
 
-        // Link TRUE
+        // Link TRUE FUCK!!!! HUINA
+        /*
         $fown = $this->connect->files()->getFileLink(973, 'werd');
         $fshr = $this->connect->files()->getFileLink(973, 'dev1');
 
         var_dump($fown);
         var_dump($fshr);
+
+        */
+
+        $body = Helper::renderPartial($this->appName, 'email_template');
+        $bodyArr = explode("\n", $body);
+
+        $markIndex = null;
+        $bodyRebuild = '';
+        $bodyRebuildArr = [];
+
+        $bodyLength = count($bodyArr);
+        for ($i=0; $i < $bodyLength; $i++) {
+            if ($bodyArr[$i][0] != '>') {
+                $bodyRebuildArr[$i] = $bodyArr[$i];
+            } else if ($markIndex == null) {
+                $markIndex = $i;
+            }
+        }
+        if ($markIndex) {
+            unset($bodyRebuildArr[$markIndex-1]);
+        }
+        $bodyRebuild = join("\n", $bodyRebuildArr);
+
+        var_dump($bodyRebuildArr);
+        var_dump($bodyRebuild);
+
         die;
+
+
         //$htmlBody = $mManager->createTemplate($buildData, $taskFiles, $ud['uid']);
         //$data = [ ];
         //$email = Helper::renderPartial($this->appName, 'emails/start', $data);
         //return new TemplateResponse($this->appName, 'emails/start', $data);
         //return new MailTemplateResponse($this->appName, 'emails/start', $data);
+    }
+
+    public function cleanBody($body)
+    {
+        $bodyArr = explode("\n", $body);
+        $markIndex = null;
+        $bodyRebuildArr = [];
+        $bodyLength = count($bodyArr);
+        for ($i=0; $i < $bodyLength; $i++) {
+            if ($bodyArr[$i][0] != '>') {
+                $bodyRebuildArr[$i] = $bodyArr[$i];
+            } else if ($markIndex == null) {
+                $markIndex = $i;
+            }
+        }
+        if ($markIndex) {
+            unset($bodyRebuildArr[$markIndex-1]);
+        }
+        return join("\n", $bodyRebuildArr);
     }
 
 }
