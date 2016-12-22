@@ -204,11 +204,11 @@ class ApiController extends Controller {
         foreach ($usersIds as $uid) {
             $ud = $this->connect->users()->getUserData($uid);
 
-            if (!empty($attachfilesInfo)) {
+/*            if (!empty($attachfilesInfo)) {
                 for ($iau=0; $iau<count($attachfilesInfo); $iau++) {
                     $attachfilesInfo[$iau]['webdav'] = $this->connect->files()->getFileLink($attachfilesInfo[$iau]['fileid'], $uid);
                 }
-            }
+            }*/
 
             $htmlBody = $mManager->createTemplateStart($ud, $buildData, $attachfilesInfo);
 
@@ -450,11 +450,11 @@ class ApiController extends Controller {
             foreach($usersIds as $uid) {
                 $ud = $this->connect->users()->getUserData($uid);
 
-                if (!empty($attachfilesInfo)) {
+/*                if (!empty($attachfilesInfo)) {
                     for ($iau=0;$iau<count($attachfilesInfo);$iau++) {
                         $attachfilesInfo[$iau]['webdav'] = $this->connect->files()->getFileLink($attachfilesInfo[$iau]['fileid'], $uid);
                     }
-                }
+                }*/
 
                 $htmlBody = $mManager->createTemplateStart($ud, $buildData, $attachfilesInfo);
 
