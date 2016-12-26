@@ -178,6 +178,15 @@ class ApiController extends Controller {
             $postShare  = isset($post['share'])  ? array_keys($post['share']) : [];
             $postUsers  = isset($post['users'])  ? array_values($post['users']) : [];
             $postGroups = isset($post['groups']) ? array_values($post['groups']) : [];
+
+            $postNoGroupUsers  = isset($post['nogroup_users'])  ? array_values($post['nogroup_users']) : [];
+            $postUsers = array_merge($postNoGroupUsers, $postUsers);
+
+            //var_dump($post);
+            //var_dump($postUsers);
+            //var_dump($postNoGroupUsers);
+            //exit;
+
             $subscribersChanged = $tManager->subscribersCreate($postGroups, $postUsers);
             $buildData = $tManager->build([
                 'title'         => $post['title'],
@@ -212,9 +221,12 @@ class ApiController extends Controller {
 
         // SEND Emails
         $attachfilesInfo = [];
-        if (isset($postShare)) {
+        if (!empty($postShare)) {
             $attachfilesInfo = $fManager->getFilesDataInfo($postShare);
         }
+        //todo:fixneed
+        if (!is_array($attachfilesInfo))
+            $attachfilesInfo = [];
 
         $usersIds = $mManager->getUsersFromSubscribers($subscribersChanged, $UID);
 
@@ -223,15 +235,15 @@ class ApiController extends Controller {
         $userDataEmptyEmails = [];
         $server_host = $this->configurator->get('server_host');
         $mail_domain = $this->configurator->get('mail_domain');
-        foreach ($usersIds as $uid) {
-            $ud = $this->connect->users()->getUserData($uid);
-
+        $usersData = $this->connect->users()->getUngroupUsers($usersIds);
+        foreach ($usersData as $ud) {
+            //$uid = $ud['uid'];
+            //$ud = $this->connect->users()->getUserData($uid);
 /*            if (!empty($attachfilesInfo)) {
                 for ($iau=0; $iau<count($attachfilesInfo); $iau++) {
                     $attachfilesInfo[$iau]['webdav'] = $this->connect->files()->getFileLink($attachfilesInfo[$iau]['fileid'], $uid);
                 }
             }*/
-
             $buildData['id'] = $insertId;
             $htmlBody = $mManager->createTemplateStart($ud, $buildData, $attachfilesInfo);
 
