@@ -130,13 +130,19 @@ class ApiController extends Controller {
                 ['users' => [$taskParent['author']]]
             );
 
+            //todo: nl2br
+            $data['message'] = nl2br($data['message']);
+
+            //todo:added rep files
+            $repfiles = empty($data['files']) ? [] : $data['files'];
+
             // data for db insert replay talk
             $buildData = $tManager->build([
                 'rid'           => $taskParent['id'],
                 'title'         => 'RE: '.$taskParent['title'],
                 'text'          => $data['message'],
                 'subscribers'   => $subscribersChanged,
-                'attachements'  => [],
+                'attachements'  => json_encode($repfiles),
                 'author'        => $UID,
                 'hash'          => $tManager->createhash(),
             ]);
@@ -145,6 +151,22 @@ class ApiController extends Controller {
 
             $front['insert_id'] = $insertId;
             $front['parent_id'] = $taskParent['id'];
+
+            $shared_for = false;
+            if ($insertId && !empty($repfiles)) {
+                $usersids = array_diff($this->connect->users()->getUsersIDs(), [$UID]);
+
+                foreach($usersids as $u) {
+                    foreach($repfiles as $fid) {
+
+                        if (empty($fid) || empty($u))
+                            continue;
+
+                        $shared_for[] = $fManager->shareFileWith($fid, $u);
+                    }
+                }
+            }
+            $front['shared_for'] = $shared_for;
 
         }
         // Begin talk
@@ -303,9 +325,11 @@ class ApiController extends Controller {
         $to = explode('@', $post['to']);
         $toPart = $to[0];
         $subject = $post['subject'];
-        $content = empty($post['content']) ? strip_tags($post['content_html']) : $post['content'];
-        $content = $this->cleanBody($content);
+        $content = empty($post['content']) ? $post['content_html'] : $post['content'];
+        $content = $this->parseBodyContent($content);
         $groupPrefix = $this->configurator->get('group_prefix');
+
+
 
         // Owner. Key: userid
         $userfrom = $this->connect->users()->getByEmail(trim($post['from']));
@@ -392,6 +416,12 @@ class ApiController extends Controller {
         $buildData = [];
         $subscribers = [];
 
+
+        //todo: nl2br
+        $content = nl2br($content);
+        $textTags = '<br><p><blockquote><h1><h2><h3><h4><strong><em><del><a><ul><ol><li><hr><img>';
+        $content = strip_tags($content, $textTags);
+
         // оброботка входящих ответов c $hash
         if ($itReplay && $messageParent) {
 
@@ -400,6 +430,7 @@ class ApiController extends Controller {
                 ['users' => [$UID]],
                 ['users' => [$messageParent['author']]]
             );
+
 
             // insert message
             $buildData = $tManager->build([
@@ -652,37 +683,49 @@ class ApiController extends Controller {
     {
         $UID = 'admin';
 
-        $tManager = new TalkManager($UID, $this->connect, $this->configurator);
-        $fManager = new FileManager($UID, $this->connect, $this->activityData, $this->manager);
-        $mManager = new MailManager($UID, $this->connect, $this->configurator, $tManager, $fManager);
-
-
-        $_parent_storage = $this->connect->files()->_parent_storage($UID);
-        var_dump($_parent_storage);
-
-        $_parent_storage = $this->connect->files()->_parent_storage($UID, 'files/First');
-        var_dump($_parent_storage);
+//        $tManager = new TalkManager($UID, $this->connect, $this->configurator);
+//        $fManager = new FileManager($UID, $this->connect, $this->activityData, $this->manager);
+//        $mManager = new MailManager($UID, $this->connect, $this->configurator, $tManager, $fManager);
+//
+//
+//        $_parent_storage = $this->connect->files()->_parent_storage($UID);
+//        var_dump($_parent_storage);
+//
+//        $_parent_storage = $this->connect->files()->_parent_storage($UID, 'files/First');
+//        var_dump($_parent_storage);
 
         exit;
     }
 
-    public function cleanBody($body)
+    /**
+     * @param $body
+     * @return string
+     */
+    public function parseBodyContent($body)
     {
-        $bodyArr = explode("\n", $body);
-        $markIndex = null;
-        $bodyRebuildArr = [];
-        $bodyLength = count($bodyArr);
-        for ($i=0; $i < $bodyLength; $i++) {
-            if ($bodyArr[$i][0] != '>') {
-                $bodyRebuildArr[$i] = $bodyArr[$i];
-            } else if ($markIndex == null) {
-                $markIndex = $i;
+        $separ = '------------ answer below this line ------------';
+        if (count(explode($separ,$body)) === 2) {
+            $body = explode($separ,$body)[0];
+            return $body;
+        }
+        else {
+            $bodyArr = explode("\n", $body);
+            $markIndex = null;
+            $bodyRebuildArr = [];
+            $bodyLength = count($bodyArr);
+            for ($i=0; $i < $bodyLength; $i++) {
+                if ($bodyArr[$i][0] != '>') {
+                    $bodyRebuildArr[$i] = $bodyArr[$i];
+                } else if ($markIndex == null) {
+                    $markIndex = $i;
+                }
             }
+            if ($markIndex) {
+                unset($bodyRebuildArr[$markIndex-1]);
+            }
+            return join("\n", $bodyRebuildArr);
         }
-        if ($markIndex) {
-            unset($bodyRebuildArr[$markIndex-1]);
-        }
-        return join("\n", $bodyRebuildArr);
+
     }
 
 }
