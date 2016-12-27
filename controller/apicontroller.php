@@ -332,15 +332,19 @@ class ApiController extends Controller {
             if (!empty($userAdminData))
             {
                 $server_host = $this->configurator->get('server_host');
-
                 $collabUser = $this->configurator->get('collab_user');
-                $fromUser = ['email' => $post['from'], 'displayname' => !empty($post['from_name']) ? $post['from_name'] : 'User'];
+
+                $fromUser = [
+                    'email' => $post['from'],
+                    'to' => $post['to'],
+                    'displayname' => (!empty($post['from_name']) ? $post['from_name'] : 'User')
+                ];
 
                 $tManager = new TalkManager($collabUser, $this->connect, $this->configurator);
                 $fManager = new FileManager($collabUser, $this->connect, $this->activityData, $this->manager);
                 $mManager = new MailManager($collabUser, $this->connect, $this->configurator, $tManager, $fManager);
 
-                $htmlBody = $mManager->createTemplateError($userAdminData, $collabUser, ['title' => $subject], $fromUser);
+                $htmlBody = $mManager->createTemplateError($userAdminData, ['title' => $subject], $fromUser);
 
                 $mManager->send(
                     [
