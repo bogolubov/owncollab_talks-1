@@ -315,7 +315,6 @@ class ApiController extends Controller {
         $groupPrefix = $this->configurator->get('group_prefix');
 
 
-
         // Owner. Key: userid
         $userfrom = $this->connect->users()->getByEmail(trim($post['from']));
         $userfromData = $this->connect->users()->getUserData($userfrom['userid']);

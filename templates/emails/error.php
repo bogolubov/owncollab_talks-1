@@ -453,7 +453,7 @@ $mailtitle              = $sitehost . ' // ' . $talkmessage['title'];
                                                     <p>
                                                         Dear <b><?php p($usersender['displayname']) ?></b>,</p>
                                                     <p>
-                                                        You tried to send an email to <?php p($usersender['to']) ?>. We kindly
+                                                        You tried to send an email to <b><?php p($usersender['to']) ?></b>. We kindly
                                                         inform you that your email with the title <b>"<?php p($mailtitle) ?>"</b> could
                                                         not be delivered.</p>
                                                     <p>
