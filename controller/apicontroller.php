@@ -278,34 +278,7 @@ class ApiController extends Controller {
         // UsersData with empty emails
         // Create error email
         if (!empty($userDataEmptyEmails)) {
-            $maila = \OCP\Config::getSystemValue('mail_from_address', false);
-            $maild = \OCP\Config::getSystemValue('mail_domain', false);
-            if ($maila && $maild) {
-                $userAdminData = ['displayname' =>'Administrator', 'email'=> $maila.'@'.$maild];
-            } else {
-                $userAdminData = $this->connect->users()->getUserData('admin');
-            }
-
-            if (!empty($userAdminData)) {
-                $htmlBody = $mManager->createTemplateError($userAdminData, $owner, $buildData, $userDataEmptyEmails);
-
-                $mManager->send(
-                    [
-                        'email' => $owner['email'],
-                        'name' => $owner['displayname'],
-                    ],
-                    [
-                        'email' => $userAdminData['email'],
-                        'name' => $userAdminData['displayname'],
-                    ],
-                    $server_host . ' // Receiving email error',
-                    $htmlBody,
-                    $attachfilesInfo
-                );
-
-            } else {
-                // todo: а если нет админа ?
-            }
+            // todo: решенно перенести для неизвестных emails
         }
 
         if($front['insert_id'] && !$taskParent) {
@@ -348,6 +321,42 @@ class ApiController extends Controller {
         $userfromData = $this->connect->users()->getUserData($userfrom['userid']);
 
         if (!$userfromData) {
+            //todo: error email
+
+            $maila = \OCP\Config::getSystemValue('mail_from_address', false);
+            $maild = \OCP\Config::getSystemValue('mail_domain', false);
+
+            if ($maila && $maild) $userAdminData = ['displayname' =>'Administrator', 'email'=> $maila.'@'.$maild];
+            else $userAdminData = $this->connect->users()->getUserData('admin');
+
+            if (!empty($userAdminData))
+            {
+                $server_host = $this->configurator->get('server_host');
+
+                $collabUser = $this->configurator->get('collab_user');
+                $fromUser = ['email' => $post['from'], 'displayname' => !empty($post['from_name']) ? $post['from_name'] : 'User'];
+
+                $tManager = new TalkManager($collabUser, $this->connect, $this->configurator);
+                $fManager = new FileManager($collabUser, $this->connect, $this->activityData, $this->manager);
+                $mManager = new MailManager($collabUser, $this->connect, $this->configurator, $tManager, $fManager);
+
+                $htmlBody = $mManager->createTemplateError($userAdminData, $collabUser, ['title' => $subject], $fromUser);
+
+                $mManager->send(
+                    [
+                        'email' => $fromUser['email'],
+                        'name' => $fromUser['displayname'],
+                    ],
+                    [
+                        'email' => $userAdminData['email'],
+                        'name' => $userAdminData['displayname'],
+                    ],
+                    $server_host . ' // Receiving email error',
+                    $htmlBody
+                );
+
+            } else {/* todo: а если нет админа ? */}
+
             $result['error'] = 'User not found';
             return new DataResponse($result);
         }

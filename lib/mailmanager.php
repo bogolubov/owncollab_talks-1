@@ -114,6 +114,7 @@ class MailManager
         return Helper::renderPartial('owncollab_talks', 'emails/error', $renderData);
     }
 
+
     public function getUsersFromSubscribers($subscribers, $addUsers = [])
     {
         // get users for mail
