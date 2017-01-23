@@ -60,7 +60,15 @@ if($message):
         <form id="quick-reply" method="post">
             <input type="text" hidden="hidden" name="hash" value="<?=$messageHash?>">
             <div class="tbl">
-                <div class="tbl_cell valign_top width70"><textarea name="message" class="width100" placeholder="Answer directly"></textarea></div>
+                <div class="tbl_cell valign_top width70">
+                    <textarea name="message" class="width100" placeholder="Answer directly"></textarea>
+
+                    <div class="talk_title">Upload file</div>
+                    <div id="upload_box">
+                        <div id="uploadfile_plugin"></div>
+                    </div>
+
+                </div>
                 <div class="tbl_cell valign_top">&nbsp;&nbsp;<input type="submit" value="Reply now"></div>
             </div>
         </form>

@@ -10,26 +10,27 @@ use \OCA\Owncollab_Talks\Helper;
  */
 
 /*
-'user_data_owner'
-'talkmessage'
-'users_data_empty'
-'sitehost'
-'siteurl'
-'logoimg'
+ *
+$listusersfullnames     = '';
+for ($isc=0; $isc < count($usersempty); $isc ++)
+    $listusersfullnames .= "<b>{$usersempty[$isc]['displayname']}</b>" . (count($usersempty)-2 >= $isc ? ', ': '');
+
+ 'user_data_admin'
+ 'user_data_sender'
+ 'talkmessage'
+ 'sitehost'
+ 'siteurl'
+ 'logoimg'
 */
 
 $useradmin              = $_['user_data_admin'];
-$userowner              = $_['user_data_owner'];
+$usersender             = $_['user_data_sender'];
 $talkmessage            = $_['talkmessage'];
-$usersempty             = $_['users_data_empty'];
 $sitehost               = $_['sitehost'];
 $siteurl                = trim($_['siteurl'], '/');
 $logoimgfullurl         = $siteurl . $_['logoimg'];
 $mailtitle              = $sitehost . ' // ' . $talkmessage['title'];
 
-$listusersfullnames     = '';
-for ($isc=0; $isc < count($usersempty); $isc ++)
-    $listusersfullnames .= "<b>{$usersempty[$isc]['displayname']}</b>" . (count($usersempty)-2 >= $isc ? ', ': '');
 
 
 ?><!doctype html>
@@ -450,9 +451,9 @@ for ($isc=0; $isc < count($usersempty); $isc ++)
                                                 <td id="talk-text" align="left">
 
                                                     <p>
-                                                        Dear <b><?php p($userowner['displayname']) ?></b>,</p>
+                                                        Dear <b><?php p($usersender['displayname']) ?></b>,</p>
                                                     <p>
-                                                        You tried to send an email to <?php echo $listusersfullnames ?>. We kindly
+                                                        You tried to send an email to <b><?php p($usersender['to']) ?></b>. We kindly
                                                         inform you that your email with the title <b>"<?php p($mailtitle) ?>"</b> could
                                                         not be delivered.</p>
                                                     <p>

@@ -44,7 +44,7 @@ if (!empty($_['subscribers']) && is_array($_['subscribers'])) {
 
         body {
             background-color: #f6f6f6;
-            font-family: "Times New Roman", Arial, sans-serif;
+            font-family:  "Open Sans", Frutiger, Calibri, "Myriad Pro", Myriad, sans-serif;
             -webkit-font-smoothing: antialiased;
             font-size: 14px;
             line-height: 1.4;
@@ -62,7 +62,7 @@ if (!empty($_['subscribers']) && is_array($_['subscribers'])) {
         }
 
         table td {
-            font-family: "Times New Roman", Arial, sans-serif;
+            font-family:  "Open Sans", Frutiger, Calibri, "Myriad Pro", Myriad, sans-serif;
             font-size: 14px;
             vertical-align: top;
         }
@@ -132,7 +132,7 @@ if (!empty($_['subscribers']) && is_array($_['subscribers'])) {
         h3,
         h4 {
             color: #000000;
-            font-family: "Times New Roman", Arial, sans-serif;
+            font-family:  "Open Sans", Frutiger, Calibri, "Myriad Pro", Myriad, sans-serif;
             font-weight: 400;
             line-height: 1.4;
             margin: 0;
@@ -149,7 +149,7 @@ if (!empty($_['subscribers']) && is_array($_['subscribers'])) {
         p,
         ul,
         ol {
-            font-family: "Times New Roman", Arial, sans-serif;
+            font-family:  "Open Sans", Frutiger, Calibri, "Myriad Pro", Myriad, sans-serif;
             font-size: 14px;
             font-weight: normal;
             margin: 0;
@@ -411,7 +411,7 @@ if (!empty($_['subscribers']) && is_array($_['subscribers'])) {
                             <table border="0" cellpadding="0" cellspacing="0">
                                 <tr>
                                     <td>
-
+                                        ------------ answer below this line ------------<br>
                                         <p>Dear <b><?php p($userdisplayname)?></b>,</p>
                                         <p>The user <b><?php p($authordisplayname)?></b> dropped following email to you<?php echo $listreceievedfullnames; ?>.</p>
                                         <p>Please answer directly using your preferred email client or login to your

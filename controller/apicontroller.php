@@ -130,13 +130,19 @@ class ApiController extends Controller {
                 ['users' => [$taskParent['author']]]
             );
 
+            //todo: nl2br
+            $data['message'] = nl2br($data['message']);
+
+            //todo:added rep files
+            $repfiles = empty($data['files']) ? [] : $data['files'];
+
             // data for db insert replay talk
             $buildData = $tManager->build([
                 'rid'           => $taskParent['id'],
                 'title'         => 'RE: '.$taskParent['title'],
                 'text'          => $data['message'],
                 'subscribers'   => $subscribersChanged,
-                'attachements'  => [],
+                'attachements'  => json_encode($repfiles),
                 'author'        => $UID,
                 'hash'          => $tManager->createhash(),
             ]);
@@ -145,6 +151,22 @@ class ApiController extends Controller {
 
             $front['insert_id'] = $insertId;
             $front['parent_id'] = $taskParent['id'];
+
+            $shared_for = false;
+            if ($insertId && !empty($repfiles)) {
+                $usersids = array_diff($this->connect->users()->getUsersIDs(), [$UID]);
+
+                foreach($usersids as $u) {
+                    foreach($repfiles as $fid) {
+
+                        if (empty($fid) || empty($u))
+                            continue;
+
+                        $shared_for[] = $fManager->shareFileWith($fid, $u);
+                    }
+                }
+            }
+            $front['shared_for'] = $shared_for;
 
         }
         // Begin talk
@@ -156,6 +178,15 @@ class ApiController extends Controller {
             $postShare  = isset($post['share'])  ? array_keys($post['share']) : [];
             $postUsers  = isset($post['users'])  ? array_values($post['users']) : [];
             $postGroups = isset($post['groups']) ? array_values($post['groups']) : [];
+
+            $postNoGroupUsers  = isset($post['nogroup_users'])  ? array_values($post['nogroup_users']) : [];
+            $postUsers = array_merge($postNoGroupUsers, $postUsers);
+
+            //var_dump($post);
+            //var_dump($postUsers);
+            //var_dump($postNoGroupUsers);
+            //exit;
+
             $subscribersChanged = $tManager->subscribersCreate($postGroups, $postUsers);
             $buildData = $tManager->build([
                 'title'         => $post['title'],
@@ -190,9 +221,12 @@ class ApiController extends Controller {
 
         // SEND Emails
         $attachfilesInfo = [];
-        if (isset($postShare)) {
+        if (!empty($postShare)) {
             $attachfilesInfo = $fManager->getFilesDataInfo($postShare);
         }
+        //todo:fixneed
+        if (!is_array($attachfilesInfo))
+            $attachfilesInfo = [];
 
         $usersIds = $mManager->getUsersFromSubscribers($subscribersChanged, $UID);
 
@@ -201,15 +235,15 @@ class ApiController extends Controller {
         $userDataEmptyEmails = [];
         $server_host = $this->configurator->get('server_host');
         $mail_domain = $this->configurator->get('mail_domain');
-        foreach ($usersIds as $uid) {
-            $ud = $this->connect->users()->getUserData($uid);
-
+        $usersData = $this->connect->users()->getUngroupUsers($usersIds);
+        foreach ($usersData as $ud) {
+            //$uid = $ud['uid'];
+            //$ud = $this->connect->users()->getUserData($uid);
 /*            if (!empty($attachfilesInfo)) {
                 for ($iau=0; $iau<count($attachfilesInfo); $iau++) {
                     $attachfilesInfo[$iau]['webdav'] = $this->connect->files()->getFileLink($attachfilesInfo[$iau]['fileid'], $uid);
                 }
             }*/
-
             $buildData['id'] = $insertId;
             $htmlBody = $mManager->createTemplateStart($ud, $buildData, $attachfilesInfo);
 
@@ -244,34 +278,7 @@ class ApiController extends Controller {
         // UsersData with empty emails
         // Create error email
         if (!empty($userDataEmptyEmails)) {
-            $maila = \OCP\Config::getSystemValue('mail_from_address', false);
-            $maild = \OCP\Config::getSystemValue('mail_domain', false);
-            if ($maila && $maild) {
-                $userAdminData = ['displayname' =>'Administrator', 'email'=> $maila.'@'.$maild];
-            } else {
-                $userAdminData = $this->connect->users()->getUserData('admin');
-            }
-
-            if (!empty($userAdminData)) {
-                $htmlBody = $mManager->createTemplateError($userAdminData, $owner, $buildData, $userDataEmptyEmails);
-
-                $mManager->send(
-                    [
-                        'email' => $owner['email'],
-                        'name' => $owner['displayname'],
-                    ],
-                    [
-                        'email' => $userAdminData['email'],
-                        'name' => $userAdminData['displayname'],
-                    ],
-                    $server_host . ' // Receiving email error',
-                    $htmlBody,
-                    $attachfilesInfo
-                );
-
-            } else {
-                // todo: а если нет админа ?
-            }
+            // todo: решенно перенести для неизвестных emails
         }
 
         if($front['insert_id'] && !$taskParent) {
@@ -303,15 +310,56 @@ class ApiController extends Controller {
         $to = explode('@', $post['to']);
         $toPart = $to[0];
         $subject = $post['subject'];
-        $content = empty($post['content']) ? strip_tags($post['content_html']) : $post['content'];
-        $content = $this->cleanBody($content);
+        $content = empty($post['content']) ? $post['content_html'] : $post['content'];
+        $content = $this->parseBodyContent($content);
         $groupPrefix = $this->configurator->get('group_prefix');
+
 
         // Owner. Key: userid
         $userfrom = $this->connect->users()->getByEmail(trim($post['from']));
         $userfromData = $this->connect->users()->getUserData($userfrom['userid']);
 
         if (!$userfromData) {
+            //todo: error email
+
+            $maila = \OCP\Config::getSystemValue('mail_from_address', false);
+            $maild = \OCP\Config::getSystemValue('mail_domain', false);
+
+            if ($maila && $maild) $userAdminData = ['displayname' =>'Administrator', 'email'=> $maila.'@'.$maild];
+            else $userAdminData = $this->connect->users()->getUserData('admin');
+
+            if (!empty($userAdminData))
+            {
+                $server_host = $this->configurator->get('server_host');
+                $collabUser = $this->configurator->get('collab_user');
+
+                $fromUser = [
+                    'email' => $post['from'],
+                    'to' => $post['to'],
+                    'displayname' => (!empty($post['from_name']) ? $post['from_name'] : 'User')
+                ];
+
+                $tManager = new TalkManager($collabUser, $this->connect, $this->configurator);
+                $fManager = new FileManager($collabUser, $this->connect, $this->activityData, $this->manager);
+                $mManager = new MailManager($collabUser, $this->connect, $this->configurator, $tManager, $fManager);
+
+                $htmlBody = $mManager->createTemplateError($userAdminData, ['title' => $subject], $fromUser);
+
+                $mManager->send(
+                    [
+                        'email' => $fromUser['email'],
+                        'name' => $fromUser['displayname'],
+                    ],
+                    [
+                        'email' => $userAdminData['email'],
+                        'name' => $userAdminData['displayname'],
+                    ],
+                    $server_host . ' // Receiving email error',
+                    $htmlBody
+                );
+
+            } else {/* todo: а если нет админа ? */}
+
             $result['error'] = 'User not found';
             return new DataResponse($result);
         }
@@ -392,6 +440,12 @@ class ApiController extends Controller {
         $buildData = [];
         $subscribers = [];
 
+
+        //todo: nl2br
+        $content = nl2br($content);
+        $textTags = '<br><p><blockquote><h1><h2><h3><h4><strong><em><del><a><ul><ol><li><hr><img>';
+        $content = strip_tags($content, $textTags);
+
         // оброботка входящих ответов c $hash
         if ($itReplay && $messageParent) {
 
@@ -400,6 +454,7 @@ class ApiController extends Controller {
                 ['users' => [$UID]],
                 ['users' => [$messageParent['author']]]
             );
+
 
             // insert message
             $buildData = $tManager->build([
@@ -650,176 +705,51 @@ class ApiController extends Controller {
      */
     public function test($data)
     {
-
-/*        $UID = 'bogdan';
-        $messageParent = $this->connect->messages()->getById(1);
-
-        // work libs
-        $tManager = new TalkManager($UID, $this->connect, $this->configurator);
-        //$fManager = new FileManager($UID, $this->connect, $this->activityData, $this->manager);
-        //$mManager = new MailManager($UID, $this->connect, $this->configurator, $tManager, $fManager);
-
-        $subscribers = $tManager->subscribersChange(
-            $messageParent['subscribers'],
-            ['users' => [$UID]],
-            ['users' => [$messageParent['author']]]
-        );
-
-        var_dump($subscribers);
-
-        die;
-        return new DataResponse($data);*/
-
-
-/*
-        // Testing email template
         $UID = 'admin';
-        $UIDTO = 'bogdan';
 
-        $tManager = new TalkManager($UID, $this->connect, $this->configurator);
-        $fManager = new FileManager($UID, $this->connect, $this->activityData, $this->manager);
-        $mManager = new MailManager($UID, $this->connect, $this->configurator, $tManager, $fManager);
-
-        $talkmessage = $this->connect->messages()->getById(2);
-        $attachementsFilesIds = json_decode($talkmessage['attachements'], true);
-        $attachfilesInfo = $fManager->getFilesDataInfo($attachementsFilesIds);
-        $userDataTo = $this->connect->users()->getUserData($UIDTO);
-
-        $email  = $mManager->createTemplateStart($userDataTo, $talkmessage, $attachfilesInfo);
-
-        exit($email);*/
-
-        //var_dump($attachfilesInfo);
-
-        /*
-        // Parse mail content
-        $groupPrefix = $this->configurator->get('group_prefix');
-        $toPart = 'developers-group';
-        $itGroup = false;
-        if ($toGroup = substr($toPart, -strlen($groupPrefix)) AND $toGroup === $groupPrefix) {
-            $toGroup = substr($toPart, 0, -(strlen($groupPrefix)));
-            $groupsList = $this->connect->users()->getGroupsUsersList();
-            if (isset($groupsList[$toGroup]))
-                $itGroup = true;
-        }
-        var_dump($toGroup);
-        var_dump($itGroup);*/
-/*
-        // Link
-        $siteurl = $this->configurator->get('site_url');
-        $file = $this->connect->files()->getInfoByIds(27)[0];
-        $filelink = $siteurl . 'remote.php/webdav' . $file['file'];
-        var_dump($file);
-        var_dump($filelink);*/
-
-        // Link TRUE FUCK!!!! HUINA
-        /*
-        $fown = $this->connect->files()->getFileLink(973, 'werd');
-        $fshr = $this->connect->files()->getFileLink(973, 'dev1');
-
-        var_dump($fown);
-        var_dump($fshr);
-
-        */
-/*
-        $body = Helper::renderPartial($this->appName, 'email_template');
-        $bodyArr = explode("\n", $body);
-
-        $markIndex = null;
-        $bodyRebuild = '';
-        $bodyRebuildArr = [];
-
-        $bodyLength = count($bodyArr);
-        for ($i=0; $i < $bodyLength; $i++) {
-            if ($bodyArr[$i][0] != '>') {
-                $bodyRebuildArr[$i] = $bodyArr[$i];
-            } else if ($markIndex == null) {
-                $markIndex = $i;
-            }
-        }
-        if ($markIndex) {
-            unset($bodyRebuildArr[$markIndex-1]);
-        }
-        $bodyRebuild = join("\n", $bodyRebuildArr);
-
-        var_dump($bodyRebuildArr);
-        var_dump($bodyRebuild);
-
-*/
-
-        /**/
-        // Testing email error template
-/*        $UID = 'werd';
-        $userDataEmptyEmails = [];
-
-        $tManager = new TalkManager($UID, $this->connect, $this->configurator);
-        $fManager = new FileManager($UID, $this->connect, $this->activityData, $this->manager);
-        $mManager = new MailManager($UID, $this->connect, $this->configurator, $tManager, $fManager);
-
-
-        $maila = \OCP\Config::getSystemValue('mail_from_address', false);
-        $maild = \OCP\Config::getSystemValue('mail_domain', false);
-        if ($maila && $maild) {
-            $userAdminData = ['displayname' =>'Administrator', 'email'=> $maila.'@'.$maild];
-        } else {
-            $userAdminData = $this->connect->users()->getUserData('admin');
-        }
-
-
-        $userOwnerData = $this->connect->users()->getUserData($UID);
-        $talkmessage = $this->connect->messages()->getById(2);
-        $userDataEmptyEmails[] = $this->connect->users()->getUserData('devpro');
-        $userDataEmptyEmails[] = $this->connect->users()->getUserData('devpro2');
-        $userDataEmptyEmails[] = $this->connect->users()->getUserData('devpro3');
-        $userDataEmptyEmails[] = $this->connect->users()->getUserData('devpro4');
-
-        $email  = $mManager->createTemplateError($userAdminData, $userOwnerData, $talkmessage, $userDataEmptyEmails);
-        echo ($email);*/
-
-        //\OCP\IConfig getSystemValue
-//        $maila = \OCP\Config::getSystemValue('mail_from_address', false);
-//        $maild = \OCP\Config::getSystemValue('mail_domain', false);
+//        $tManager = new TalkManager($UID, $this->connect, $this->configurator);
+//        $fManager = new FileManager($UID, $this->connect, $this->activityData, $this->manager);
+//        $mManager = new MailManager($UID, $this->connect, $this->configurator, $tManager, $fManager);
 //
-//        var_dump($maila);
-//        var_dump($maild);
-//        var_dump($userAdminData);
-//        $htmlBody = $mManager->createTemplate($buildData, $taskFiles, $ud['uid']);
-//        $data = [ ];
-        //$email = Helper::renderPartial($this->appName, 'emails/start', $data);
-        //return new TemplateResponse($this->appName, 'emails/start', $data);
-        //return new MailTemplateResponse($this->appName, 'emails/start', $data);
-
-/*        $maila = \OCP\Config::getSystemValue('mail_from_address', false);
-        $maild = \OCP\Config::getSystemValue('mail_domain', false);
-        if ($maila && $maild) {
-            $userAdminData = ['displayname' =>'Administrator', 'email'=> $maila.'@'.$maild];
-        } else {
-            $userAdminData = $this->connect->users()->getUserData('admin');
-        }
-
-        var_dump($userAdminData);*/
-
+//
+//        $_parent_storage = $this->connect->files()->_parent_storage($UID);
+//        var_dump($_parent_storage);
+//
+//        $_parent_storage = $this->connect->files()->_parent_storage($UID, 'files/First');
+//        var_dump($_parent_storage);
 
         exit;
     }
 
-    public function cleanBody($body)
+    /**
+     * @param $body
+     * @return string
+     */
+    public function parseBodyContent($body)
     {
-        $bodyArr = explode("\n", $body);
-        $markIndex = null;
-        $bodyRebuildArr = [];
-        $bodyLength = count($bodyArr);
-        for ($i=0; $i < $bodyLength; $i++) {
-            if ($bodyArr[$i][0] != '>') {
-                $bodyRebuildArr[$i] = $bodyArr[$i];
-            } else if ($markIndex == null) {
-                $markIndex = $i;
+        $separ = '------------ answer below this line ------------';
+        if (count(explode($separ,$body)) === 2) {
+            $body = explode($separ,$body)[0];
+            return $body;
+        }
+        else {
+            $bodyArr = explode("\n", $body);
+            $markIndex = null;
+            $bodyRebuildArr = [];
+            $bodyLength = count($bodyArr);
+            for ($i=0; $i < $bodyLength; $i++) {
+                if ($bodyArr[$i][0] != '>') {
+                    $bodyRebuildArr[$i] = $bodyArr[$i];
+                } else if ($markIndex == null) {
+                    $markIndex = $i;
+                }
             }
+            if ($markIndex) {
+                unset($bodyRebuildArr[$markIndex-1]);
+            }
+            return join("\n", $bodyRebuildArr);
         }
-        if ($markIndex) {
-            unset($bodyRebuildArr[$markIndex-1]);
-        }
-        return join("\n", $bodyRebuildArr);
+
     }
 
 }

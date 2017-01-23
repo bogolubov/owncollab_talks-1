@@ -9,6 +9,7 @@ if(App.namespace){App.namespace('Action.Edit', function(App){
      */
     _.init = function () {
 
+
         if (!App.query('textarea[name=message]'))
             return;
 
@@ -17,8 +18,14 @@ if(App.namespace){App.namespace('Action.Edit', function(App){
         _.checkSubscribersEvent();
         _.submitFormEvent();
 
-        App.style('/apps/owncollab_talks/css/uploadfile.css');
+        _.initPluginUploadfile();
+    };
 
+    /**
+     *
+     */
+    _.initPluginUploadfile = function(){
+        App.style('/apps/owncollab_talks/css/uploadfile.css');
         App.require('jq_uploadfile', [
             App.urlScript + 'libs/jquery.form.js',
             App.urlScript + 'libs/jquery.uploadfile.js'
@@ -26,10 +33,13 @@ if(App.namespace){App.namespace('Action.Edit', function(App){
             _.submitFileUploadEvent();
             _.attachUserFileList();
         }).requireStart('jq_uploadfile');
-
     };
 
     _.submitFormSendNow = false;
+
+    /**
+     *
+     */
     _.submitFormEvent = function(){
 
         jQuery('form#begin-talk').submit(function(event){
@@ -73,10 +83,17 @@ if(App.namespace){App.namespace('Action.Edit', function(App){
      */
     _.submitFormReplyEvent = function () {
 
+        _.initPluginUploadfile();
+
         jQuery('form#quick-reply').submit(function(event) {
             event.preventDefault();
 
             var formValues = Util.formData(this, true);
+
+            // add files
+            formValues['files'] = Object.keys(App.Action.File.selectFilesData);
+            // console.log(formValues);
+            // return false;
 
             App.Controller.Page.errorLineClose();
 
@@ -87,10 +104,8 @@ if(App.namespace){App.namespace('Action.Edit', function(App){
 
                 // response = can have keys: error, parent_id, insert_id
                 App.Action.Api.request('insert', function(response) {
-
-                    console.log('reply formValues >> ', formValues);
-                    console.log('reply response >> ', response);
-
+                    //console.log('reply formValues >> ', formValues);
+                    //console.log('reply response >> ', response);
                     // response is object
                     if (Util.isObj(response)) {
 
@@ -104,9 +119,7 @@ if(App.namespace){App.namespace('Action.Edit', function(App){
                             } else
                                 jQuery("ul.listmenu>li[data-id="+response['parent_id']+"]").click();
                         }
-
                     }
-
 /*
                     if(!Util.isObj(response) || response['error'] ) {
                         App.Controller.Page.errorLine(response['errorinfo']?response['errorinfo']:"Server internal error");
@@ -122,7 +135,6 @@ if(App.namespace){App.namespace('Action.Edit', function(App){
                         } else
                             jQuery("ul.listmenu>li[data-id="+response['parent_id']+"]").click();
                     }*/
-
 
                 }, formValues);
             }

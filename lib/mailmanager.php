@@ -99,13 +99,26 @@ class MailManager
         return Helper::renderPartial('owncollab_talks', 'emails/start', $renderData);
     }
 
-    public function createTemplateError($userAdminData, $userOwnerData, array $talkmessage, array $userDataEmptyEmails)
+/*    public function createTemplateError($userAdminData, $userOwnerData, array $talkmessage, array $userDataEmptyEmails)
     {
         $renderData = [
             'user_data_admin'       => $userAdminData,
             'user_data_owner'       => $userOwnerData,
             'talkmessage'           => $talkmessage,
             'users_data_empty'      => $userDataEmptyEmails,
+            'sitehost'              => $this->configurator->get('server_host'),
+            'siteurl'               => $this->configurator->get('site_url'),
+            'logoimg'               => '/apps/owncollab_talks/img/logo.jpg',
+        ];
+
+        return Helper::renderPartial('owncollab_talks', 'emails/error', $renderData);
+    }*/
+    public function createTemplateError($userAdminData, array $talkmessage, array $userSenderData)
+    {
+        $renderData = [
+            'user_data_admin'       => $userAdminData,
+            'user_data_sender'      => $userSenderData,
+            'talkmessage'           => $talkmessage,
             'sitehost'              => $this->configurator->get('server_host'),
             'siteurl'               => $this->configurator->get('site_url'),
             'logoimg'               => '/apps/owncollab_talks/img/logo.jpg',
