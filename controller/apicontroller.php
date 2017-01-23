@@ -103,7 +103,6 @@ class ApiController extends Controller {
      */
     public function insert($data)
     {
-
         $post = Helper::post();
         $data = !empty($post["data"]) ? $post["data"] : [];
         $hash = !empty($data["hash"]) ? $data["hash"] : false;
@@ -235,7 +234,9 @@ class ApiController extends Controller {
         $userDataEmptyEmails = [];
         $server_host = $this->configurator->get('server_host');
         $mail_domain = $this->configurator->get('mail_domain');
-        $usersData = $this->connect->users()->getUngroupUsers($usersIds);
+
+        $usersData = $this->connect->users()->getUsersDataByIds($usersIds);
+
         foreach ($usersData as $ud) {
             //$uid = $ud['uid'];
             //$ud = $this->connect->users()->getUserData($uid);

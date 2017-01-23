@@ -171,4 +171,25 @@ class Users
 
     public function getUngroupUsersList($refresh = false){}
 
+    public function getUsersDataByIds($ids, $refresh = false)
+    {
+        static $usersData = null;
+
+        if($usersData === null || $refresh) {
+            $ins = '';
+            foreach ($ids as $id) {
+                if (empty($ins)) $ins .= '?';
+                else  $ins .= ',?';
+            }
+
+            $sql = "SELECT u.uid, u.displayname, p.configvalue as email
+            FROM *PREFIX*users u
+            LEFT JOIN *PREFIX*preferences p ON (p.userid = u.uid AND p.appid = 'settings' AND p.configkey = 'email')
+            WHERE u.uid IN ($ins)";
+
+            $usersData = $this->connect->queryAll($sql, $ids);
+        }
+        return $usersData;
+    }
+
 }
