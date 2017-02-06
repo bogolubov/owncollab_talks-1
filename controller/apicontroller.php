@@ -728,7 +728,7 @@ class ApiController extends Controller {
      */
     public function parseBodyContent($body)
     {
-        $separ = '------------ answer below this line ------------';
+        $separ = '-------------answer-below-this-line-------------';
         if (count(explode($separ,$body)) === 2) {
             $body = explode($separ,$body)[0];
             return $body;

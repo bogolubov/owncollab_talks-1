@@ -411,7 +411,7 @@ if (!empty($_['subscribers']) && is_array($_['subscribers'])) {
                             <table border="0" cellpadding="0" cellspacing="0">
                                 <tr>
                                     <td>
-                                        ------------ answer below this line ------------<br>
+                                        -------------answer-below-this-line-------------<br>
                                         <p>Dear <b><?php p($userdisplayname)?></b>,</p>
                                         <p>The user <b><?php p($authordisplayname)?></b> dropped following email to you<?php echo $listreceievedfullnames; ?>.</p>
                                         <p>Please answer directly using your preferred email client or login to your
