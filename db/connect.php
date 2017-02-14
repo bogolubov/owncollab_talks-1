@@ -26,16 +26,19 @@ class Connect
      * Connect constructor.
      * @param IDBConnection $db
      */
-    public function __construct(IDBConnection $db) {
+    public function __construct(IDBConnection $db)
+    {
         $this->db = $db;
 
         // Register tables models
-        $this->messages = new Messages($this, 'collab_messages');
-        $this->user_message = new UserMessages($this, 'collab_user_message');
         $this->users = new Users($this, 'users');
+        $this->messages = new Messages($this, 'collab_messages');
         $this->files = new Files($this, 'filecache');
-        $this->talks = new Talks($this, $this->messages);
-        $this->answers = new Answers($this, $this->messages);
+
+        //$this->user_message = new UserMessages($this, 'collab_user_message');
+
+        //$this->talks = new Talks($this, $this->messages);
+        //$this->answers = new Answers($this, $this->messages);
     }
 
     /**
@@ -63,12 +66,12 @@ class Connect
      * @param $fields
      * @param $table
      * @param null $where
-     * @param null $params
+     * @param array $params
      * @return mixed
      */
-    public function select($fields, $table, $where = null, $params = null) {
+    public function select($fields, $table, $where = null, $params = []) {
         $sql = "SELECT " . $fields . " FROM " . $table . ($where ? " WHERE " . $where : "") . ";";
-        return  $this->queryAll($sql, $params);
+        return  $this->queryAll($sql, (array) $params);
     }
 
     /**

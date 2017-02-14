@@ -22,43 +22,16 @@ $application = new \OCA\Owncollab_Talks\AppInfo\Application();
 
 $application->registerRoutes($this, ['routes' => [
 
-    ['name' => 'main#index', 'url' => '/', 'verb' => 'GET'],
-    ['name' => 'api#index', 'url' => '/api', 'verb' => 'POST'],
+    ['name' => 'main#index',    'url' => '/',                   'verb' => 'GET'],
+    ['name' => 'main#my',       'url' => '/my',                 'verb' => 'GET'],
+    ['name' => 'main#all',      'url' => '/all',                'verb' => 'GET'],
+    ['name' => 'main#started',  'url' => '/started',            'verb' => 'GET'],
+    ['name' => 'main#begin',    'url' => '/begin',              'verb' => 'GET'],
+    ['name' => 'main#read',     'url' => '/read/{id}',          'verb' => 'GET'],
+    ['name' => 'api#index',     'url' => '/api',                'verb' => ['GET','POST']],
+    ['name' => 'api#insert',    'url' => '/save_talk',          'verb' => 'POST'],
+    ['name' => 'api#parser',    'url' => '/parse_manager',      'verb' => 'POST'],
+    ['name' => 'api#parserlog', 'url' => '/parserlog',          'verb' => 'POST'],
+    ['name' => 'api#test',      'url' => '/test',               'verb' => 'GET'],
 
-    ['name' => 'main#page', 'url' => '/page', 'verb' => 'GET'],
-    ['name' => 'main#do_echo', 'url' => '/echo', 'verb' => 'POST'],
-
-    ['name' => 'main#index', 'url' => '/all', 'verb' => 'GET'],
-    ['name' => 'main#mytalks', 'url' => '/mytalks', 'verb' => 'GET'],
-    ['name' => 'main#startedtalks', 'url' => '/startedtalks', 'verb' => 'GET'],
-    ['name' => 'main#talk', 'url' => '/talk/{id}', 'verb' => 'GET'],
-    ['name' => 'main#read', 'url' => '/read/{id}', 'verb' => 'GET'],
-    ['name' => 'main#begin', 'url' => '/begin', 'verb' => 'GET'],
-    ['name' => 'main#selectSubscribers', 'url' => '/subscribers', 'verb' => 'GET'],
-    ['name' => 'main#attachments', 'url' => '/attachments', 'verb' => 'GET'],
-    ['name' => 'main#saveTalk', 'url' => '/send', 'verb' => 'POST'],
-    //['name' => 'main#save', 'url' => '/send', 'verb' => 'GET'],
-    ['name' => 'main#reply', 'url' => '/reply/{id}', 'verb' => 'GET'],
-
-    ['name' => 'main#addUser', 'url' => '/adduser/{id}', 'verb' => 'GET'],
-    ['name' => 'main#removeUser', 'url' => '/removeuser/{talk}/{user}', 'verb' => 'GET'],
-    ['name' => 'main#markMessage', 'url' => '/mark/{id}/{flag}', 'verb' => 'GET'],
-
-    ['name' => 'main#getUserFiles', 'url' => '/getfiles', 'verb' => 'GET'],
-    ['name' => 'main#parseMessages', 'url' => '/parsemessages', 'verb' => 'GET'],
-
-    //['name' => 'main#parse_mail', 'url' => '/parsemail', 'verb' => 'GET|POST'],
-    ['name' => 'main#saveemailanswer', 'url' => '/savemail', 'verb' => 'GET|POST'],
-    //['name' => 'main#savemail', 'url' => '/savemail', 'verb' => 'GET|POST'],
-    ['name' => 'main#saveemailtalk', 'url' => '/savemailtalk', 'verb' => 'GET|POST'],
 ]]);
-
-\OCP\API::register(
-    'get',
-    '/apps/owncollab_talks/url',
-    function($urlParameters) {
-        return new \OC_OCS_Result($data);
-    },
-    'owncollab_talks',
-    \OC_API::ADMIN_AUTH
-);

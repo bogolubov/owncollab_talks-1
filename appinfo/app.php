@@ -11,13 +11,20 @@
 
 namespace OCA\Owncollab_Talks\AppInfo;
 
+
+use OCA\Owncollab_Talks\Db\Connect;
 use OCA\Owncollab_Talks\Helper;
+use OCA\Owncollab_Talks\MTAServer\Aliaser;
+use OCA\Owncollab_Talks\MTAServer\Configurator;
+use OCA\Owncollab_Talks\MTAServer\MtaConnector;
 use OCP\AppFramework\App;
 use OCP\Util;
+
 
 $appName = 'owncollab_talks';
 $app = new App($appName);
 $container = $app->getContainer();
+
 
 /**
  * Navigation menu settings
@@ -30,10 +37,46 @@ $container->query('OCP\INavigationManager')->add(function () use ($container, $a
 		'id' => $appName,
 		'order' => 10,
 		'href' => $urlGenerator->linkToRoute($appName.'.main.index'),
-		'icon' => $urlGenerator->imagePath($appName, 'app.svg'),
+		'icon' => $urlGenerator->imagePath($appName, 'app.png'),
 		'name' => $l->t('Talks')
 	];
 });
+
+
+/**
+ * Aliaser class a listen the events "create new users" and "create new group"
+ * todo: create error logs for Configurator & MtaConnector
+ */
+if( Helper::isAppSettingsUsers() ) {
+
+    $configurator = new Configurator();
+    $mta = new MtaConnector($configurator);
+
+    if($mtaErrors = $mta->getErrors()) {
+        Helper::mailParserLogerError($mtaErrors);
+    }
+    else if ($mta->getConnection()) {
+        $aliaser = new Aliaser($appName, $configurator, $mta);
+
+        // Sync MailServer virtual users with OwnCloud users
+        $connect = new Connect(\OC::$server->getDatabaseConnection());
+
+        $users = [];
+        $usersArr = $connect->users()->getAll();
+
+        foreach ($usersArr as $ua) {
+            $users[] = strtolower($ua['uid']);
+        }
+        $groups = [];
+        $groupsArr = $connect->users()->getAllGroups();
+        foreach ($groupsArr as $ga) {
+            $groups[] = strtolower($ga['gid']);
+        }
+
+        $aliaser->syncVirtualAliasesWithUsers($users, $groups);
+    }
+
+}
 
 
 /**
@@ -46,29 +89,8 @@ Util::addTranslations($appName);
 /**
  * Common styles and scripts
  */
-if(Helper::isAppPage($appName)){
+if(Helper::isAppPage($appName)) {
 	Util::addStyle($appName, 'common');
-	Util::addScript($appName, 'inc');
-	Util::addScript($appName, 'application');
+	Util::addScript($appName, 'libs/ns.application');
+	Util::addScript($appName, 'application/init');
 }
-
-
-/**
- * Detect and appoints styles and scripts for particular app page
- */
-$currentUri = Helper::getCurrentUri($appName);
-if($currentUri == '/') {
-
-
-} 
-
-/**
-* Set timezone to 'Berlin' 
-* It must be set in the ownCloud config 
-*/ 
-date_default_timezone_set('Europe/Berlin'); 
-
-/**
- * Checking and saving the files send by email
- */
-//$checkFiles = new TempFiles();

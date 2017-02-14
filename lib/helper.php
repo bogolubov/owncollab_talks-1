@@ -1,8 +1,10 @@
 <?php
 
+
 namespace OCA\Owncollab_Talks;
 
 use OC\User\Session;
+use OCA\Owncollab_Chart\Sessioner;
 use OCP\AppFramework\Http\DataResponse;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCA\Owncollab_Talks\PHPMailer\PHPMailer;
@@ -19,7 +21,8 @@ class Helper
     {
         $requestUri = \OC::$server->getRequest()->getRequestUri();
         $uriParts = explode('/',trim($requestUri,'/'));
-        if(strtolower($appName) === strtolower($uriParts[array_search('apps',$uriParts)+1]))
+        $part = array_search('apps',$uriParts);
+        if(isset($uriParts[$part+1]) && strtolower($appName) === strtolower($uriParts[$part+1]))
             return true;
         else return false;
     }
@@ -41,6 +44,18 @@ class Helper
             return false;
         }
     }
+
+
+    static public function cutStringPreview($string, $length = 25, $end = '...')
+    {
+        $string = strip_tags(htmlspecialchars_decode(stripcslashes($string)));
+        $stringLength = strlen($string);
+        if ($stringLength > $length)
+            $string = substr($string, 0, $length) . $end;
+
+        return $string;
+    }
+
 
     /**
      * Check URI address path
@@ -69,25 +84,6 @@ class Helper
         return $response->render();
     }
 
-
-    /**
-     * Session worker
-     * @param null $key
-     * @param null $value
-     * @return mixed|Sessioner
-     */
-    static public function session($key=null, $value=null)
-    {
-        static $ses = null;
-        if($ses === null) $ses = new Sessioner();
-        if(func_num_args() == 0)
-            return $ses;
-        if(func_num_args() == 1)
-            return $ses->get($key);
-        else
-            $ses->set($key,$value);
-    }
-
     /**
      * @param null $key
      * @param bool|true $clear
@@ -105,6 +101,87 @@ class Helper
             }
         }
         return false;
+    }
+
+
+    /**
+     * Accessor for $_COOKIE when fetching values, or maps directly
+     * to setcookie() when setting values.
+     * @param $name
+     * @param null $value
+     * @return mixed|null
+     */
+    static public function cookies($name, $value = null)
+    {
+        $argsNum = func_num_args();
+        $argsValues = func_get_args();
+
+        if ($argsNum == 1)
+            return isset($_COOKIE[$name]) ? $_COOKIE[$name] : null;
+
+        return call_user_func_array('setcookie', $argsValues);
+    }
+
+
+    /**
+     * Accessor for $_SESSION
+     * @param $name
+     * @param null $value
+     * @return null
+     */
+    static public function simpleSession($name, $value = null)
+    {
+        if(!isset($_SESSION))
+            session_start();
+
+        # session var set
+        if (func_num_args() == 2)
+            return ($_SESSION[$name] = $value);
+
+        # session var get
+        return isset($_SESSION[$name]) ? $_SESSION[$name] : null;
+    }
+
+
+    /**
+     * Session worker
+     * @param null $key
+     * @param null $value
+     * @return mixed|null|Sessioner
+     */
+    static public function session($key = null, $value = null)
+    {
+        static $sessioner = null;
+        if($sessioner === null)
+            $sessioner = new Sessioner();
+        if(func_num_args() == 0)
+            return $sessioner;
+        if(func_num_args() == 1)
+            return $sessioner->get($key);
+        else
+            $sessioner->set($key, $value);
+    }
+
+    /**
+     * @param $routeName
+     * @param array $arguments
+     * @return string
+     */
+    static public function linkToRoute($routeName, $arguments = [])
+    {
+        return \OC::$server->getURLGenerator()->linkToRoute($routeName, $arguments);
+    }
+
+
+    /**
+     * @param $appName
+     * @param $file
+     * @param array $arguments
+     * @return string
+     */
+    static public function linkTo($appName, $file, $arguments = [])
+    {
+        return \OC::$server->getURLGenerator()->linkTo($appName, $file, $arguments);
     }
 
     /**
@@ -136,12 +213,29 @@ class Helper
         return base64_decode($encoded);
     }
 
-    static public function appName($name=false){
+/*    static public function appName($name=false){
         static $_name = null;
         if($name) $_name = $name;
         return $_name;
-    }
+    }*/
 
+    static public function formatBytes($bytes, $precision = 2)
+    {
+        $base = log($bytes, 1024);
+        $suffixes = array('', 'Kb', 'Mb', 'Gb', 'Tb');
+
+        return round(pow(1024, $base - floor($base)), $precision) .' '. $suffixes[floor($base)];
+
+        /*
+        $units = array('B', 'KB', 'MB', 'GB', 'TB');
+        $bytes = max($bytes, 0);
+        $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
+        $pow = min($pow, count($units) - 1);
+        // Uncomment one of the following alternatives
+        // $bytes /= pow(1024, $pow);
+        // $bytes /= (1 << (10 * $pow));
+        return round($bytes, $precision) . ' ' . $units[$pow];*/
+    }
 
     static public function toTimeFormat($timeString){
         return date( "Y-m-d H:i:s", strtotime($timeString) );
@@ -180,304 +274,292 @@ class Helper
         return $replied;
     }
 
+
     /**
-     * Share file with a user
-     * @param $filename string
-     * @param $user string
-     * @return bool
+     * @param $key
+     * @param string $default
+     * @return mixed
      */
-    static public function shareFile($filename, $user) {
-        $ch = curl_init();
-        $host = \OC::$server->getRequest()->getServerHost();
-        $path = 'http://'.$user.':admin@'.$host.'/ocs/v1.php/apps/files_sharing/api/v1/shares'; //TODO: Змінити абсолютну адресу на динамічну
-        $postfields = array(
-            'path' => $filename,
-            'shareType' => 0,
-            'shareWith' => $user,
-            'publicUpload' => true,
-            'password' => 'admin',
-            'permissions' => 1
-        );
+    static public function getSysConfig($key, $default = '') {
+        return \OC::$server->getSystemConfig()->getValue($key, $default);
+    }
 
-        curl_setopt($ch, CURLOPT_URL, $path);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $postfields );
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        $resultCurl = curl_exec($ch);
-        $errorCurl = curl_error($ch);
-        curl_close($ch);
-        $returned = false;
 
-        return $returned;
+    /**
+     * @return string
+     */
+    static public function getUID() {
+        return \OC::$server->getUserSession()->getUser()->getUID();
+    }
+
+
+    static public function getFileData($path)
+    {
+        $view = new \OC\Files\View('/'.self::getUID().'/files');
+        $file = null;
+        $fileInfo = $view->getFileInfo($path);
+        if ($fileInfo) $file = $fileInfo;
+
+        return $file;
     }
 
     /**
-     * Upload file to share
-     * @param $filename string
-     * @param $user string
+     * Static saved appName value
+     * @var null
+     */
+    static private $_appName = null;
+
+    /**
+     * Set to static save appName value
+     * @param $name
+     * @return string|null
+     */
+    static public function setAppName($name) {
+        return self::$_appName = $name;
+    }
+
+    /**
+     * Get static saved appName value
+     * @return string|null
+     */
+    static public function getAppName() {
+        $res = null;
+        if(self::$_appName) $res = self::$_appName;
+        else
+            if($appName = self::val('appName'))
+                $res = self::$_appName = $appName;
+
+        return $res;
+    }
+
+
+    /**
+     * Check current the application is running.
+     * If $name return bool if current application equivalent
+     * If $name missing return current application name
+     *
+     * @param $name
+     * @return array|null|bool
+     */
+    static public function isApp($name = null) {
+        $uri = \OC::$server->getRequest()->getRequestUri();
+        $start = strpos($uri, '/apps/') + 6;
+        $app = substr($uri, $start);
+
+        if (strpos($app, '/'))
+            $app = substr($app, 0, strpos($app, '/'));
+
+        if($name)
+            return $app == $name;
+
+        return $app;
+    }
+
+    /**
+     * Check current the application is setting.
      * @return bool
      */
-    static public function uploadFile($filename, $user) {
-        $host = \OC::$server->getRequest()->getServerHost();
-
-        $target_url = 'davs://'.$host.'/remote.php/webdav/'.$filename['tmp_name'];
-        $postfields = array(
-            'extra_info' => '123456',
-            'file_contents'=>'@/var/www/webdav/'.$filename['name']
-        );
-
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $target_url);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_USERPWD, $user . ":admin"); //TODO Замінити 'admin' на реальний пароль
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $postfields);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        $result = curl_exec($ch);
-        curl_close($ch);
-        echo $result;
+    static public function isAppSettingsUsers() {
+        return strpos(\OC::$server->getRequest()->getRequestUri(), '/settings/users') !== false;
     }
 
-    static public function time_elapsed_string($ptime) {
-        $etime = time() - $ptime;
+    /**
+     * @param string $path  If $path string started with slash example: '/path/to..' - its was indicate to absolute path.
+     *                          And, without slash is relative path
+     * @param array $args   Extracted on include file
+     * @return null|array|mixed
+     */
+    static public function includePHP($path, array $args = [])
+    {
+        if(is_file($path)) {
 
-        if ($etime < 1) {
-            return '0 seconds';
+            ob_start();
+            extract($args);
+            $fileResult = include $path;
+            $obResult = ob_get_clean();
+
+            if(!empty($fileResult) && is_array($fileResult))
+                return $fileResult;
+            else
+                return $obResult;
         }
 
-        $a = array(
-            365 * 24 * 60 * 60  =>  'year',
-            30 * 24 * 60 * 60  =>  'month',
-            24 * 60 * 60  =>  'day',
-            60 * 60  =>  'hour',
-            60  =>  'minute',
-            1  =>  'second'
-        );
-
-        $a_plural = array(
-            'year'   => 'years',
-            'month'  => 'months',
-            'day'    => 'days',
-            'hour'   => 'hours',
-            'minute' => 'minutes',
-            'second' => 'seconds'
-        );
-
-        foreach ($a as $secs => $str)
-        {
-            $d = $etime / $secs;
-            if ($d >= 1)
-            {
-                $r = round($d);
-                if ($r > 1) {
-                    return ['key' => '%s '.$a_plural[$str].' ago', 'value' => $r];
-                }
-                else {
-                    return ['key' => '1 '.$str.' ago', 'value' => $r .' '. $str . ' ago'];
-                }
-            }
-        }
+        return false;
     }
 
-    static public function sizeRoundedString($size) {
-        if ($size < 1) {
-            return '0 bytes';
-        }
 
-        $a = array(
-            1024 * 1024 * 1024 * 1024  =>  'TB',
-            1024 * 1024 * 1024  =>  'GB',
-            1024 * 1024  =>  'MB',
-            1024  =>  'kB',
-            1  =>  'B'
-        );
+    /**
+     * <pre>
+     * Helper::val
+     * 'insecureServerHost'
+     * 'httpProtocol'
+     * 'requestUri'
+     * 'serverHost'
+     * 'urlParams'
+     * 'pathInfo'
+     * 'urlFull'
+     * null 'appName'
+     * null 'userId'
+     * </pre>
+     * @param array|string|null $parts
+     * @return array|null
 
-        foreach ($a as $bytes => $str) {
-            $d = $size / $bytes;
-            if ($d >= 1) {
-                $r = round($d, 2);
-                return $r . ' ' . $a[$bytes];
-            }
-        }
-    }
+    static public function val($parts = null)
+    {
+        static $data = null;
 
-    static public function getFileType($file) {
-        $types = array(
-            'image' => ['jpg','jpeg','gif','bmp','png'],
-            'application-pdf' => ['pdf'],
-            'x-office-document' => ['doc','dot','docx','docm','dotx','dotm','docb'],
-            'x-office-spreadsheet' => ['xls','xlt','xlm','xlsx','xlsm','xltx','xltm','xlsb','xla','xlam','xll','xlw'],
-            'x-office-presentation' => ['ppt','pot','pps','pptx','pptm','potx','potm','ppam','ppsx','ppsm','sldx','sldm – PowerPoint macro-enabled slide'],
-            'audio' => ['3gp','aa','aac','aax','act','aiff','amr','ape','au','awb','dct','dss','dvf','flac','gsm','iklax','ivs','m4a','m4b','m4p','mmf','mp3','mpc','msv','ogg','oga','opus','ra','rm','raw','sln','tta','vox','wav','wma','wv','webm'],
-            'video' => ['aaf','3gp','gif','asf','avchd','avi','cam','dat','dsh','dvr-ms','flv','m1v','m2v','fla','flr','sol','m4v','mkv','wrap','mng','mov','mpeg','mpg','mpe','mxf','roq','nsv','ogg','rm','svi','smi','swf','wmv','wtv','yuv'],
-            'text' => ['cnf','conf','cfg','log','asc','txt','a']
-        );
-        $ext = substr($file['file_target'], strpos($file['file_target'], ".")+1);
-        if ($file['item_type'] == 'folder') {
-            $filetype = 'folder';
-            if ($file['share_with']) {
-                $filetype .= '-shared';
-            }
-        }
-        else {
-            foreach ($types as $t => $type) {
-                if (in_array($ext, $type)) {
-                    $filetype = $t;
-                    break;
+        if($data == null || (is_array($parts) && !empty($parts)) ) {
+
+            $req = \OC::$server->getRequest();
+
+            $dataDefault = [
+                'insecureServerHost' => $req->getInsecureServerHost(),
+                'httpProtocol' => stripos($req->getHttpProtocol(), 'https') === false ? 'http' : 'https',
+                'requestUri' =>  $req->getRequestUri(),
+                'serverHost' => $req->getServerHost(),
+                'urlParams' => $req->urlParams,
+                'pathInfo' => $req->getPathInfo(),
+                'appName' => null,
+                'userId' => self::getUID(),
+                'urlFull' => \OC::$server->getURLGenerator()->getAbsoluteURL('/'),
+            ];
+
+            if(count($parts) > 0) {
+                foreach($parts as $key => $value) {
+                    $dataDefault[$key] = $value;
                 }
             }
+            $data = $dataDefault;
         }
-        if (!$filetype) {
-            $filetype = 'file';
-        }
-        return $filetype;
+
+        if(is_string($parts) && !empty($parts)) {
+            return isset($data[$parts]) ? $data[$parts] : null;
+        }else
+            return $data;
+    } */
+
+    /**
+     * Absolute path to application OwnCollabTalks
+     * @param string $addSubPath
+     * @return string
+     */
+    static public function pathAppTalks($addSubPath = '')
+    {
+        return \OC_App::getAppPath('owncollab_talks') . ($addSubPath ? '/' . ltrim($addSubPath,'/') : '');
     }
 
-    static public function firstWords($text, $limit) {
-        if (str_word_count($text, 0) > $limit) {
-            $words = str_word_count($text, 2);
-            $pos = array_keys($words);
-            $text = substr($text, 0, $pos[$limit]) . '...';
-        }
-        return $text;
+    /**
+     * Mail log writer
+     * @param $data_string
+     */
+    static public function mailParserLoger($data_string)
+    {
+        $file_path = self::pathAppTalks("/mailparser.log");
+        if(!is_writable($file_path) && is_file($file_path)) chmod($file_path, 0777);
+        $data = "\n" . date("Y.m.d H:i:s") . ": " .trim($data_string);
+        file_put_contents($file_path, $data, FILE_APPEND);
     }
 
-    static function messageSendBkp($subscriber, $fromuser, $messagedata, $projectName, $directanswer = false) {
-        $to = isset($subscriber['settings']) ? $subscriber['settings'][0]['email'] : false;
-        //$from = isset($fromuser['settings']) ? $fromuser['settings'][0]['email'] : "no-reply@".\OC::$server->getRequest()->getServerHost();
-        $from = !empty($messagedata['groupsid']) ? self::getGroupAlias($fromuser, $projectName) : self::getUserAlias($fromuser, $projectName);
-        $replyto = !empty($messagedata['groupsid']) ? self::getGroupAlias($fromuser, $projectName, $messagedata['hash']) : self::getUserAlias($fromuser, $projectName, $messagedata['hash']);
-        //$from = is_array($messagedata['groupsid']) && !empty($messagedata['groupsid']) ? self::getGroupAlias($fromuser, $projectName) : self::getUserAlias($fromuser, $projectName);
-        //$replyto = is_array($messagedata['groupsid']) && !empty($messagedata['groupsid']) ? self::getGroupAlias($fromuser, $projectName, $messagedata['hash']) : self::getUserAlias($fromuser, $projectName, $messagedata['hash']);
-        $subject = isset($messagedata['title']) ? $messagedata['title'] : 'OwnCollab message';
-        if ($directanswer) {
-            $body = $subject;
-        }
-        else {
-            if (!empty($messagedata['attachlinks'])) {
-                $body = "<br><br>" . $messagedata['attachlinks'];
-            }
-            $body .= isset($messagedata['text']) ? $messagedata['text'] : '';
-        }
-
-        //echo "from: ".$from."<br>to: ".$to."<br>subject: ".$subject."<br>body: ".$body."<br><br>";
-        $mail = new PHPMailer();
-        $mail->setFrom($from);
-        $mail->AddReplyTo($replyto, $fromuser);
-        $mail->addAddress($to);
-        $mail->Subject = $subject;
-        $mail->Body = $body;
-        $mail->isHTML();
-
-        if (!empty($to) && !empty($from)) {
-            if (!$mail->send()) {
-                return $mail->ErrorInfo;
-            } else {
-                return true;
-            }
-        } else {
-            return false;
-        }
+    /**
+     * @param $data_string
+     */
+    static public function mailParserLogerError($data_string)
+    {
+        $file_path = self::pathAppTalks("/mailparser_error.log");
+        if(!is_writable($file_path) && is_file($file_path)) chmod($file_path, 0777);
+        $data = "\n" . date("Y.m.d H:i:s") . ": " .trim($data_string);
+        file_put_contents($file_path, $data, FILE_APPEND);
     }
 
-    static function messageSend($address, $messagedata, $projectname = "ownCloud", $alladdresses = array()) {
-        $to = $address['email'];
-        $from = $address['fromaddress'];
-        $replyto = $address['replyto'];
-        $subject = isset($messagedata['title']) ? $messagedata['title'] : 'OwnCollab message';
-        $body = isset($messagedata['text']) ? $messagedata['text'] : 'OwnCollab message';
 
-        $mail = new PHPMailer();
-	$mail->CharSet = "UTF-8"; 
-	$mail->setFrom($from, $address['fromname']);
-        $mail->AddReplyTo($replyto, $address['fromname']);
-        $mail->addAddress($to, $address['name']);
-        $mail->Subject = $subject;
-        //$mail->Body = $body;
-        $emailparams = [
-            'mode' => 'email',
-            'projectname' => $projectname,
-            'domain' => \OC::$server->getRequest()->getServerHost(),
-            'talktitle' => $subject,
-            'message-text' => $body,
-            //'sender' => isset($address['fromname']) && !empty($address['fromname']) ? $address['fromname'] : $address['fromaddress'],
-            'sender' => $messagedata['author'],
-            'subscriber' => $address['name'],
-            'subscribers' => self::getOtherSubscribers($address['name'], $alladdresses)
+    /**
+     * Countdown counter
+     * @param $date
+     * @return bool|string
+     */
+    static function dateDowncounter($date){
+
+        $check_time = time() - strtotime($date);
+//        if($check_time <= 0){
+//            return false;
+//        }
+
+        $days = floor($check_time/86400);
+        $hours = floor(($check_time%86400)/3600);
+        $minutes = floor(($check_time%3600)/60);
+        $seconds = $check_time % 60;
+
+//        $str = '';
+//        if($days > 0) $str .= self::declension($days,array('день','дня','дней')).' ';
+//        if($hours > 0) $str .= self::declension($hours,array('час','часа','часов')).' ';
+//        if($minutes > 0) $str .= self::declension($minutes,array('минута','минуты','минут')).' ';
+//        if($seconds > 0) $str .= self::declension($seconds,array('секунда','секунды','секунд'));
+
+//        if($days > 0) $str .= self::dateDeclension($days,array('day','day','days')).' ';
+//        if($hours > 0) $str .= self::dateDeclension($hours,array('hour','hour','hours')).' ';
+//        if($minutes > 0) $str .= self::dateDeclension($minutes,array('minute','minute','minutes')).' ';
+//        if($seconds > 0) $str .= self::dateDeclension($seconds,array('second','second','seconds'));
+
+        return [
+            'days' => self::dateDeclension($days,array('','','')),
+            'hours' => self::dateDeclension($hours,array('','','')),
+            'minutes' => self::dateDeclension($minutes,array('','','')),
+            'seconds' => self::dateDeclension($seconds,array('','','')),
         ];
-        if (!empty($messagedata['attachements'])) {
-            $emailparams['attachlinks'] = unserialize($messagedata['attachements']);
+    }
+
+
+    /**
+     * Words declension
+     *
+     * @param mixed $digit
+     * @param mixed $expr
+     * @param bool $onlyword
+     * @return
+     */
+    static function dateDeclension($digit,$expr,$onlyword=false){
+
+        if(!is_array($expr)) $expr = array_filter(explode(' ', $expr));
+        if(empty($expr[2])) $expr[2]=$expr[1];
+        $i=preg_replace('/[^0-9]+/s','',$digit)%100;
+        if($onlyword) $digit='';
+        if($i>=5 && $i<=20) $res=$digit.' '.$expr[2];
+        else
+        {
+            $i%=10;
+            if($i==1) $res=$digit.' '.$expr[0];
+            elseif($i>=2 && $i<=4) $res=$digit.' '.$expr[1];
+            else $res=$digit.' '.$expr[2];
         }
-        $mail->Body = self::renderPartial($projectname, 'part.email', $emailparams);
-        $mail->isHTML();
+        return trim($res);
+    }
 
-        if (!empty($to) && !empty($from)) {
-            if (!$mail->send()) {
-                return $mail->ErrorInfo;
-            } else {
-                return true;
-            }
-        } else {
-            return false;
+
+
+
+    /**
+     * @param $login
+     * @param $password
+     * @return bool|null
+     */
+    public static function login($login, $password)
+    {
+        $result = \OC_User::getUserSession()->login($login, $password);
+
+        if ($result) {
+            // Refresh the token
+            \OC::$server->getCsrfTokenManager()->refreshToken();
+
+            //we need to pass the user name, which may differ from login name
+            $user = \OC_User::getUserSession()->getUser()->getUID();
+            \OC_Util::setupFS($user);
+
+            //trigger creation of user home and /files folder
+            \OC::$server->getUserFolder($user);
         }
+
+        return $result;
     }
 
-    static function getUserAlias($userid, $projectName, $hash = '') {
-        $project = str_replace(" ", '_', strtolower($projectName));
-        $project = preg_replace("/[^A-Za-z0-9]/", '', $project);
-        $name = !empty($hash) ? $userid.'+'.substr($hash, 0, 16) : $userid;
-        $alias = strtolower($name).'@'.$_SERVER['HTTP_HOST'];
-        return $alias;
-    }
 
-    static function getGroupAlias($groupid, $projectName, $hash = '') {
-        $project = str_replace(" ", '_', strtolower($projectName));
-        $project = preg_replace("/[^A-Za-z0-9]/", '', $project);
-        $aliases = array();
-        /* foreach ($groupid as $i => $item) {
-            $name = !empty($hash) ? $item.'+'.substr($hash, 0, 16) : $item;
-            //$aliases[] = strtolower($name).'@'.$project.'.'.$_SERVER['HTTP_HOST'];
-            $aliases[] = strtolower($name).'@'.$_SERVER['HTTP_HOST'];
-        } */
-
-        $name = !empty($hash) ? $groupid.'+'.substr($hash, 0, 16) : $groupid;
-        $alias = strtolower($name).'@'.$_SERVER['HTTP_HOST'];
-        return $alias;
-    }
-
-    static public function makeAttachLinks($filesid, $files) {
-        $host = \OC::$server->getRequest()->getServerHost();
-        $links = '';
-        foreach ($filesid as $f => $id) {
-            $link = array();
-            $file = $files->getById($id)[0];
-            $link['name'] = $file['name'];
-            $link['icon'] = "http://".$host."/core/img/filetypes/".$files->getIcon($file['mimetype']).".svg"; //Отримати повну адресу
-            $path = str_replace('files/Talks', '', $file['path']);
-            $path = str_replace('/'.$file['name'], '', $path);
-            $link['link'] = $file['mimetype'] == 'httpd/unix-directory' ? "http://".$host."/index.php/apps/files?dir=//".$file['name'] : "http://".$host."/index.php/apps/files/ajax/download.php?dir=%2F".$path."&files=".$file['name'];
-            $link['size'] = self::sizeRoundedString($file['size']);
-            $link['href'] = '<a href="'.$link['link'].'">'.$file['name'].'</a><br>';
-            $links[] = $link;
-        }
-        return $links;
-    }
-
-    static private function getOtherSubscribers($name, $addresses) {
-        $subscribers = array();
-        foreach ($addresses as $gu => $group) {
-            if ($gu == 'ungroupped') {
-                foreach ($group['groupusers'] as $u => $user) {
-                    if (!($u == $name) && !in_array($u, $subscribers)) {
-                        $subscribers[] = $u;
-                    }
-                }
-            }
-            else {
-                $subscribers[] = $gu;
-            }
-        }
-        return implode(', ', $subscribers);
-    }
 }

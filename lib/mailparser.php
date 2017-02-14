@@ -1,136 +1,202 @@
-<?php 
-//$msg = file_get_contents("php://stdin");
-$handle=fopen("php://stdin", "r"); 
+<?php
 
-	$head = "\n\n\n================================================================\n".date("Y.m.d H:i:s")." MSG: \n";
-	file_put_contents('/tmp/inb.log', $head, FILE_APPEND);
-	//file_put_contents('/tmp/inb.log', "\n DIR : ".__DIR__, FILE_APPEND);
+define('APPROOT', dirname(__DIR__));
 
-include __DIR__."/ZBateson/MailMimeParser/MailMimeParser.php"; 
+include APPROOT . "/lib/ZBateson/MailMimeParser/MailMimeParser.php";
 
-function __autoload($classname) {
-    if (strpos($classname, "ZBateson") !== false) { 
-      $filename = __DIR__."/". str_replace("\\", "/", $classname) .".php"; 
-    } 
-    include_once($filename);
+/**
+ * Autoloader for ZBateson PHP libruary
+ * @param $classname
+ */
+function __autoload($classname)
+{
+    if (strpos($classname, "ZBateson") !== false) {
+        $filepath = APPROOT . "/lib/" . str_replace("\\", "/", $classname) . ".php";
+        if (is_file($filepath))
+            include_once($filepath);
+    }
 }
 
-$path = realpath(dirname(dirname(dirname(__DIR__))));
-	//file_put_contents('/tmp/inb.log', "\n".$path, FILE_APPEND);
 
-// we've called a class ***
-//$obj = new myClass();
-
-	//file_put_contents('/tmp/inb.log', "\nInit parser!", FILE_APPEND);
-$mailParser = new ZBateson\MailMimeParser\MailMimeParser();
-	//file_put_contents('/tmp/inb.log', "\nParser loaded!", FILE_APPEND);
-
-//$handle = fopen(__DIR__.'/olexiy2.mail', 'r');
-
-	//file_put_contents('/tmp/inb.log', "\nstrlen(msg) : ".(is_resource($handle)?"True":"False"), FILE_APPEND);
-
-//if (strlen($msg) > 10) {
-	//file_put_contents('/tmp/inb.log', "\n!!!!!!!!--------------", FILE_APPEND);
-    $message = $mailParser->parse($handle);         // returns a ZBateson\MailMimeParser\Message
-    //$message = $mailParser->parse($msg);         // returns a ZBateson\MailMimeParser\Message
-    fclose($handle);
-
-	//file_put_contents('/tmp/inb.log', "\nTrying to parse!--------------\n", FILE_APPEND);
-    try { 
-	//$headerTo = $message->getHeader('to'); 
-	//$headerFrom = $message->getHeader('from'); 
-	$to = $message->getHeaderValue('to');
-	$toName = $message->getHeader('to')->getPersonName();
-	$from = $message->getHeaderValue('from');                       // user@example.com
-	$fromName = $message->getHeader('from')->getPersonName();       // Person Name
-	$subject = $message->getHeaderValue('subject');                 // The email's subject
-	
-	$res = $message->getTextStream();                               // or getHtmlStream
-	$content = stream_get_contents($res);
-
-	$pluspos = strpos($to, '+'); 
-	if ($pluspos > 0) { 
-		$hash = substr($to, strpos($to, '+') + 1, 16); 
-	} 
-
-	//file_put_contents('/tmp/inb.log', "\nTry successful!", FILE_APPEND);
-    } 
-    catch (Exaption $e) {
-	$error = $e->getMessages(); 
-	//file_put_contents('/tmp/inb.log', "\nCatched error : ".$error, FILE_APPEND);
-    } 
-
-    $attachescount = $message->getAttachmentCount(); 
-    if ($attachescount > 0) {
-	$attachedFiles = array(); 
-	for ($i=0; $i<$attachescount; $i++) { 
-	    $att = $message->getAttachmentPart($i);                         // first attachment
-
-	    $attachedFiles[$i]['contentType'] = $att->getHeaderValue('Content-Type');            // text/plain for instance
-	    $attachedFiles[$i]['encoding'] = $att->getHeaderValue('content-transfer-encoding'); 
-	    $attachedFiles[$i]['filename'] = $att->getHeaderParameter('Content-Disposition', 'filename'); 
-	    $attachedFiles[$i]['contents'] = stream_get_contents($att->getContentResourceHandle()); 
-	} 
-    } 
+/**
+ * Mail log writer
+ * @param $data_string
+ */
+function loger($data_string)
+{
+    $file_path = APPROOT . "/mailparser.log";
+    $data = "\n" . date("Y.m.d H:i:s") . ": " .trim($data_string);
+    print($data);
+    file_put_contents($file_path, $data, FILE_APPEND);
+}
 
 
-    /* foreach ($attachedFiles as $a => $file) {
-	if (!empty($file['contents'])) { 
-	    if ($file['contentType'] == 'image/png' && $file['encoding'] == 'base64') { 
-		base64_to_jpeg($file['contents'], $file['filename']); 
-	    } 
-	} 
-    } */ 
-    
-	//file_put_contents('/tmp/inb.log', "\npath : " . $path . "\n", FILE_APPEND);
+/**
+ * @param $data_string
+ */
+function loger_error($data_string)
+{
+    $file_path = APPROOT . "/mailparser_error.log";
+    $data = "\n" . date("Y.m.d H:i:s") . ": " .trim($data_string);
+    print($data);
+    file_put_contents($file_path, $data, FILE_APPEND);
+}
 
-    include $path . '/config/config.php';
-    $projectname = 'owncollab';
-    //$projectmail = 'team@'.$projectname.'.'.$CONFIG['trusted_domains'][0];
-    $projectmail = 'team@'.$CONFIG['trusted_domains'][0];
-	//file_put_contents('/tmp/inb.log', "\nurl : " . $url . "\n", FILE_APPEND);
-	//file_put_contents('/tmp/inb.log', "\ncurl!\n", FILE_APPEND);
 
-    $messageParams = [
-	'to' => $to,
-	'toName' => $toName,
-	'from' => $from,
-	'fromName' => $fromName,
-	'subject' => $subject,
-	'contents' => $content, 
-	'hash' => $hash 
-    ];
+/**
+ * @return mixed
+ */
+function parse_source_mail_data()
+{
+    $data       = [];
+    $resource   = fopen("php://stdin", "r");
+    // for xDebug
+    // $resource   = fopen(__DIR__."/mails/bogdan.mail", "r");
+    $mailParser = new ZBateson\MailMimeParser\MailMimeParser();
+    $message    = $mailParser->parse($resource);
 
-    if (!empty($attachedFiles)) { 
-	$messageParams['attachments'] = serialize($attachedFiles); 
-    } 
- 
-    if (!$hash || $to == $projectmail) {
-        $url = $CONFIG['overwrite.cli.url'] . '/index.php/apps/owncollab_talks/savemailtalk';
+    try {
+        $data['parser_message'] = $message;
+        $data['to']          = $message->getHeaderValue('to');
+        $data['to_name']     = is_object($message->getHeader('to')) ? $message->getHeader('to')->getPersonName() : '';
+        $data['from']        = $message->getHeaderValue('from');
+        $data['from_name']   = is_object($message->getHeader('from')) ? $message->getHeader('from')->getPersonName() : '';
+        $data['subject']     = $message->getHeaderValue('subject');
+        $data['content']     = stream_get_contents($message->getTextStream());
+        $data['content_html']= $message->getHtmlStream()
+                                ? stream_get_contents($message->getHtmlStream())
+                                : '';
+        $data['files_count'] = $message->getAttachmentCount();
+
+        //$data['all_attachment_parts'] = (is_numeric($data['files_count']) && $data['files_count'] > 0)
+        //                        ? $message->getAllAttachmentParts()
+        //                        : false;
+
+    } catch (Exception $error) {
+        loger_error("Line: ".__LINE__."; Error parse source stdin resource. Message error: ".$error->getMessage());
     }
-    else {
-        $url = $CONFIG['overwrite.cli.url'] . '/index.php/apps/owncollab_talks/savemail';
+
+    fclose($resource);
+    // $_d['content']      = $data['content'];
+    // $_d['content_html'] = $data['content_html'];
+    // loger('Source data: '. print_r($_d, true));
+    return $data;
+}
+
+
+/**
+ * @var array $config
+ * @param array $fieldsData
+ */
+function send_to_app(array $fieldsData)
+{
+
+    $config_file = APPROOT . '/config/config.php';
+    if(!is_file($config_file)) {
+        loger_error("Line: ".__LINE__."; Not found file config.php");
+        exit;
     }
-   
-	//file_put_contents('/tmp/inb.log', "\nMessage parsed!".print_r($messageParams, true), FILE_APPEND);
+
+    $config = include $config_file;
+    $url = $config['site_url'] . 'index.php/apps/owncollab_talks/parse_manager';
+
+    $fcount = $fieldsData['files_count'];
+    $parserMessage = $fieldsData['parser_message'];
+
+    if($fcount > 0) {
+        $fieldsData['files'] = files_parser($parserMessage, $fieldsData);
+    }
+
+    unset($fieldsData['parser_message']);
+    $fieldsData['mail_domain'] = $config['mail_domain'];
+    $fieldsData['site_url'] = $config['site_url'];
 
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url);
     curl_setopt($ch, CURLOPT_POST, true);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, $messageParams);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($fieldsData));
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
     curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    $resultCurl = curl_exec($ch);
-    $errorCurl = curl_error($ch);
-    curl_close($ch); 
-//}
 
-/* function base64_to_file($base64_string, $output_file) {
-    $ifp = fopen($output_file, "wb"); 
-    fwrite($ifp, $base64_string); 
-    fclose($ifp); 
-    return $output_file; 
-} */ 
+    $result = curl_exec($ch);
+    $error = curl_error($ch);
+    curl_close($ch);
 
-?>
+    // console info
+    //print_r($result);
+    print_r(json_decode($result, true));
+    exit;
+
+
+    if ($error) {
+        loger_error("Line: " . __LINE__ . "; cURL request fail! Error: " . $error);
+        exit();
+    }
+    try {
+        $resultData = json_decode($result, true);
+
+        if (!empty($resultData['message'])) {
+            loger_error("Line: " . __LINE__ . "; Message:" . $resultData['message']);
+
+        } else if (isset($resultData['type']) && $resultData['type'] != 'ok') {
+            loger_error("Line: " . __LINE__ . "; Bad Query Data:" . $result);
+
+        } else {
+
+            loger("Parse and send mail data is success! From: " .$fieldsData['from']. " To: " . $fieldsData['to'] . " Result data: " . $result);
+        }
+
+    } catch (Exception $e) {
+        loger_error("Line: " . __LINE__ . "; Result from server not decode! QueryData:" . $result);
+    }
+
+}
+
+/**
+ * @param \ZBateson\MailMimeParser\MimePart[] $mimePart
+ * @param \ZBateson\MailMimeParser\Message $message
+ * @return array
+ */
+function files_parser($message, $messageData)
+{
+    $i = 0;
+    $files = [];
+
+    while ($att = $message->getAttachmentPart($i)) {
+
+        try{
+            /**
+             * @type \ZBateson\MailMimeParser\Header\AbstractHeader $typeHeader
+             */
+            $typeHeader     = $att->getHeader('Content-Type');
+            //$typeHeaders = $att->getHeaders();
+            $filetype       = $typeHeader->getValue();
+            $filename       = trim(explode('name=',$typeHeader->getRawValue())[1], "\"'");
+            $filecontent    = stream_get_contents($att->getContentResourceHandle());
+
+            //$tmpfile = APPROOT . '/temp/' . time() . '-' . $messageData['from'] . '-' . $filename;
+            $tmpfile = '/tmp/' . time() . '-' . $messageData['from'] . '-' . $filename;
+
+            if(file_put_contents($tmpfile, $filecontent)){
+                //chmod($tmpfile, 0777);
+                //chown($tmpfile, 'www-data');
+                $files[$i]['filename'] = $filename;
+                $files[$i]['filetype'] = $filetype;
+                $files[$i]['tmpfile']  = $tmpfile;
+            } else
+                loger_error("Line: ".__LINE__."; Error save file part: $i; name: $filename;");
+
+        }catch (Exception $error) {
+            loger_error("Line: ".__LINE__."; Error parse file part $i. Message error: ".$error->getMessage());
+        }
+        $i ++;
+    }
+
+    return $files;
+}
+
+loger("The script is is running...");
+
+// Start
+send_to_app(parse_source_mail_data());

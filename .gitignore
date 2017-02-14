@@ -23,3 +23,12 @@ index
 
 # use
 tmp
+temp/*
+lib/_old
+lib/mails
+templates/_old
+/config/config.php
+
+
+mailparser.log
+mailparser_error.log

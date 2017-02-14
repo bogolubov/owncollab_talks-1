@@ -13,19 +13,181 @@ class Messages
 {
     /** @var  Connect */
     protected $connect;
-
     protected $tableName;
 
-    public function __construct($connect, $tableName) {
+    public function __construct($connect, $tableName)
+    {
         $this->connect = $connect;
         $this->tableName = '*PREFIX*' . $tableName;
     }
 
-    public function getById($id) {
-        $message = $this->connect->select("*", $this->tableName, "id = :id",[':id' => $id]);
+    public function insertTask(array $data)
+    {
+        return $this->connect->insert($this->tableName, $data);
+    }
+
+    public function updateTask($id, $data)
+    {
+        return $this->connect->update($this->tableName, $data, 'id = ?', [(int)$id]);
+    }
+
+
+    /**
+     * @param $id
+     * @return bool|array
+     */
+    public function getById($id)
+    {
+        $message = $this->connect->select("*", $this->tableName, "id = :id", [':id' => $id]);
+        return $message ? $message[0] : false ;
+    }
+
+    public function getAttachementsFrom($id)
+    {
+        $message = $this->getById($id);
+        $attach = null;
+        if($message) {
+            try {
+                $attach = json_decode($message['attachements '], true);
+            } catch ( \Exception $e) {}
+        }
+        return $attach;
+    }
+
+    public function getByHash($hash)
+    {
+        $message = $this->connect->select("*", $this->tableName, "hash = :hash", [':hash' => $hash]);
+        return $message ? $message[0] : false ;
+    }
+
+
+    /**
+     * Current user is participating of Talks
+     * @param $id
+     * @return array
+     */
+    public function getMy($id)
+    {
+        $all = $this->getAll();
+
+        if(is_array($all)) {
+            $message = array_filter($all, function ($item) use ($id) {
+                try {
+                    $subscribers = json_decode($item['subscribers'], true);
+                    return isset($subscribers['users']) && in_array($id, $subscribers['users']);
+                } catch (\Exception $error) {
+                    return false;
+                }
+            });
+            return $message;
+        }
+    }
+
+    /**
+     * All Talks
+     * @return mixed
+     */
+
+    public function getAll()
+    {
+        $message = $this->connect->select("*", $this->tableName, "status < 2 AND rid = 0 ");
         return $message;
     }
 
+    /**
+     * Current user is started of Talks
+     * @param $id
+     * @return mixed
+     */
+    public function getStarted($id)
+    {
+        $message = $this->connect->select("*", $this->tableName, "author = :author AND status < 2 AND rid = 0 ", [':author' => $id]);
+        return $message;
+    }
+
+    /**
+     * @param $id
+     * @return mixed
+     */
+    public function getChildren($id)
+    {
+        $message = $this->connect->select("*", $this->tableName, "status < 2 AND rid = :rid ", [':rid' => $id]);
+        return $message;
+    }
+
+
+    public function insert($data)
+    {
+
+        $result = $this->connect->insert($this->tableName, [
+            'rid'           => $data['rid'],
+            'date'          => $data['date'],
+            'title'	        => $data['title'],
+            'text'          => $data['text'],
+            'attachements'  => $data['attachements'],
+            'author'        => $data['author'],
+            'subscribers'   => $data['subscribers'],
+            'hash'          => $data['hash'],
+            'status'        => $data['status'],
+        ]);
+
+        $id = false;
+
+        if ($result) {
+            $id =  \OC::$server->getDatabaseConnection()->lastInsertId($this->tableName);
+        }
+
+        return $id;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+    /**
+     * @param $uid
+     * @param $mimetype
+     * @return mixed [mimetype_id, mimetype, storage_id, filecache_id]
+     */
+    public function getParseFileData($uid, $mimetype)
+    {
+        $sql = "SELECT
+                    mt.id as mimetype_id,
+                    mt.mimetype as mimetype,
+                    sg.numeric_id as storage_id,
+                    fch.fileid as filecache_id
+                FROM *PREFIX*mimetypes mt
+                LEFT JOIN *PREFIX*storages sg ON (sg.id = :uid)
+                LEFT JOIN *PREFIX*filecache fch ON (fch.path = 'files/Talks')
+                WHERE mt.mimetype = :mimetype";
+
+        return $this->connect->query($sql, [
+            ':uid' => 'home::'.$uid,
+            ':mimetype' => $mimetype,
+        ]);
+    }
+
+    public function addtoFilecache($data)
+    {
+        return $this->connect->insert('*PREFIX*filecache',$data)->execute();
+    }
+
+    public function addtoActivity($data)
+    {
+        return $this->connect->insert('*PREFIX*activity',$data)->execute();
+    }
+
+
+
+    /*
     public function getTalkByHash($hash) {
         $talk = $this->connect->query("SELECT * FROM ".$this->tableName." WHERE hash LIKE '".$hash."%' AND rid = 0");
         return $talk;
@@ -116,5 +278,5 @@ class Messages
 
     public function update($data) {
         $this->connect->update($this->tableName, $data, 'id = '.$data['id']);
-    }
+    }*/
 }
